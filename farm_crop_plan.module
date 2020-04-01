@@ -4,3 +4,5 @@
  * @file
  * farmOS crop planning module.
  */
+
+include_once 'farm_crop_plan.features.inc';
