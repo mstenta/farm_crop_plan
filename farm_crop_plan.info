@@ -1,0 +1,4 @@
+name = Farm Crop Plan
+description = Crop plan type and related features for farmOS.
+core = 7.x
+package = farmOS Contrib
