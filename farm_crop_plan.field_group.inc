@@ -52,6 +52,7 @@ function farm_crop_plan_field_group_info() {
     'children' => array(
       0 => 'field_farm_notes',
       1 => 'name',
+      2 => 'field_farm_season',
     ),
     'format_type' => 'field_group_easy_responsive_tabs_nav_item',
     'format_settings' => array(

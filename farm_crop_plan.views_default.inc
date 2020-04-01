@@ -45,8 +45,10 @@ function farm_crop_plan_views_default_views() {
   $handler->display->display_options['style_options']['columns'] = array(
     'id' => 'id',
     'name' => 'name',
+    'field_farm_season' => 'field_farm_season',
     'active' => 'active',
   );
+  $handler->display->display_options['style_options']['class'] = '';
   $handler->display->display_options['style_options']['default'] = '-1';
   $handler->display->display_options['style_options']['info'] = array(
     'id' => array(
@@ -57,6 +59,13 @@ function farm_crop_plan_views_default_views() {
       'empty_column' => 0,
     ),
     'name' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'field_farm_season' => array(
       'sortable' => 0,
       'default_sort_order' => 'asc',
       'align' => '',
@@ -89,6 +98,11 @@ function farm_crop_plan_views_default_views() {
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['alter']['make_link'] = TRUE;
   $handler->display->display_options['fields']['name']['alter']['path'] = 'farm/plan/[id]';
+  /* Field: Field: Season */
+  $handler->display->display_options['fields']['field_farm_season']['id'] = 'field_farm_season';
+  $handler->display->display_options['fields']['field_farm_season']['table'] = 'field_data_field_farm_season';
+  $handler->display->display_options['fields']['field_farm_season']['field'] = 'field_farm_season';
+  $handler->display->display_options['fields']['field_farm_season']['type'] = 'taxonomy_term_reference_plain';
   /* Field: Farm plan: Active */
   $handler->display->display_options['fields']['active']['id'] = 'active';
   $handler->display->display_options['fields']['active']['table'] = 'farm_plan';
@@ -129,6 +143,22 @@ function farm_crop_plan_views_default_views() {
   $handler->display->display_options['filters']['name']['expose']['label'] = 'Name';
   $handler->display->display_options['filters']['name']['expose']['operator'] = 'name_op';
   $handler->display->display_options['filters']['name']['expose']['identifier'] = 'name';
+  /* Filter criterion: Field: Season (field_farm_season) */
+  $handler->display->display_options['filters']['field_farm_season_tid']['id'] = 'field_farm_season_tid';
+  $handler->display->display_options['filters']['field_farm_season_tid']['table'] = 'field_data_field_farm_season';
+  $handler->display->display_options['filters']['field_farm_season_tid']['field'] = 'field_farm_season_tid';
+  $handler->display->display_options['filters']['field_farm_season_tid']['group'] = 1;
+  $handler->display->display_options['filters']['field_farm_season_tid']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['field_farm_season_tid']['expose']['operator_id'] = 'field_farm_season_tid_op';
+  $handler->display->display_options['filters']['field_farm_season_tid']['expose']['label'] = 'Season';
+  $handler->display->display_options['filters']['field_farm_season_tid']['expose']['operator'] = 'field_farm_season_tid_op';
+  $handler->display->display_options['filters']['field_farm_season_tid']['expose']['identifier'] = 'field_farm_season_tid';
+  $handler->display->display_options['filters']['field_farm_season_tid']['expose']['remember_roles'] = array(
+    2 => '2',
+  );
+  $handler->display->display_options['filters']['field_farm_season_tid']['type'] = 'select';
+  $handler->display->display_options['filters']['field_farm_season_tid']['vocabulary'] = 'farm_season';
+  $handler->display->display_options['filters']['field_farm_season_tid']['hierarchy'] = 1;
   /* Filter criterion: Farm plan: Active */
   $handler->display->display_options['filters']['active']['id'] = 'active';
   $handler->display->display_options['filters']['active']['table'] = 'farm_plan';
@@ -170,6 +200,7 @@ function farm_crop_plan_views_default_views() {
     t('Plan ID'),
     t('.'),
     t('Name'),
+    t('Season'),
     t('Active'),
     t('Plan type'),
     t('Page'),
