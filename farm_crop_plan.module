@@ -21,3 +21,104 @@ function farm_crop_plan_farm_ui_entities() {
     ),
   );
 }
+
+/**
+ * Implements hook_entity_view().
+ */
+function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
+
+  // Only proceed if this is the full view mode of a crop plan.
+  if (!($type == 'farm_plan' && $entity->type == 'crop' && $view_mode == 'full')) {
+    return;
+  }
+
+  // Reference the entity content object.
+  $content = &$entity->content;
+
+  // Add the planting form.
+  $content['planting'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add a planting'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 100,
+  );
+  $content['planting']['form'] = drupal_get_form('farm_crop_plan_planting_form', $entity);
+}
+
+/**
+ * Planting form.
+ */
+function farm_crop_plan_planting_form($form, &$form_state, $plan) {
+
+  // Store the plan entity for use in submit.
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
+
+  // Crop selection.
+  $form['crop'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Crop/variety'),
+    '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_crop',
+    '#required' => TRUE,
+  );
+
+  // Submit.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add'),
+  );
+
+  return $form;
+}
+
+/**
+ * Planting form submit.
+ */
+function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
+
+  // Load the plan.
+  $plan = $form_state['values']['plan'];
+  $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan);
+
+  // Get the season from the plan.
+  $season = $plan_wrapper->field_farm_season->label();
+
+  // Get the crop name that was entered and create/load it's term.
+  $crop_term = farm_term($form_state['values']['crop'], 'farm_crops');
+  $crop = $crop_term->name;
+
+  // Assemble a planting name.
+  $planting_name_parts = array(
+    $season,
+    $crop,
+  );
+  $planting_name = implode(' ', $planting_name_parts);
+
+  // Create a new planting asset.
+  $values = array(
+    'type' => 'planting',
+    'name' => $planting_name,
+  );
+  $planting = entity_create('farm_asset', $values);
+  $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting);
+
+  // Add the season.
+  $planting_wrapper->field_farm_season = $plan_wrapper->field_farm_season;
+
+  // Add the crop.
+  $planting_wrapper->field_farm_crop[] = $crop_term;
+
+  // Save the planting.
+  $planting_wrapper->save();
+
+  // Link the asset to this quick form.
+  farm_plan_link_record('asset', $plan->id, $planting->id);
+
+  // Set a message.
+  $label = entity_label('farm_asset', $planting);
+  $uri = entity_uri('farm_asset', $planting);
+  drupal_set_message('Planting created: ' . l($label, $uri['path']));
+}
