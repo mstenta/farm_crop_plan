@@ -15,6 +15,13 @@ function farm_crop_plan_ctools_plugin_api($module = NULL, $api = NULL) {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function farm_crop_plan_views_api($module = NULL, $api = NULL) {
+  return array("api" => "3.0");
+}
+
+/**
  * Implements hook_default_farm_plan_type().
  */
 function farm_crop_plan_default_farm_plan_type() {
