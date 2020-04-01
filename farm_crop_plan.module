@@ -6,3 +6,18 @@
  */
 
 include_once 'farm_crop_plan.features.inc';
+
+/**
+ * Implements hook_farm_ui_entities().
+ */
+function farm_crop_plan_farm_ui_entities() {
+  return array(
+    'farm_plan' => array(
+      'crop' => array(
+        'label' => t('Crop Plan'),
+        'label_plural' => t('Crop Plans'),
+        'view' => 'farm_crop_plan',
+      ),
+    ),
+  );
+}
