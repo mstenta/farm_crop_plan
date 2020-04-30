@@ -82,28 +82,29 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
   foreach ($plantings as $planting) {
 
     // Add a planting details form.
-    $form['plantings'][$planting->id] = farm_crop_plan_planting_details_form($plan, $planting);
+    $planting_form = farm_crop_plan_planting_details_form($plan, $planting);
 
     // Make it a fieldset with a title.
-    $form['plantings'][$planting->id]['#type'] = 'fieldset';
-    $form['plantings'][$planting->id]['#collapsible'] = TRUE;
-    $form['plantings'][$planting->id]['#collapsed'] = TRUE;
-    $form['plantings'][$planting->id]['#title'] = t('Planting') . ': ' . entity_label('farm_asset', $planting);
-
+    $planting_form['#type'] = 'fieldset';
+    $planting_form['#collapsible'] = TRUE;
+    $planting_form['#collapsed'] = TRUE;
+    $planting_form['#title'] = t('Planting') . ': ' . entity_label('farm_asset', $planting);
 
     // Add the planting to the form values, for use in form submission.
-    $form['plantings'][$planting->id]['planting'] = array(
+    $planting_form['planting'] = array(
       '#type' => 'value',
       '#value' => $planting,
     );
 
     // If the planting has an ID, add a link to remove it.
     if (!empty($planting->id)) {
-      $form['plantings'][$planting->id]['remove'] = array(
+      $planting_form['remove'] = array(
         '#type' => 'markup',
         '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/asset/' . $planting->id . '/delete', array('query' => array('destination' => current_path()))),
       );
     }
+
+    $form['plantings'][$planting->id] = $planting_form;
   }
 
   return $form;
@@ -141,8 +142,10 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     // Get the crop name.
     $defaults['crop'] = $planting_wrapper->field_farm_crop->label();
 
+    // Load linked logs.
     $log_ids = farm_plan_linked_records('log', $plan->id);
 
+    // Define log types to create on planting assets.
     $log_types = array(
       'transplanting' => 'farm_transplanting',
       'seeding' => 'farm_seeding'
@@ -161,8 +164,11 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
           // Load the log.
           $log = log_load($row->id);
 
-          // Create an entity metadata wrapper for the log.
-          $log_wrapper = entity_metadata_wrapper('log', $log);
+          // Save the log for later.
+          $form[$label]['log'] = array(
+            '#type' => 'value',
+            '#value' => $log,
+          );
 
           // Update default form values associated with the log type.
           $defaults[$label]['date'] = $log->timestamp;
@@ -204,7 +210,6 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#title' => t('Crop/variety'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_crop',
     '#default_value' => $defaults['crop'],
-    '#required' => TRUE,
   );
 
   // Seeding date.
@@ -216,13 +221,15 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#date_year_range' => '-3:+10',
   );
 
+  // Only set default value if exists.
   if (!empty($defaults['seeding']['date'])) {
     $form['seeding']['date']['#default_value'] = date($date_format, $defaults['seeding']['date']);
   }
 
+  // Seeding location.
   $form['seeding']['location'] = array(
     '#type' => 'textfield',
-    '#title' => t( 'Location'),
+    '#title' => t( 'Seeding Location'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
     '#default_value' => $defaults['seeding']['location'],
   );
@@ -236,24 +243,30 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#date_year_range' => '-3:+10',
   );
 
+  // Only set default value if exists.
   if (!empty($defaults['transplanting']['date'])) {
     $form['transplanting']['date']['#default_value'] = date($date_format, $defaults['transplanting']['date']);
   }
 
+  // Transplanting location.
   $form['transplanting']['location'] = array(
     '#type' => 'textfield',
-    '#title' => t( 'Location'),
+    '#title' => t( 'Transplanting Location'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
     '#default_value' => $defaults['transplanting']['location'],
   );
 
-  // Display submit button for create planting only.
-  if (empty($planting)) {
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Create Planting'),
-      '#submit' => array('farm_crop_plan_planting_form_submit'),
-    );
+  // Display submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create Planting'),
+    '#submit' => array('farm_crop_plan_planting_form_submit'),
+  );
+
+  // Change value to "Save Planting" if updating planting.
+  if (!empty($planting)) {
+    $form['submit']['#value'] = t('Save Planting');
+    $form['submit']['#name'] = t('save-planting-' . $planting->id);
   }
 
   return $form;
@@ -263,37 +276,70 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
  * Planting form validation.
  */
 function farm_crop_plan_planting_form_validate($form, &$form_state) {
-  $crop = $form_state['values']['new']['crop'];
 
-  if (empty($crop)) {
-    form_set_error('new][crop', t('Crop cannot be empty.'));
+  // Load planting values from triggering element.
+  if (!empty($form_state['triggering_element']['#parents'])) {
+    $parents = $form_state['triggering_element']['#parents'];
+    if ($parents[0] == 'new') {
+      $planting = $form_state['values']['new'];
+      $element = $form['new'];
+    }
+
+    if ($parents[0] == 'plantings') {
+      $id = $parents[1];
+      $planting = $form_state['values']['plantings'][$id];
+      $element = $form['plantings'][$id];
+    }
   }
 
-  $seeding_date = $form_state['values']['new']['seeding']['date'];
-  $seeding_location = $form_state['values']['new']['seeding']['location'];
+  // Bail if planting has no values.
+  if (empty($planting)) {
+    return;
+  }
 
+  // Ensure a crop is provided.
+  $crop = $planting['crop'];
+  if (empty($crop)) {
+    form_error($element['crop'], t('Crop cannot be empty.'));
+  }
+
+  // Ensure both seeding date and location are provided.
+  $seeding_date = $planting['seeding']['date'];
+  $seeding_location = $planting['seeding']['location'];
   if (empty($seeding_date) xor empty($seeding_location)) {
     if (empty($seeding_date)) {
-      form_set_error('new][seeding][date', t('Seeding date must be provided with seeding location.'));
+      form_error($element['seeding']['date'], t('Seeding date must be provided with seeding location.'));
     }
 
     if (empty($seeding_location)) {
-      form_set_error('new][seeding][location', t('Seeding location must be provided with seeding date.'));
+      form_error($element['seeding']['location'], t('Seeding location must be provided with seeding date.'));
     }
   }
 
+  // Ensure we don't remove an existing log.
+  $seeding_log_exists = !empty($planting['seeding']['log']);
+  if ($seeding_log_exists && empty($seeding_date) && empty($seeding_location)) {
+    form_error($element['seeding'], t('Seeding log cannot be removed.'));
+  }
 
-  $transplanting_date = $form_state['values']['new']['transplanting']['date'];
-  $transplanting_location = $form_state['values']['new']['transplanting']['location'];
 
+  // Ensure both transplanting date and location are provided.
+  $transplanting_date = $planting['transplanting']['date'];
+  $transplanting_location = $planting['transplanting']['location'];
   if (empty($transplanting_date) xor empty($transplanting_location)) {
     if (empty($transplanting_date)) {
-      form_set_error('new][transplanting][date', t('Transplanting date must be provided with transplanting location.'));
+      form_error($element['transplanting']['date'], t('Transplanting date must be provided with transplanting location.'));
     }
 
     if (empty($transplanting_location)) {
-      form_set_error('new][transplanting][location', t('Transplanting location must be provided with transplanting date.'));
+      form_error($element['transplanting']['location'], t('Transplanting location must be provided with transplanting date.'));
     }
+  }
+
+  // Ensure we don't remove an existing log.
+  $transplanting_log_exists = !empty($lanting['transplanting']['log']);
+  if ($transplanting_log_exists && empty($transplating_date) && empty($transplanting_location)) {
+    form_error($element['transplanting'], t('Transplanting log cannot be removed.'));
   }
 }
 
@@ -313,50 +359,19 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
   if (!empty($form_state['triggering_element']['#parents'])) {
     $parents = $form_state['triggering_element']['#parents'];
     if ($parents[0] == 'new') {
-      $planting = $form_state['values']['new'];
+      $planting_values = $form_state['values']['new'];
+    }
+
+    if ($parents[0] == 'plantings') {
+      $id = $parents[1];
+      $planting_values = $form_state['values']['plantings'][$id];
     }
   }
 
   // Bail if planting has no values.
-  if (empty($planting)) {
+  if (empty($planting_values)) {
     return;
   }
-
-  // Get the crop name that was entered and create/load it's term.
-  $crop_term = farm_term($planting['crop'], 'farm_crops');
-  $crop = $crop_term->name;
-
-  // Assemble a planting name.
-  $planting_name_parts = array(
-    $season,
-    $crop,
-  );
-  $planting_name = implode(' ', $planting_name_parts);
-
-  // Create a new planting asset.
-  $values = array(
-    'type' => 'planting',
-    'name' => $planting_name,
-  );
-  $planting_asset = entity_create('farm_asset', $values);
-  $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_asset);
-
-  // Add the season.
-  $planting_wrapper->field_farm_season = $plan_wrapper->field_farm_season;
-
-  // Add the crop.
-  $planting_wrapper->field_farm_crop[] = $crop_term;
-
-  // Save the planting.
-  $planting_wrapper->save();
-
-  // Link the asset to this crop plan.
-  farm_plan_link_record('asset', $plan->id, $planting_asset->id);
-
-  // Set a message.
-  $label = entity_label('farm_asset', $planting_asset);
-  $uri = entity_uri('farm_asset', $planting_asset);
-  drupal_set_message('Planting created: ' . l($label, $uri['path']));
 
   // Build array of log types.
   $log_types = array(
@@ -365,32 +380,201 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
   );
 
   // Start array of logs to create.
-  $logs = array();
+  $new_logs = array();
 
-  // Load values for logs that need to be created.
-  foreach($log_types as $name => $type) {
-    $date = $planting[$name]['date'];
-    $location = $planting[$name]['location'];
+  // Check if the submitted planting already exists.
+  if (!empty($planting_values['planting'])) {
 
-    if (!empty($date) && !empty($location)) {
-      $logs[] = array(
-        'type' => $type,
-        'date' => $date,
-        'location' => $location,
+    // Get the planting id.
+    $planting_id = $planting_values['planting']->id;
+
+    // Keep track if planting was updated, so we can set a message afterwards.
+    $updated_planting = FALSE;
+
+    // If the crop changed, update the planting.
+    if ($planting_values['crop'] != $form['plantings'][$planting_id]['crop']['#default_value']) {
+
+      // Get an entity metadata wrappers for the planting.
+      $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_values['planting']);
+
+      // Get the crop term (or create a new one), and add it to the planting.
+      $crop = farm_term($planting_values['crop'], 'farm_crops');
+      $planting_wrapper->field_farm_crop->set(array(NULL));
+      $planting_wrapper->field_farm_crop[] = $crop;
+
+      // Recreate the planting name.
+      $planting_name_parts = array(
+        $season,
+        $planting_values['crop'],
       );
+      $planting_name = implode(' ', $planting_name_parts);
+      $planting_wrapper->name = $planting_name;
+
+      // Save the planting.
+      $planting_wrapper->save();
+
+      // Remember that the planting was updated.
+      $updated_planting = TRUE;
+    }
+
+    // Load values for logs that need to be created.
+    foreach($log_types as $name => $type) {
+
+      // Existing values.
+      $current_log_values = $form['plantings'][$planting_id][$name];
+
+      // New values.
+      $new_date = $planting_values[$name]['date'];
+      $new_location = $planting_values[$name]['location'];
+
+      // Skip if date or location is not provided.
+      if (empty($new_date) || empty($new_location)) {
+        continue;
+      }
+
+      // Check for existing log.
+      if (empty($planting_values[$name]['log'])) {
+
+        // Add log info to create later.
+        $new_logs[] = array(
+          'type' => $type,
+          'planting_asset' => $planting_values['planting'],
+          'date' => $new_date,
+          'location' => $new_location,
+        );
+
+        // Skip updating.
+        continue;
+      }
+
+      // Keep track if the log was updated.
+      $updated_log = FALSE;
+
+      // If the planting date changed, update the log.
+      $default_date = !empty($current_log_values['date']['#default_value']) ? $current_log_values['date']['#default_value'] : NULL;
+      if ($new_date != $default_date) {
+
+        // Update the log timestamp.
+        $timestamp = strtotime($new_date);
+        $planting_values[$name]['log']->timestamp = $timestamp;
+        log_save($planting_values[$name]['log']);
+
+        // Remember that the log was updated.
+        $updated_log = TRUE;
+      }
+
+      // Get the existing location.
+      $default_location = !empty($current_log_values['location']['#default_value']) ? $current_log_values['location']['#default_value'] : NULL;
+
+      // If the location changed, update the log.
+      if ($new_location != $default_location) {
+
+        // Load the movement information associated with the log.
+        if (!empty($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
+          $movement = field_collection_item_load($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value']);
+          $movement_wrapper = entity_metadata_wrapper('field_collection_item', $movement);
+          $movement_wrapper->field_farm_move_to = array();
+
+          // Load areas.
+          $areas = farm_area_parse_names($new_location, TRUE);
+          foreach ($areas as $area) {
+            $area = taxonomy_term_load($area->tid);
+            $movement_wrapper->field_farm_move_to[] = $area;
+          }
+          $movement_wrapper->save();
+        }
+
+        // Remember that the log was updated.
+        $updated_log = TRUE;
+      }
+
+      // If the log was updated, display a message.
+      if ($updated_log) {
+        $log_name = entity_label('log', $planting_values[$name]['log']);
+        drupal_set_message(t('The %log_type log %log_name was updated.', array('%log_type' => $name, '%log_name' => $log_name)));
+      }
+    }
+
+    // If the planting was updated, display a message.
+    if ($updated_planting) {
+      $planting_name = entity_label('farm_asset', $planting_values['planting']);
+      drupal_set_message(t('The planting asset %planting_name was updated.', array('%planting_name' => $planting_name)));
+    }
+  }
+
+  // Create new planting if one doesn't exist.
+  if (empty($planting_values['planting'])) {
+
+    // Get the crop name that was entered and create/load it's term.
+    $crop_term = farm_term($planting_values['crop'], 'farm_crops');
+    $crop = $crop_term->name;
+
+    // Assemble a planting name.
+    $planting_name_parts = array(
+      $season,
+      $crop,
+    );
+    $planting_name = implode(' ', $planting_name_parts);
+
+    // Create a new planting asset.
+    $values = array(
+      'type' => 'planting',
+      'name' => $planting_name,
+    );
+    $planting_asset = entity_create('farm_asset', $values);
+    $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_asset);
+
+    // Add the season.
+    $planting_wrapper->field_farm_season = $plan_wrapper->field_farm_season;
+
+    // Add the crop.
+    $planting_wrapper->field_farm_crop[] = $crop_term;
+
+    // Save the planting.
+    $planting_wrapper->save();
+
+    // Link the asset to this crop plan.
+    farm_plan_link_record('asset', $plan->id, $planting_asset->id);
+
+    // Set a message.
+    $label = entity_label('farm_asset', $planting_asset);
+    $uri = entity_uri('farm_asset', $planting_asset);
+    drupal_set_message('Planting created: ' . l($label, $uri['path']));
+
+    // Load values for logs that need to be created.
+    foreach ($log_types as $name => $type) {
+      $date = $planting_values[$name]['date'];
+      $location = $planting_values[$name]['location'];
+
+      if (!empty($date) && !empty($location)) {
+        $new_logs[] = array(
+          'type' => $type,
+          'planting_asset' => $planting_asset,
+          'date' => $date,
+          'location' => $location,
+        );
+      }
     }
   }
 
   // Iterate through the logs.
-  foreach ($logs as $log_values) {
+  foreach ($new_logs as $log_values) {
 
     // If no details were provided, skip it.
     if (empty($log_values)) {
       continue;
     }
 
+    // Skip if no planting asset is provided.
+    if (empty($log_values['planting_asset'])) {
+      continue;
+    }
+
     // Get the log type.
     $type = $log_values['type'];
+
+    // Save the log values.
+    $planting_asset = $log_values['planting_asset'];
 
     // Convert the date to a timestamp.
     $timestamp = strtotime($log_values['date']);
