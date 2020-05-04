@@ -101,6 +101,7 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
       $planting_form['remove'] = array(
         '#type' => 'markup',
         '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/asset/' . $planting->id . '/delete', array('query' => array('destination' => current_path()))),
+        '#weight' => 100,
       );
     }
 
@@ -214,6 +215,12 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#title' => t('Crop/variety'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_crop',
     '#default_value' => $defaults['crop'],
+    '#weight' => 1,
+  );
+
+  // Seeding info.
+  $form['seeding'] = array(
+    '#weight' => 2,
   );
 
   // Seeding date.
@@ -244,6 +251,11 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#title' => t( 'Seeding Location'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
     '#default_value' => $defaults['seeding']['location'],
+  );
+
+  // Transplanting info.
+  $form['transplanting'] = array(
+    '#weight' => 3,
   );
 
   // Transplanting date.
