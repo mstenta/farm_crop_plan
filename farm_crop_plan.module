@@ -517,6 +517,11 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
           // Update the log timestamp.
           $timestamp = strtotime($new_date);
           $planting_values[$name]['log']->timestamp = $timestamp;
+
+          // Mark the log as done if the date is in the past.
+          $done = $timestamp < REQUEST_TIME;
+          $planting_values[$name]['log']->done = $done;
+
           log_save($planting_values[$name]['log']);
 
           // Remember that the log was updated.
