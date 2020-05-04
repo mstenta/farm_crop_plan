@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Farm Crop Plan install.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function farm_crop_plan_schema() {
+  $schema['farm_crop_plan_planting'] = array(
+    'description' => 'Stores information about Crop Plan Plantings.',
+    'fields' => array(
+      'plan_id' => array(
+        'description' => 'Plan ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'asset_id' => array(
+        'description' => 'Planting Asset ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'seeding_id' => array(
+        'description' => 'Seeding ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'transplanting_id' => array(
+        'description' => 'Transplanting ID',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('plan_id', 'asset_id'),
+  );
+  return $schema;
+}

@@ -72,22 +72,21 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
   $form['new']['#collapsed'] = TRUE;
 
   // Display Plantings associated with this plan.
-  // Load asset(s) associated with this plan.
-  $asset_ids = farm_plan_linked_records('asset', $plan->id);
-  $assets = farm_asset_load_multiple($asset_ids);
+  // Load plantings associated with this plan.
+  $query = db_select('farm_crop_plan_planting', 'p');
+  $query->addField('p', 'asset_id');
+  $query->condition('plan_id', $plan->id);
+  $result = $query->execute();
+
+  $planting_ids = array();
+  foreach ($result as $row) {
+    if (!empty($row->asset_id)) {
+      $planting_ids[] = $row->asset_id;
+    }
+  }
 
   // Iterate through the assets to make a list of plantings.
-  $plantings = array();
-  foreach ($assets as $asset) {
-
-    // If the asset is not a planting, skip it.
-    if ($asset->type != 'planting') {
-      continue;
-    }
-
-    // Add it to the list.
-    $plantings[] = $asset;
-  }
+  $plantings = farm_asset_load_multiple($planting_ids);
 
   // Iterate through the plantings and build forms.
   foreach ($plantings as $planting) {
@@ -161,9 +160,6 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     // Get the crop name.
     $defaults['crop'] = $planting_wrapper->field_farm_crop->label();
 
-    // Load linked logs.
-    $log_ids = farm_plan_linked_records('log', $plan->id);
-
     // Define log types to create on planting assets.
     $log_types = array(
       'transplanting' => 'farm_transplanting',
@@ -171,17 +167,23 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     );
 
     foreach($log_types as $label => $type) {
+
+      // Save the field name to lookup based on the log type.
+      $field_name = $label . '_id';
+
       // Find logs that reference the planting.
-      $query = farm_log_asset_query($planting->id, 0, NULL, $type);
-      $query->addField('ss_log', 'id');
+      $query = db_select('farm_crop_plan_planting', 'p');
+      $query->addField('p', $field_name);
+      $query->condition('plan_id', $plan->id);
+      $query->condition('asset_id', $planting->id);
       $result = $query->execute();
       foreach ($result as $row) {
 
         // Check if the log is included in the plan.
-        if (!empty($row->id) && in_array($row->id, $log_ids)) {
+        if (!empty($row->{$field_name})) {
 
           // Load the log.
-          $log = log_load($row->id);
+          $log = log_load($row->{$field_name});
 
           // Save the log for later.
           $defaults[$label]['log'] = $log;
@@ -618,6 +620,12 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // Link the asset to this crop plan.
       farm_plan_link_record('asset', $plan->id, $planting_asset->id);
 
+      $record = array(
+        'plan_id' => $plan->id,
+        'asset_id' => $planting_asset->id,
+      );
+      drupal_write_record('farm_crop_plan_planting', $record);
+
       // Set a message.
       $label = entity_label('farm_asset', $planting_asset);
       $uri = entity_uri('farm_asset', $planting_asset);
@@ -684,8 +692,22 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // Save the log.
       $log_wrapper->save();
 
+      // Field Name
+      if ($type == 'farm_seeding') {
+        $field_name = 'seeding_id';
+      } else if ($type == 'farm_transplanting') {
+        $field_name = 'transplanting_id';
+      }
+
       // Link the log to the crop plan.
-      farm_plan_link_record('log', $plan->id, $log->id);
+      //farm_plan_link_record('log', $plan->id, $log->id);
+      $query = db_update('farm_crop_plan_planting');
+      $query->condition('plan_id', $plan->id);
+      $query->condition('asset_id', $planting_asset->id);
+      $query->fields(array(
+        $field_name => $log->id,
+      ));
+      $query->execute();
     }
   }
 }
