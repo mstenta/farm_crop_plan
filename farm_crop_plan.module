@@ -23,6 +23,37 @@ function farm_crop_plan_farm_ui_entities() {
 }
 
 /**
+ * Implements hook_farm_plan_record_relationships().
+ */
+function farm_crop_plan_farm_plan_record_relationships() {
+  return array(
+    'farm_crop_plan_planting' => array(
+      'label' => t('Planting'),
+      'entity_type' => 'farm_asset',
+      'entity_pk' => 'id',
+      'table' => 'farm_crop_plan_planting',
+      'field' => 'asset_id',
+    ),
+    'farm_crop_plan_seeding' => array(
+      'label' => t('Seeding'),
+      'entity_type' => 'log',
+      'entity_pk' => 'id',
+      'table' => 'farm_crop_plan_planting',
+      'field' => 'seeding_id',
+      'required' => FALSE,
+    ),
+    'farm_crop_plan_transplanting' => array(
+      'label' => t('Transplanting'),
+      'entity_type' => 'log',
+      'entity_pk' => 'id',
+      'table' => 'farm_crop_plan_planting',
+      'field' => 'transplanting_id',
+      'required' => FALSE,
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function farm_crop_plan_menu() {
@@ -73,19 +104,7 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
 
   // Display Plantings associated with this plan.
   // Load plantings associated with this plan.
-  $query = db_select('farm_crop_plan_planting', 'p');
-  $query->addField('p', 'asset_id');
-  $query->condition('plan_id', $plan->id);
-  $result = $query->execute();
-
-  $planting_ids = array();
-  foreach ($result as $row) {
-    if (!empty($row->asset_id)) {
-      $planting_ids[] = $row->asset_id;
-    }
-  }
-
-  // Iterate through the assets to make a list of plantings.
+  $planting_ids = farm_plan_linked_records('farm_crop_plan_planting', $plan->id);
   $plantings = farm_asset_load_multiple($planting_ids);
 
   // Iterate through the plantings and build forms.
@@ -110,7 +129,7 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
     if (!empty($planting->id)) {
       $planting_form['remove'] = array(
         '#type' => 'markup',
-        '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/asset/' . $planting->id . '/delete', array('query' => array('destination' => current_path()))),
+        '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/farm_crop_plan_planting/' . $planting->id . '/delete', array('query' => array('destination' => current_path()))),
         '#weight' => 100,
       );
     }
@@ -618,13 +637,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       $planting_wrapper->save();
 
       // Link the asset to this crop plan.
-      farm_plan_link_record('asset', $plan->id, $planting_asset->id);
-
-      $record = array(
-        'plan_id' => $plan->id,
-        'asset_id' => $planting_asset->id,
-      );
-      drupal_write_record('farm_crop_plan_planting', $record);
+      farm_plan_link_record('farm_crop_plan_planting', $plan->id, $planting_asset->id);
 
       // Set a message.
       $label = entity_label('farm_asset', $planting_asset);
@@ -692,22 +705,14 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // Save the log.
       $log_wrapper->save();
 
-      // Field Name
-      if ($type == 'farm_seeding') {
-        $field_name = 'seeding_id';
-      } else if ($type == 'farm_transplanting') {
-        $field_name = 'transplanting_id';
-      }
-
       // Link the log to the crop plan.
-      //farm_plan_link_record('log', $plan->id, $log->id);
-      $query = db_update('farm_crop_plan_planting');
-      $query->condition('plan_id', $plan->id);
-      $query->condition('asset_id', $planting_asset->id);
-      $query->fields(array(
-        $field_name => $log->id,
-      ));
-      $query->execute();
+      if ($type == 'farm_seeding') {
+        $relationship = 'farm_crop_plan_seeding';
+      }
+      elseif ($type == 'farm_transplanting') {
+        $relationship = 'farm_crop_plan_transplanting';
+      }
+      farm_plan_link_record($relationship, $plan->id, $log->id, array('asset_id' => $planting_asset->id));
     }
   }
 }
