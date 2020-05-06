@@ -84,6 +84,20 @@ function farm_crop_plan_access($plan) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function farm_crop_plan_theme($existing, $type, $theme, $path) {
+  return array(
+    'farm_crop_plan_areas' => array(
+      'variables' => array(
+        'plan_id' => NULL,
+      ),
+      'file' => 'farm_crop_plan.theme.inc',
+    ),
+  );
+}
+
+/**
  * Planting form.
  */
 function farm_crop_plan_planting_form($form, &$form_state, $plan) {
