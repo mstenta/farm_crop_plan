@@ -477,8 +477,11 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     // Check if the submitted planting already exists.
     if (!empty($planting_values['planting'])) {
 
+      // Get the planting asset.
+      $planting_asset = $planting_values['planting'];
+
       // Get the planting id.
-      $planting_id = $planting_values['planting']->id;
+      $planting_id = $planting_asset->id;
 
       // Keep track if planting was updated, so we can set a message afterwards.
       $updated_planting = FALSE;
@@ -487,7 +490,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       if ($planting_values['crop'] != $form['plantings'][$planting_id]['crop']['#default_value']) {
 
         // Get an entity metadata wrappers for the planting.
-        $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_values['planting']);
+        $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_asset);
 
         // Get the crop term (or create a new one), and add it to the planting.
         $crop = farm_term($planting_values['crop'], 'farm_crops');
@@ -530,7 +533,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
           // Add log info to create later.
           $new_logs[] = array(
             'type' => $type,
-            'planting_asset' => $planting_values['planting'],
+            'planting_asset' => $planting_asset,
             'date' => $new_date,
             'location' => $new_location,
           );
@@ -594,7 +597,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
 
       // If the planting was updated, display a message.
       if ($updated_planting) {
-        $planting_name = entity_label('farm_asset', $planting_values['planting']);
+        $planting_name = entity_label('farm_asset', $planting_asset);
         drupal_set_message(t('The planting asset %planting_name was updated.', array('%planting_name' => $planting_name)));
       }
     }
