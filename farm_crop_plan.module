@@ -23,28 +23,39 @@ function farm_crop_plan_farm_ui_entities() {
 }
 
 /**
- * Implements hook_entity_view().
+ * Implements hook_menu().
  */
-function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
+function farm_crop_plan_menu() {
+  $items['farm/plan/%farm_plan/plantings'] = array(
+    'title' => 'Plantings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('farm_crop_plan_planting_form', 2),
+    'access callback' => 'farm_crop_plan_access',
+    'access arguments' => array(2),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
+  );
+  return $items;
+}
 
-  // Only proceed if this is the full view mode of a crop plan.
-  if (!($type == 'farm_plan' && $entity->type == 'crop' && $view_mode == 'full')) {
-    return;
+/**
+ * Access callback for crop plan tabs.
+ */
+function farm_crop_plan_access($plan) {
+
+  // If the plan is not a crop plan, deny access.
+  if ($plan->type != 'crop') {
+    return FALSE;
   }
 
-  // Reference the entity content object.
-  $content = &$entity->content;
-
-  $content['plantings'] = drupal_get_form('farm_crop_plan_planting_form', $entity);
+  // Defer to the farm plan access callback.
+  return farm_plan_access('update', $plan);
 }
 
 /**
  * Planting form.
  */
 function farm_crop_plan_planting_form($form, &$form_state, $plan) {
-
-  // Display the form below crop plan attributes.
-  $form['#weight'] = 100;
   $form['#tree'] = TRUE;
 
   // Store the plan entity for use in submit.
