@@ -170,6 +170,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
       'date' => NULL,
       'location' => '',
     ),
+    'days_to_harvest' => '',
   );
 
   if (!empty($planting)) {
@@ -178,6 +179,12 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
     // Get the crop name.
     $defaults['crop'] = $planting_wrapper->field_farm_crop->label();
+
+    // Load information from the {farm_crop_plan_planting} table.
+    $farm_crop_plan_planting = db_query('SELECT * FROM {farm_crop_plan_planting} WHERE plan_id = :plan_id AND asset_id = :asset_id', array(':plan_id' => $plan->id, ':asset_id' => $planting->id))->fetchAssoc();
+
+    // Get the days to harvest.
+    $defaults['days_to_harvest'] = $farm_crop_plan_planting['days_to_harvest'];
 
     // Define log types to create on planting assets.
     $log_types = array(
@@ -318,6 +325,15 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#title' => t( 'Transplanting Location'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
     '#default_value' => $defaults['transplanting']['location'],
+  );
+
+  // Days to harvest.
+  $form['days_to_harvest'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Days to harvest'),
+    '#default_value' => $defaults['days_to_harvest'],
+    '#element_validate' => array('element_validate_integer_positive'),
+    '#weight' => 4,
   );
 
   return $form;
@@ -716,6 +732,16 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         $relationship = 'farm_crop_plan_transplanting';
       }
       farm_plan_link_record($relationship, $plan->id, $log->id, array('asset_id' => $planting_asset->id));
+    }
+
+    // Update the days to harvest.
+    if (!empty($planting_values['days_to_harvest'])) {
+      $record = array(
+        'plan_id' => $plan->id,
+        'asset_id' => $planting_asset->id,
+        'days_to_harvest' => $planting_values['days_to_harvest'],
+      );
+      drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
     }
   }
 }

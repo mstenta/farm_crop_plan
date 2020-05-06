@@ -36,6 +36,12 @@ function farm_crop_plan_schema() {
         'unsigned' => TRUE,
         'not null' => FALSE,
       ),
+      'days_to_harvest' => array(
+        'description' => 'Days to harvest',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
     ),
     'primary key' => array('plan_id', 'asset_id'),
   );
