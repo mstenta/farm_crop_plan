@@ -98,6 +98,25 @@ function farm_crop_plan_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_entity_view().
+ */
+function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
+
+  // Only proceed if this is the full view mode of a crop plan.
+  if (!($type == 'farm_plan' && $entity->type == 'crop' && $view_mode == 'full')) {
+    return;
+  }
+
+  // Reference the entity content object.
+  $content = &$entity->content;
+
+  $content['plantings'] = array(
+    '#markup' => theme('farm_crop_plan_areas', array('plan_id' => $entity->id)),
+    '#weight' => 100,
+  );
+}
+
+/**
  * Planting form.
  */
 function farm_crop_plan_planting_form($form, &$form_state, $plan) {
