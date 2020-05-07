@@ -590,6 +590,17 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         // Keep track if the log was updated.
         $updated_log = FALSE;
 
+        // If the Planting crop changed, update the log name.
+        if ($updated_planting) {
+
+          // Blank out the log name to auto-regenerate.
+          $planting_values[$name]['log']->name = '';
+          log_save($planting_values[$name]['log']);
+
+          // Remember that the log was updated.
+          $updated_log = TRUE;
+        }
+
         // If the log date changed, update the log.
         $default_date = !empty($current_log_values['date']['#default_value']) ? $current_log_values['date']['#default_value'] : NULL;
         if ($new_date != $default_date) {
