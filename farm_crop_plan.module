@@ -423,12 +423,10 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
 
     // Validate seeding info.
     if ($supplied_seeding) {
+
+      // Ensure seeding date is provided.
       if (empty($seeding_date)) {
         form_error($element['seeding']['date'], $planting_name . ': ' . t('Seeding date must be provided with seeding location.'));
-      }
-
-      if (empty($seeding_location)) {
-        form_error($element['seeding']['location'], $planting_name . ': ' .  t('Seeding location must be provided with seeding date.'));
       }
     }
 
@@ -448,12 +446,10 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
 
     // Validate transplanting info.
     if ($supplied_transplanting) {
+
+      // Ensure transplanting date is provided.
       if (empty($transplanting_date)) {
         form_error($element['transplanting']['date'], $planting_name . ': ' .  t('Transplanting date must be provided with transplanting location.'));
-      }
-
-      if (empty($transplanting_location)) {
-        form_error($element['transplanting']['location'], $planting_name . ': ' .  t('Transplanting location must be provided with transplanting date.'));
       }
     }
 
@@ -571,8 +567,8 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         $new_date = $planting_values[$name]['date'];
         $new_location = $planting_values[$name]['location'];
 
-        // Skip if date or location is not provided.
-        if (empty($new_date) || empty($new_location)) {
+        // Skip if date is not provided.
+        if (empty($new_date)) {
           continue;
         }
 
@@ -594,7 +590,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         // Keep track if the log was updated.
         $updated_log = FALSE;
 
-        // If the planting date changed, update the log.
+        // If the log date changed, update the log.
         $default_date = !empty($current_log_values['date']['#default_value']) ? $current_log_values['date']['#default_value'] : NULL;
         if ($new_date != $default_date) {
 
@@ -618,18 +614,36 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         // If the location changed, update the log.
         if ($new_location != $default_location) {
 
+          // Load new areas.
+          $areas = farm_area_parse_names($new_location, TRUE);
+
           // Load the movement information associated with the log.
           if (!empty($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
             $movement = field_collection_item_load($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value']);
             $movement_wrapper = entity_metadata_wrapper('field_collection_item', $movement);
             $movement_wrapper->field_farm_move_to = array();
 
-            // Load areas.
-            $areas = farm_area_parse_names($new_location, TRUE);
+            // Add areas to movement.
             foreach ($areas as $area) {
               $area = taxonomy_term_load($area->tid);
               $movement_wrapper->field_farm_move_to[] = $area;
             }
+            $movement_wrapper->save();
+          } else {
+
+            // Add a new movement to the log.
+            $movement = entity_create('field_collection_item', array('field_name' => 'field_farm_movement'));
+            $movement->setHostEntity('log', $planting_values[$name]['log']);
+
+            // Create an entity wrapper for the adjustment.
+            $movement_wrapper = entity_metadata_wrapper('field_collection_item', $movement);
+
+            // Iterate through the areas and add each to the "Move to" field.
+            foreach ($areas as $area) {
+              $movement_wrapper->field_farm_move_to[] = $area;
+            }
+
+            // Save the movement.
             $movement_wrapper->save();
           }
 
@@ -701,7 +715,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         $date = $planting_values[$name]['date'];
         $location = $planting_values[$name]['location'];
 
-        if (!empty($date) && !empty($location)) {
+        if (!empty($date)) {
           $new_logs[] = array(
             'type' => $type,
             'planting_asset' => $planting_asset,
