@@ -519,6 +519,27 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     // Start array of logs to create.
     $new_logs = array();
 
+    // Build a planting name to use later.
+
+    // The "final" location of the planting is assumed to be the transplanting
+    // location. If a transplanting is not being created, but a seeding is, then
+    // use the seeding location.
+    $location = '';
+    if (!empty($planting_values['transplanting']['location']) ) {
+      $location = $planting_values['transplanting']['location'];
+    }
+    elseif (!empty($planting_values['seeding']['location'])) {
+      $location = $planting_values['seeding']['location'];
+    }
+
+    // The planting will be named based on the season, location and crop.
+    $planting_name_parts = array(
+      $season,
+      $location,
+      $planting_values['crop'],
+    );
+    $planting_name = implode(' ', $planting_name_parts);
+
     // Check if the submitted planting already exists.
     if (!empty($planting_values['planting'])) {
 
@@ -531,6 +552,24 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // Keep track if planting was updated, so we can set a message afterwards.
       $updated_planting = FALSE;
 
+      // Update the planting name if needed.
+      // This is done before updating logs so that they will
+      // be generated with the correct name.
+      if ($planting_asset->name != $planting_name) {
+
+        // Get an entity metadata wrapper for the planting.
+        $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_asset);
+
+        // Update the name.
+        $planting_wrapper->name = $planting_name;
+
+        // Save the planting.
+        $planting_wrapper->save();
+
+        // Remember the planting was updated.
+        $updated_planting = TRUE;
+      }
+
       // If the crop changed, update the planting.
       if ($planting_values['crop'] != $form['plantings'][$planting_id]['crop']['#default_value']) {
 
@@ -541,14 +580,6 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         $crop = farm_term($planting_values['crop'], 'farm_crops');
         $planting_wrapper->field_farm_crop->set(array(NULL));
         $planting_wrapper->field_farm_crop[] = $crop;
-
-        // Recreate the planting name.
-        $planting_name_parts = array(
-          $season,
-          $planting_values['crop'],
-        );
-        $planting_name = implode(' ', $planting_name_parts);
-        $planting_wrapper->name = $planting_name;
 
         // Save the planting.
         $planting_wrapper->save();
@@ -687,14 +718,6 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
 
       // Get the crop name that was entered and create/load it's term.
       $crop_term = farm_term($planting_values['crop'], 'farm_crops');
-      $crop = $crop_term->name;
-
-      // Assemble a planting name.
-      $planting_name_parts = array(
-        $season,
-        $crop,
-      );
-      $planting_name = implode(' ', $planting_name_parts);
 
       // Create a new planting asset.
       $values = array(
