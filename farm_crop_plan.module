@@ -451,6 +451,13 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
       if (empty($transplanting_date)) {
         form_error($element['transplanting']['date'], $planting_name . ': ' .  t('Transplanting date must be provided with transplanting location.'));
       }
+
+      // Ensure transplanting date is scheduled after seeding date.
+      if (!empty($transplanting_date) && !empty($seeding_date)) {
+        if ($transplanting_date <= $seeding_date) {
+          form_error($element['transplanting']['date'], $planting_name . ': ' . t('Transplanting date must be after seeding date.'));
+        }
+      }
     }
 
     // Ensure we don't remove an existing log.
