@@ -200,6 +200,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
       'location' => '',
     ),
     'transplanting' => array(
+      'days_to_transplant' => '',
       'date' => NULL,
       'location' => '',
     ),
@@ -215,6 +216,9 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
     // Load information from the {farm_crop_plan_planting} table.
     $farm_crop_plan_planting = db_query('SELECT * FROM {farm_crop_plan_planting} WHERE plan_id = :plan_id AND asset_id = :asset_id', array(':plan_id' => $plan->id, ':asset_id' => $planting->id))->fetchAssoc();
+
+    // Get the days to transplant.
+    $defaults['transplanting']['days_to_transplant'] = $farm_crop_plan_planting['days_to_transplant'];
 
     // Get the days to harvest.
     $defaults['days_to_harvest'] = $farm_crop_plan_planting['days_to_harvest'];
@@ -302,9 +306,10 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#date_format' => $date_format,
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
+    '#default_value' => NULL,
   );
 
-  // Only set default value if exists.
+  // Only calculate default value if exists.
   if (!empty($defaults['seeding']['date'])) {
     $form['seeding']['date']['#default_value'] = date($date_format, $defaults['seeding']['date']);
   }
@@ -330,16 +335,27 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#weight' => 3,
   );
 
+  // Days to transplant.
+  $form['transplanting']['days_to_transplant'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Days to Transplant'),
+    '#description' => t('Calculate a transplanting date from days after seeding. This will be calculated if not provided.'),
+    '#default_value' => $defaults['transplanting']['days_to_transplant'],
+    '#element_validate' => array('element_validate_integer_positive'),
+  );
+
   // Transplanting date.
   $form['transplanting']['date'] = array(
     '#type' => 'date_select',
     '#title' => t('Transplanting date'),
+    '#description' => t('Specify a specific transplanting date. This will override the days to transplant field if changed.'),
     '#date_format' => $date_format,
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
+    '#default_value' => NULL,
   );
 
-  // Only set default value if exists.
+  // Only calculate default value if exists.
   if (!empty($defaults['transplanting']['date'])) {
     $form['transplanting']['date']['#default_value'] = date($date_format, $defaults['transplanting']['date']);
   }
@@ -438,17 +454,23 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
 
 
     // Ensure both transplanting date and location are provided.
+    $days_to_transplant = $planting['transplanting']['days_to_transplant'];
     $transplanting_date = $planting['transplanting']['date'];
     $transplanting_location = $planting['transplanting']['location'];
 
     // Indicate if the user supplied transplanting info.
-    $supplied_transplanting = !empty($transplanting_date) || !empty($transplanting_location);
+    $supplied_transplanting = !empty($days_to_transplant) || !empty($transplanting_date) || !empty($transplanting_location);
 
     // Validate transplanting info.
     if ($supplied_transplanting) {
 
+      // If days to transplant is provided, ensure a seeding date is provided.
+      if (!empty($days_to_transplant) && empty($seeding_date)) {
+        form_error($element['seeding']['date'], $planting_name . ': ' . t('Seeding date is required to calculate transplanting date from days to transplant.'));
+      }
+
       // Ensure transplanting date is provided.
-      if (empty($transplanting_date)) {
+      if (empty($transplanting_date) && empty($days_to_transplant)) {
         form_error($element['transplanting']['date'], $planting_name . ': ' .  t('Transplanting date must be provided with transplanting location.'));
       }
 
@@ -461,7 +483,7 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
     }
 
     // Ensure we don't remove an existing log.
-    $transplanting_log_exists = !empty($lanting['transplanting']['log']);
+    $transplanting_log_exists = !empty($planting['transplanting']['log']);
     if ($transplanting_log_exists && !$supplied_transplanting) {
       form_error($element['transplanting'], $planting_name . ': ' .  t('Transplanting log cannot be removed.'));
     }
@@ -506,17 +528,27 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
   $plantings = array();
 
   // Add the new plantings.
-  $plantings[] = $form_state['values']['new'];
+  $plantings[] = array(
+    'submitted' => $form_state['values']['new'],
+    'current' => $form['new'],
+  );
 
   // Add existing plantings to list for validation.
   if (!empty($form_state['values']['plantings'])) {
     foreach ($form_state['values']['plantings'] as $planting_id => $planting_values) {
-      $plantings[] = $form_state['values']['plantings'][$planting_id];
+      $plantings[] = array(
+        'submitted' => $form_state['values']['plantings'][$planting_id],
+        'current' => $form['plantings'][$planting_id],
+      );
     }
   }
 
   // Iterate through plantings and update or create as necessary.
-  foreach($plantings as $planting_values) {
+  foreach($plantings as $planting_info) {
+
+    // Save submitted and old values from form.
+    $planting_values = $planting_info['submitted'];
+    $current_values = $planting_info['current'];
 
     // Bail if planting has no values.
     if (empty($planting_values)) {
@@ -546,6 +578,33 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       $planting_values['crop'],
     );
     $planting_name = implode(' ', $planting_name_parts);
+
+    // Calculate a transplanting date from seeding date + days to transplant.
+    // Only calculate if a seeding date is supplied.
+    if (!empty($planting_values['seeding']['date'])) {
+
+      // Save related values.
+      $seeding_date = $planting_values['seeding']['date'];
+      $days_to_transplant = &$planting_values['transplanting']['days_to_transplant'];
+      $transplanting_date = &$planting_values['transplanting']['date'];
+
+      // Remember if a new transplanting date was specified.
+      // Don't consider a new transplanting date that is blank.
+      $updated_transplanting_date = !empty($transplanting_date) && $transplanting_date != $current_values['transplanting']['date']['#default_value'];
+
+      // If a new transplanting date was specified, use that
+      // and update days to transplant to match.
+      if ($updated_transplanting_date) {
+        $interval = date_diff(date_create($seeding_date), date_create($transplanting_date));
+        $days_to_transplant = $interval->format('%a');
+      }
+
+      // Otherwise if days to transplant was specified, calculate a new transplanting date.
+      if (!$updated_transplanting_date && !empty($days_to_transplant)) {
+        $transplanting_timestamp = strtotime('+' . $days_to_transplant . ' days', strtotime($seeding_date));
+        $transplanting_date = strftime('%Y-%m-%d', $transplanting_timestamp);
+      }
+    }
 
     // Check if the submitted planting already exists.
     if (!empty($planting_values['planting'])) {
@@ -578,7 +637,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       }
 
       // If the crop changed, update the planting.
-      if ($planting_values['crop'] != $form['plantings'][$planting_id]['crop']['#default_value']) {
+      if ($planting_values['crop'] != $current_values['crop']['#default_value']) {
 
         // Get an entity metadata wrappers for the planting.
         $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting_asset);
@@ -599,7 +658,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       foreach ($log_types as $name => $type) {
 
         // Existing values.
-        $current_log_values = $form['plantings'][$planting_id][$name];
+        $current_log_values = $current_values[$name];
 
         // New values.
         $new_date = $planting_values[$name]['date'];
@@ -822,14 +881,23 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       farm_plan_link_record($relationship, $plan->id, $log->id, array('asset_id' => $planting_asset->id));
     }
 
-    // Update the days to harvest.
-    if (!empty($planting_values['days_to_harvest'])) {
-      $record = array(
-        'plan_id' => $plan->id,
-        'asset_id' => $planting_asset->id,
-        'days_to_harvest' => $planting_values['days_to_harvest'],
-      );
-      drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
+    // Build array of crop plan planting attributes to update.
+    $record = array(
+      'plan_id' => $plan->id,
+      'asset_id' => $planting_asset->id,
+    );
+
+    // Update days_to_transplant.
+    if (!empty($planting_values['transplanting']['days_to_transplant'])) {
+      $record['days_to_transplant'] = $planting_values['transplanting']['days_to_transplant'];
     }
+
+    // Update days_to_harvest.
+    if (!empty($planting_values['days_to_harvest'])) {
+      $record['days_to_harvest'] = $planting_values['days_to_harvest'];
+    }
+
+    // Update the Crop Plan Planting.
+    drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
   }
 }

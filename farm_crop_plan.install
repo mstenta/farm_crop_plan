@@ -36,6 +36,12 @@ function farm_crop_plan_schema() {
         'unsigned' => TRUE,
         'not null' => FALSE,
       ),
+      'days_to_transplant' => array(
+        'description' => 'Days to transplant',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
       'days_to_harvest' => array(
         'description' => 'Days to harvest',
         'type' => 'int',
