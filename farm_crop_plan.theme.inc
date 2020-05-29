@@ -44,6 +44,12 @@ function theme_farm_crop_plan_areas($variables) {
     }
     $days_to_harvest = $planting_record->days_to_harvest;
 
+    // Load "Harvest window". Default to 0 days.
+    $harvest_window = $planting_record->harvest_window;
+    if (empty($harvest_window)) {
+      $harvest_window = 0;
+    }
+
     // If there is a seeding log, load it.
     $seeding_log = NULL;
     if (!empty($planting_record->seeding_id)) {
@@ -77,6 +83,11 @@ function theme_farm_crop_plan_areas($variables) {
     }
     elseif (!empty($transplanting_log->timestamp)) {
       $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $transplanting_log->timestamp);
+    }
+
+    // Increase harvest timestamp by harvest days.
+    if (!empty($harvest_timestamp)) {
+      $harvest_timestamp = strtotime('+' . $harvest_window . ' days', $harvest_timestamp);
     }
 
     // Update the plan's latest timestamp.
@@ -124,6 +135,7 @@ function theme_farm_crop_plan_areas($variables) {
               'log' => $transplanting_log,
               'start' => $transplanting_log->timestamp,
               'end' => $harvest_timestamp,
+              'harvest_window' => $harvest_window,
             );
           }
         }
@@ -132,7 +144,7 @@ function theme_farm_crop_plan_areas($variables) {
   }
 
   // Add inline CSS.
-  drupal_add_css('table td.planted {background-color: #dff0d8;}','inline');
+  drupal_add_css('table td.planted {background-color: #dff0d8;} table td.harvest {background-color: #9ADB7F','inline');
 
   // Generate header columns for each week.
   $header = array('');
@@ -172,6 +184,19 @@ function theme_farm_crop_plan_areas($variables) {
       $start_week = (int) round(($planting['start'] - $plan_start) / (60 * 60 * 24 * 7));
       $total_weeks = (int) round(($planting['end'] - $planting['start']) / (60 * 60 * 24 * 7));
 
+      // Calculate harvest weeks if a harvest window was specified.
+      $harvest_window = 0;
+      $harvest_weeks = 0;
+      if (!empty($planting['harvest_window'])) {
+        $harvest_window = $planting['harvest_window'];
+        $harvest_weeks = (int) round($harvest_window / 7);
+
+        // Minimum of 1 week to ensure harvest window is displayed.
+        if ($harvest_weeks == 0) {
+          $harvest_weeks = 1;
+        }
+      }
+
       // Generate a planting row to be added to the table.
       $planting_label = entity_label('farm_asset', $planting['asset']);
       $planting_uri = entity_uri('farm_asset', $planting['asset']);
@@ -192,13 +217,23 @@ function theme_farm_crop_plan_areas($variables) {
       $planting_row = array(
         'data' => $planting_summary,
         'class' => 'planted',
-        'colspan' => $total_weeks,
+        'colspan' => $total_weeks - $harvest_weeks,
+      );
+
+      // Define a row for the harvest window.
+      $harvest_row = array(
+        'data' => '<small>' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
+        'class' => 'harvest',
+        'colspan' => $harvest_weeks,
       );
 
       // Generate all cells in the row.
       for ($j = 0; $j < $num_weeks; $j++) {
         if ($j == $start_week) {
           $row[] = $planting_row;
+          if ($harvest_weeks > 0) {
+            $row[] = $harvest_row;
+          }
         }
         else {
           $row[] = '';
