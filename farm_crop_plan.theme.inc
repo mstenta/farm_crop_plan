@@ -234,6 +234,9 @@ function theme_farm_crop_plan_areas($variables) {
           if ($harvest_weeks > 0) {
             $row[] = $harvest_row;
           }
+          // Update number of cells remaining.
+          // Avoid rendering too many cells in each row.
+          $j += $total_weeks - 1;
         }
         else {
           $row[] = '';
