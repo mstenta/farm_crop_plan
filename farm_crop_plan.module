@@ -194,6 +194,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   $date_format = 'Y-m-d';
 
   $defaults = array(
+    'name' => NULL,
     'crop' => NULL,
     'seeding' => array(
       'date' => NULL,
@@ -210,6 +211,9 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   if (!empty($planting)) {
     // Get the planting metadata wrapper.
     $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting);
+
+    // Get the planting name.
+    $defaults['name'] = $planting->name;
 
     // Get the crop name.
     $defaults['crop'] = $planting_wrapper->field_farm_crop->label();
@@ -383,6 +387,15 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#default_value' => $defaults['days_to_harvest'],
     '#element_validate' => array('element_validate_integer_positive'),
     '#weight' => 4,
+  );
+
+  // Planting asset name.
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Planting Name'),
+    '#description' => t('The planting asset name will default to "[Season] [Location] [Crop(s)]" but can be modified here. If both a seeding and a transplanting log are created, the transplanting location will be used.' ),
+    '#default_value' => $defaults['name'],
+    '#weight' => 5,
   );
 
   return $form;
@@ -560,26 +573,30 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     // Start array of logs to create.
     $new_logs = array();
 
-    // Build a planting name to use later.
+    // Get the submitted planting name.
+    $planting_name = $planting_values['name'];
 
-    // The "final" location of the planting is assumed to be the transplanting
-    // location. If a transplanting is not being created, but a seeding is, then
-    // use the seeding location.
-    $location = '';
-    if (!empty($planting_values['transplanting']['location']) ) {
-      $location = $planting_values['transplanting']['location'];
-    }
-    elseif (!empty($planting_values['seeding']['location'])) {
-      $location = $planting_values['seeding']['location'];
-    }
+    // If no name was given, build a planting name.
+    if (empty($planting_name)) {
 
-    // The planting will be named based on the season(s), location and crop.
-    $planting_name_parts = array(
-      implode('/', $seasons),
-      $location,
-      $planting_values['crop'],
-    );
-    $planting_name = implode(' ', $planting_name_parts);
+      // The "final" location of the planting is assumed to be the transplanting
+      // location. If a transplanting is not being created, but a seeding is, then
+      // use the seeding location.
+      $location = '';
+      if (!empty($planting_values['transplanting']['location'])) {
+        $location = $planting_values['transplanting']['location'];
+      } elseif (!empty($planting_values['seeding']['location'])) {
+        $location = $planting_values['seeding']['location'];
+      }
+
+      // The planting will be named based on the season(s), location and crop.
+      $planting_name_parts = array(
+        implode('/', $seasons),
+        $location,
+        $planting_values['crop'],
+      );
+      $planting_name = implode(' ', $planting_name_parts);
+    }
 
     // Calculate a transplanting date from seeding date + days to transplant.
     // Only calculate if a seeding date is supplied.
