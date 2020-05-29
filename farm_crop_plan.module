@@ -926,10 +926,12 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       $record['days_to_transplant'] = $planting_values['transplanting']['days_to_transplant'];
     }
 
-    // Update days_to_harvest.
-    if (!empty($planting_values['days_to_harvest'])) {
-      $record['days_to_harvest'] = $planting_values['days_to_harvest'];
+    // Update days_to_harvest. Replace empty string with NULL.
+    $days_to_harvest = $planting_values['days_to_harvest'];
+    if (empty($days_to_harvest)) {
+      $days_to_harvest = NULL;
     }
+    $record['days_to_harvest'] = $days_to_harvest;
 
     // Update harvest_window. Replace empty string with NULL.
     $harvest_window = $planting_values['harvest_window'];
