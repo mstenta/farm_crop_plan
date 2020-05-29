@@ -206,6 +206,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
       'location' => '',
     ),
     'days_to_harvest' => '',
+    'harvest_window' => '',
   );
 
   if (!empty($planting)) {
@@ -226,6 +227,9 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
     // Get the days to harvest.
     $defaults['days_to_harvest'] = $farm_crop_plan_planting['days_to_harvest'];
+
+    // Get the harvest window.
+    $defaults['harvest_window'] = $farm_crop_plan_planting['harvest_window'];
 
     // Define log types to create on planting assets.
     $log_types = array(
@@ -389,13 +393,22 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#weight' => 4,
   );
 
+  // Harvest window.
+  $form['harvest_window'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Harvest window'),
+    '#default_value' => $defaults['harvest_window'],
+    '#element_validate' => array('element_validate_integer_positive'),
+    '#weight' => 5,
+  );
+
   // Planting asset name.
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Planting Name'),
     '#description' => t('The planting asset name will default to "[Season] [Location] [Crop(s)]" but can be modified here. If both a seeding and a transplanting log are created, the transplanting location will be used.' ),
     '#default_value' => $defaults['name'],
-    '#weight' => 5,
+    '#weight' => 6,
   );
 
   return $form;
@@ -917,6 +930,13 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     if (!empty($planting_values['days_to_harvest'])) {
       $record['days_to_harvest'] = $planting_values['days_to_harvest'];
     }
+
+    // Update harvest_window. Replace empty string with NULL.
+    $harvest_window = $planting_values['harvest_window'];
+    if (empty($harvest_window)) {
+      $harvest_window = NULL;
+    }
+    $record['harvest_window'] = $harvest_window;
 
     // Update the Crop Plan Planting.
     drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
