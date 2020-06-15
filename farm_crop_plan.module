@@ -140,6 +140,9 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
   $planting_ids = farm_plan_linked_records('farm_crop_plan_planting', $plan->id);
   $plantings = farm_asset_load_multiple($planting_ids);
 
+  // Sort plantings by name.
+  usort($plantings, function($a, $b) { return strcmp($a->name, $b->name);});
+
   // Iterate through the plantings and build forms.
   foreach ($plantings as $planting) {
 
