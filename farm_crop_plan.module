@@ -153,7 +153,7 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
     $planting_form['#type'] = 'fieldset';
     $planting_form['#collapsible'] = TRUE;
     $planting_form['#collapsed'] = TRUE;
-    $planting_form['#title'] = t('Planting') . ': ' . entity_label('farm_asset', $planting);
+    $planting_form['#title'] = entity_label('farm_asset', $planting);
 
     // Add the planting to the form values, for use in form submission.
     $planting_form['planting'] = array(
