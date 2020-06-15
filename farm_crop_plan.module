@@ -410,6 +410,18 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#weight' => 4,
   );
 
+  // First harvest date.
+  $form['first_harvest_date'] = array(
+    '#type' => 'date_select',
+    '#title' => t('First harvest date'),
+    '#description' => t('Date of first harvest. Use this to plan backwards.'),
+    '#date_format' => $date_format,
+    '#date_label_position' => 'within',
+    '#date_year_range' => '-3:+10',
+    '#default_value' => NULL,
+    '#weight' => 4,
+  );
+
   // Harvest window.
   $form['harvest_window'] = array(
     '#type' => 'textfield',
@@ -473,6 +485,18 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
       $planting_name = $planting['planting']->name;
     }
 
+    // Save harvest info.
+    $harvest_date = $planting['first_harvest_date'];
+    $days_to_harvest = $planting['days_to_harvest'];
+
+    // Ensure days to harvest is supplied with harvest date.
+    if (!empty($harvest_date) && empty($days_to_harvest)) {
+      form_error($element['first_harvest_date'], $planting_name . ': ' . t('Days to harvest must be provided with harvest date.'));
+    }
+
+    // Check if we can plan backwards.
+    $plan_backwards = !empty($harvest_date) && !empty($days_to_harvest);
+
     // Ensure both seeding date and location are provided.
     $seeding_date = $planting['seeding']['date'];
     $seeding_location = $planting['seeding']['location'];
@@ -483,8 +507,8 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
     // Validate seeding info.
     if ($supplied_seeding) {
 
-      // Ensure seeding date is provided.
-      if (empty($seeding_date)) {
+      // Ensure seeding date is provided if not planning backwards.
+      if (!$plan_backwards && empty($seeding_date)) {
         form_error($element['seeding']['date'], $planting_name . ': ' . t('Seeding date must be provided with seeding location.'));
       }
     }
@@ -507,8 +531,8 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
     // Validate transplanting info.
     if ($supplied_transplanting) {
 
-      // If days to transplant is provided, ensure a seeding date is provided.
-      if (!empty($days_to_transplant) && empty($seeding_date)) {
+      // If days to transplant is provided, ensure a seeding date is provided, or planning backwards.
+      if (!empty($days_to_transplant) && (!$plan_backwards && empty($seeding_date))) {
         form_error($element['seeding']['date'], $planting_name . ': ' . t('Seeding date is required to calculate transplanting date from days to transplant.'));
       }
 
@@ -628,9 +652,39 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       $planting_name = implode(' ', $planting_name_parts);
     }
 
+    // Check if we can calculate dates planning backwards.
+    if (!empty($planting_values['first_harvest_date']) && !empty($planting_values['days_to_harvest'])) {
+
+      // Save harvest info.
+      $first_harvest_date = $planting_values['first_harvest_date'];
+      $days_to_harvest = $planting_values['days_to_harvest'];
+
+      // Calculate "days after seeding", start with the days to harvest.
+      // If a transplanting is included this value will be changed.
+      $days_after_seeding = $days_to_harvest;
+
+      // Calculate transplanting date if days to transplant is provided.
+      if (!empty($planting_values['transplanting']['days_to_transplant'])) {
+
+        // Save days to transplant.
+        $days_to_transplant = $planting_values['transplanting']['days_to_transplant'];
+
+        // Calculate transplanting date.
+        $transplanting_timestamp = strtotime('-' . $days_to_harvest . ' days', strtotime($first_harvest_date));
+        $planting_values['transplanting']['date'] = strftime('%Y-%m-%d', $transplanting_timestamp);
+
+        // Update days after seeding variable.
+        $days_after_seeding = $days_to_transplant + $days_to_harvest;
+      }
+
+      // Calculate seeding date.
+      $seeding_timestamp = strtotime('-' . $days_after_seeding . ' days', strtotime($first_harvest_date));
+      $planting_values['seeding']['date'] = strftime('%Y-%m-%d', $seeding_timestamp);
+    }
+
     // Calculate a transplanting date from seeding date + days to transplant.
     // Only calculate if a seeding date is supplied.
-    if (!empty($planting_values['seeding']['date'])) {
+    else if (!empty($planting_values['seeding']['date'])) {
 
       // Save related values.
       $seeding_date = $planting_values['seeding']['date'];
