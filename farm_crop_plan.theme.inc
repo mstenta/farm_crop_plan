@@ -75,14 +75,14 @@ function theme_farm_crop_plan_areas($variables) {
       $plan_start = $transplanting_log->timestamp;
     }
 
-    // Calculate the harvest date. This will be calculated from the seeding
-    // date if it available. Otherwise, the transplanting date will be used.
+    // Calculate the harvest date. This will be calculated from the transplanting
+    // date if it available. Otherwise, the seeding date will be used.
     $harvest_timestamp = NULL;
-    if (!empty($seeding_log->timestamp)) {
-      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $seeding_log->timestamp);
-    }
-    elseif (!empty($transplanting_log->timestamp)) {
+    if (!empty($transplanting_log->timestamp)) {
       $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $transplanting_log->timestamp);
+    }
+    elseif (!empty($seeding_log->timestamp)) {
+      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $seeding_log->timestamp);
     }
 
     // Increase harvest timestamp by harvest days.
