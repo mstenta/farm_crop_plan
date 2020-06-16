@@ -1001,7 +1001,12 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // If the planting was updated, display a message.
       if ($updated_planting) {
         $planting_name = entity_label('farm_asset', $planting_asset);
-        drupal_set_message(t('The planting asset %planting_name was updated.', array('%planting_name' => $planting_name)));
+        $planting_uri = entity_uri('farm_asset', $planting_asset);
+        $planting_url = url($planting_uri['path']);
+        drupal_set_message(
+          t('The planting asset <a href="@planting_url">@planting_name</a> was updated.',
+          array('@planting_url' => $planting_url, '@planting_name' => $planting_name))
+        );
       }
     }
 
