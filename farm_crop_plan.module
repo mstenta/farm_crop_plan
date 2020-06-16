@@ -213,11 +213,21 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     'seeding' => array(
       'date' => NULL,
       'location' => '',
+      'quantity' => array(
+        'measure' => 'count',
+        'value' => NULL,
+        'units' => NULL,
+      ),
     ),
     'transplanting' => array(
       'days_to_transplant' => '',
       'date' => NULL,
       'location' => '',
+      'quantity' => array(
+        'measure' => 'count',
+        'value' => NULL,
+        'units' => NULL,
+      ),
     ),
     'days_to_harvest' => '',
     'harvest_window' => '',
@@ -302,6 +312,15 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
           }
 
           $defaults[$label]['location'] = implode(', ', $areas);
+
+          // Load quantity data from log.
+          $data = farm_quantity_log_data($log);
+          if (!empty($data[0]['value'])) {
+            $quantity = $data[0];
+            $defaults[$label]['quantity']['measure'] = $quantity['measure'];
+            $defaults[$label]['quantity']['value'] = $quantity['value'];
+            $defaults[$label]['quantity']['units'] = $quantity['units'];
+          }
         }
       }
     }
@@ -415,6 +434,40 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
     '#default_value' => $defaults['transplanting']['location'],
   );
+
+  // Save quantity measure options.
+  $quantity_measure_options = farm_quantity_measure_options();
+
+  // Add quantity fields for seeding and transplanting logs.
+  $quantity_log_types = array('seeding', 'transplanting');
+  foreach($quantity_log_types as $type) {
+    $form[$type]['quantity'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Quantity'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form[$type]['quantity']['measure'] = array(
+      '#type' => 'select',
+      '#title' => t('Measure'),
+      '#options' => $quantity_measure_options,
+      '#default_value' => $defaults[$type]['quantity']['measure'],
+    );
+
+    $form[$type]['quantity']['value'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Value'),
+      '#default_value' => $defaults[$type]['quantity']['value'],
+    );
+
+    $form[$type]['quantity']['units'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Units'),
+      '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_quantity_units',
+      '#default_value' => $defaults[$type]['quantity']['units'],
+    );
+  }
 
   // Transplanting info.
   $form['harvest'] = array(
@@ -800,6 +853,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
             'planting_asset' => $planting_asset,
             'date' => $new_date,
             'location' => $new_location,
+            'quantity' => $planting_values[$name]['quantity'],
           );
 
           // Skip updating.
@@ -892,6 +946,46 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
           $updated_log = TRUE;
         }
 
+        // Check if the log quantity changed.
+        // Create array of values to compare.
+        $current_quantity_values = array(
+          'measure' => $current_log_values['quantity']['measure']['#default_value'],
+          'value' => $current_log_values['quantity']['value']['#default_value'],
+          'units' => $current_log_values['quantity']['units']['#default_value'],
+        );
+        $new_quantity_values = $planting_values[$name]['quantity'];
+        $quantity_changed = $current_quantity_values != $new_quantity_values;
+
+        // Update log quantities.
+        if ($quantity_changed) {
+
+          // Load the log entity metadata wrapper.
+          $log_wrapper = entity_metadata_wrapper('log', $planting_values[$name]['log']);
+
+          // Delete quantities from log if any exist.
+          if (!empty($log_wrapper->field_farm_quantity)) {
+            foreach ($log_wrapper->field_farm_quantity as $key => $quantity) {
+              entity_delete('field_collection_item', $quantity->item_id->value());
+              unset($planting_values[$name]['log']->field_farm_quantity[LANGUAGE_NONE][$key]);
+              log_save($planting_values[$name]['log']);
+            }
+          }
+
+          // Build quantity measurements.
+          $measurements = array();
+          if (!empty($planting_values[$name]['quantity']['value'])) {
+            $measurements[] = $planting_values[$name]['quantity'];
+          }
+
+          // If there are quantity measurements, add them to the log.
+          if (!empty($measurements)) {
+            farm_quantity_log_add_measurements($planting_values[$name]['log'], $measurements);
+          }
+
+          log_save($planting_values[$name]['log']);
+          $updated_log = TRUE;
+        }
+
         // If the log was updated, display a message.
         if ($updated_log) {
           $log_name = entity_label('log', $planting_values[$name]['log']);
@@ -956,6 +1050,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
             'planting_asset' => $planting_asset,
             'date' => $date,
             'location' => $location,
+            'quantity' => $planting_values[$name]['quantity'],
           );
         }
       }
@@ -998,6 +1093,17 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       } // Otherwise, create a normal log (without movement location).
       else {
         $log = farm_log_create($type, '', $timestamp, $done, array($planting_asset));
+      }
+
+      // Build quantity measurements.
+      $measurements = array();
+      if (!empty($log_values['quantity']['value'])) {
+        $measurements[] = $log_values['quantity'];
+      }
+
+      // If there are quantity measurements, add them to the log.
+      if (!empty($measurements)) {
+        farm_quantity_log_add_measurements($log, $measurements);
       }
 
       // Create an entity metadata wrapper for the log.
