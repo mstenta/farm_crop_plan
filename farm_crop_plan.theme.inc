@@ -445,7 +445,7 @@ function theme_farm_crop_plan_areas($variables) {
   }
 
   // Add inline CSS.
-  drupal_add_css('table td.planted {background-color: #dff0d8;} table td.harvest {background-color: #9ADB7F;}','inline');
+  drupal_add_css('table td.planted {background-color: #E1EBD5;} table td.harvest {background-color: #9ADB7F;}','inline');
 
   // Generate header columns for each week.
   $header = array('');
