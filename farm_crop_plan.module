@@ -989,7 +989,12 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         // If the log was updated, display a message.
         if ($updated_log) {
           $log_name = entity_label('log', $planting_values[$name]['log']);
-          drupal_set_message(t('The %log_type log %log_name was updated.', array('%log_type' => $name, '%log_name' => $log_name)));
+          $log_uri = entity_uri('log', $planting_values[$name]['log']);
+          $log_url = url($log_uri['path']);
+          drupal_set_message(
+            t('The @log_type log <a href="@log_url">@log_name</a> was updated.',
+              array('@log_type' => $name, '@log_url' => $log_url, '@log_name' => $log_name))
+          );
         }
       }
 
