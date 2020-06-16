@@ -109,6 +109,9 @@ function theme_farm_crop_plan_plantings($variables) {
     // Display a seeding stage.
     if (!empty($seeding_log)) {
 
+      // Save seeding log as first timestamp.
+      $planting_info['first_timestamp'] = $seeding_log->timestamp;
+
       // Generate links to areas referenced by the seeding.
       $area_links = array();
       if (!empty($seeding_log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
@@ -156,6 +159,12 @@ function theme_farm_crop_plan_plantings($variables) {
 
     // Display a transplanting stage.
     if (!empty($transplanting_log)) {
+
+      // Save transplanting log as first timestamp
+      // if seeding log does not exist.
+      if (empty($seeding_log)) {
+        $planting_info['first_timestamp'] = $transplanting_log->timestamp;
+      }
 
       // Generate links to areas referenced by the transplanting.
       $area_links = array();
@@ -210,6 +219,12 @@ function theme_farm_crop_plan_plantings($variables) {
     // Add planting info to plantings array.
     $plantings[$planting_asset->id] = $planting_info;
   }
+
+  // Sort plantings by first timestamp.
+  // first_timestamp is calculated above for efficiency.
+  usort($plantings, function($a, $b) {
+    return $a['first_timestamp'] - $b['first_timestamp'];
+  });
 
   // Generate header columns for each week.
   $header = array('');
