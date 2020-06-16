@@ -318,6 +318,8 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
   // Seeding info.
   $form['seeding'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Seeding'),
     '#weight' => 2,
   );
 
@@ -361,6 +363,8 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
   // Transplanting info.
   $form['transplanting'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Transplanting'),
     '#weight' => 3,
   );
 
@@ -412,17 +416,23 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#default_value' => $defaults['transplanting']['location'],
   );
 
+  // Transplanting info.
+  $form['harvest'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Harvest'),
+    '#weight' => 4,
+  );
+
   // Days to harvest.
-  $form['days_to_harvest'] = array(
+  $form['harvest']['days_to_harvest'] = array(
     '#type' => 'textfield',
     '#title' => t('Days to harvest'),
     '#default_value' => $defaults['days_to_harvest'],
     '#element_validate' => array('element_validate_integer_positive'),
-    '#weight' => 4,
   );
 
   // First harvest date.
-  $form['first_harvest_date'] = array(
+  $form['harvest']['first_harvest_date'] = array(
     '#type' => 'date_select',
     '#title' => t('First harvest date'),
     '#description' => t('Date of first harvest. Use this to plan backwards.'),
@@ -430,16 +440,14 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
     '#default_value' => NULL,
-    '#weight' => 4,
   );
 
   // Harvest window.
-  $form['harvest_window'] = array(
+  $form['harvest']['harvest_window'] = array(
     '#type' => 'textfield',
     '#title' => t('Harvest window'),
     '#default_value' => $defaults['harvest_window'],
     '#element_validate' => array('element_validate_integer_positive'),
-    '#weight' => 5,
   );
 
   // Planting asset name.
@@ -497,12 +505,12 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
     }
 
     // Save harvest info.
-    $harvest_date = $planting['first_harvest_date'];
-    $days_to_harvest = $planting['days_to_harvest'];
+    $harvest_date = $planting['harvest']['first_harvest_date'];
+    $days_to_harvest = $planting['harvest']['days_to_harvest'];
 
     // Ensure days to harvest is supplied with harvest date.
     if (!empty($harvest_date) && empty($days_to_harvest)) {
-      form_error($element['first_harvest_date'], $planting_name . ': ' . t('Days to harvest must be provided with harvest date.'));
+      form_error($element['harvest']['first_harvest_date'], $planting_name . ': ' . t('Days to harvest must be provided with harvest date.'));
     }
 
     // Check if we can plan backwards.
@@ -664,11 +672,11 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     }
 
     // Check if we can calculate dates planning backwards.
-    if (!empty($planting_values['first_harvest_date']) && !empty($planting_values['days_to_harvest'])) {
+    if (!empty($planting_values['harvest']['first_harvest_date']) && !empty($planting_values['harvest']['days_to_harvest'])) {
 
       // Save harvest info.
-      $first_harvest_date = $planting_values['first_harvest_date'];
-      $days_to_harvest = $planting_values['days_to_harvest'];
+      $first_harvest_date = $planting_values['harvest']['first_harvest_date'];
+      $days_to_harvest = $planting_values['harvest']['days_to_harvest'];
 
       // Calculate "days after seeding", start with the days to harvest.
       // If a transplanting is included this value will be changed.
@@ -1020,14 +1028,14 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     }
 
     // Update days_to_harvest. Replace empty string with NULL.
-    $days_to_harvest = $planting_values['days_to_harvest'];
+    $days_to_harvest = $planting_values['harvest']['days_to_harvest'];
     if (empty($days_to_harvest)) {
       $days_to_harvest = NULL;
     }
     $record['days_to_harvest'] = $days_to_harvest;
 
     // Update harvest_window. Replace empty string with NULL.
-    $harvest_window = $planting_values['harvest_window'];
+    $harvest_window = $planting_values['harvest']['harvest_window'];
     if (empty($harvest_window)) {
       $harvest_window = NULL;
     }
