@@ -565,8 +565,17 @@ function farm_crop_plan_timeline_table_header($start, $end) {
   $num_weeks = farm_crop_plan_timeline_num_weeks($start, $end);
   $time = $start;
   for ($i = 0; $i < $num_weeks; $i++) {
-    $header[] = date('M j', $time);
-    $time = strtotime('+7 days', $time);
+    $date = date('M j', $time);
+    $next_time = strtotime('+7 days', $time);
+    if (REQUEST_TIME >= $time && REQUEST_TIME <= $next_time) {
+      drupal_add_css('table th.current {background-color: #dff0d8;}','inline');
+      $date = array(
+        'class' => 'current',
+        'data' => $date,
+      );
+    }
+    $header[] = $date;
+    $time = $next_time;
   }
   return $header;
 }
