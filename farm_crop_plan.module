@@ -910,7 +910,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         if ($new_location != $default_location) {
 
           // Load new areas.
-          $areas = farm_area_parse_names($new_location, TRUE);
+          $areas = farm_term_parse_names($new_location, 'farm_areas', TRUE);
 
           // Load the movement information associated with the log.
           if (!empty($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
@@ -1091,7 +1091,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // If the location is available, load areas.
       $areas = array();
       if (!empty($log_values['location'])) {
-        $areas = farm_area_parse_names($log_values['location'], TRUE);
+        $areas = farm_term_parse_names($log_values['location'], 'farm_areas', TRUE);
       }
 
       // Mark the log as done if the date is in the past.
