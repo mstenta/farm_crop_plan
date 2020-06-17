@@ -234,6 +234,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   );
 
   if (!empty($planting)) {
+
     // Get the planting metadata wrapper.
     $planting_wrapper = entity_metadata_wrapper('farm_asset', $planting);
 
@@ -591,7 +592,6 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
       form_error($element['seeding'], $planting_name . ': ' .  t('Seeding log cannot be removed.'));
     }
 
-
     // Ensure both transplanting date and location are provided.
     $days_to_transplant = $planting['transplanting']['days_to_transplant'];
     $transplanting_date = $planting['transplanting']['date'];
@@ -711,7 +711,8 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       $location = '';
       if (!empty($planting_values['transplanting']['location'])) {
         $location = $planting_values['transplanting']['location'];
-      } elseif (!empty($planting_values['seeding']['location'])) {
+      }
+      elseif (!empty($planting_values['seeding']['location'])) {
         $location = $planting_values['seeding']['location'];
       }
 
@@ -924,7 +925,8 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
               $movement_wrapper->field_farm_move_to[] = $area;
             }
             $movement_wrapper->save();
-          } else {
+          }
+          else {
 
             // Add a new movement to the log.
             $movement = entity_create('field_collection_item', array('field_name' => 'field_farm_movement'));
@@ -1053,7 +1055,6 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       foreach ($log_types as $name => $type) {
         $date = $planting_values[$name]['date'];
         $location = $planting_values[$name]['location'];
-
         if (!empty($date)) {
           $new_logs[] = array(
             'type' => $type,
@@ -1100,7 +1101,9 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // If there is a location, create a movement log.
       if (!empty($log_values['location'])) {
         $log = farm_movement_create($planting_asset, $areas, $timestamp, $type, $done);
-      } // Otherwise, create a normal log (without movement location).
+      }
+
+      // Otherwise, create a normal log (without movement location).
       else {
         $log = farm_log_create($type, '', $timestamp, $done, array($planting_asset));
       }
