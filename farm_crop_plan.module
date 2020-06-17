@@ -691,9 +691,9 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     $planting_values = $planting_info['submitted'];
     $current_values = $planting_info['current'];
 
-    // Bail if planting has no values.
+    // Skip if planting has no values.
     if (empty($planting_values)) {
-      return;
+      continue;
     }
 
     // Start array of logs to create.
