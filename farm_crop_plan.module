@@ -688,7 +688,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
   if (!empty($form_state['values']['plantings'])) {
     foreach ($form_state['values']['plantings'] as $planting_id => $planting_values) {
       $plantings[] = array(
-        'submitted' => $form_state['values']['plantings'][$planting_id],
+        'submitted' => $planting_values,
         'current' => $form['plantings'][$planting_id],
       );
     }
