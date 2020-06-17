@@ -228,7 +228,7 @@ function theme_farm_crop_plan_plantings($variables) {
 
   // Generate header columns for each week.
   $header = array('');
-  $num_weeks = (int) round(($plan_end - $plan_start) / (60 * 60 * 24 * 7));
+  $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
   $time = $plan_start;
   for ($i = 0; $i < $num_weeks; $i++) {
     $header[] = date('M j', $time);
@@ -449,7 +449,7 @@ function theme_farm_crop_plan_areas($variables) {
 
   // Generate header columns for each week.
   $header = array('');
-  $num_weeks = (int) round(($plan_end - $plan_start) / (60 * 60 * 24 * 7));
+  $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
   $time = $plan_start;
   for ($i = 0; $i < $num_weeks; $i++) {
     $header[] = date('M j', $time);
@@ -557,4 +557,19 @@ function theme_farm_crop_plan_areas($variables) {
   $output .= theme('table', $options);
 
   return $output;
+}
+
+/**
+ * Helper function for calculating the number of weeks in a given time span.
+ *
+ * @param $start
+ *   Timestamp representing when the timeline starts.
+ * @param $end
+ *   Timestamp representing when the timeline ends.
+ *
+ * @return int
+ *   Returns the number of weeks between the start and end timestamps.
+ */
+function farm_crop_plan_timeline_num_weeks($start, $end) {
+  return (int) round(($end - $start) / (60 * 60 * 24 * 7));
 }
