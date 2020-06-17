@@ -146,7 +146,7 @@ function theme_farm_crop_plan_plantings($variables) {
 
       // Add area links if location is included.
       if (!empty($area_links)) {
-        $log_text .= '<br /> in <small>' . implode('', $area_links) . '</small>';
+        $log_text .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
       }
 
       $stages[] = array(
@@ -192,7 +192,7 @@ function theme_farm_crop_plan_plantings($variables) {
 
       // Add area links if location is included.
       if (!empty($area_links)) {
-        $log_text .= '<br /> to <small>' . implode('', $area_links) . '</small>';
+        $log_text .= '<br /> to <small>' . implode(', ', $area_links) . '</small>';
       }
 
       $stages[] = array(
