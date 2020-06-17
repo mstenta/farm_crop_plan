@@ -116,15 +116,59 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
   // Reference the entity content object.
   $content = &$entity->content;
 
-  $content['areas'] = array(
-    '#markup' => theme('farm_crop_plan_plantings', array('plan_id' => $entity->id)),
-    '#weight' => 100,
+  // Add the crop plan form.
+  $content['form'] = drupal_get_form('farm_crop_plan_form', $entity);
+  $content['form']['#weight'] = 100;
+}
+
+/**
+ * Crop plan form.
+ */
+function farm_crop_plan_form($form, &$form_state, $plan) {
+  $form = array();
+
+  // Add an options fieldset.
+  $form['options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
-  $content['plantings'] = array(
-    '#markup' => theme('farm_crop_plan_areas', array('plan_id' => $entity->id)),
-    '#weight' => 101,
+  // Toggle the timeline view by planting (default) or by area.
+  $form['options']['mode'] = array(
+    '#type' => 'radios',
+    '#title' => t('Organize timeline'),
+    '#options' => array(
+      'planting' => t('by planting'),
+      'area' => t('by area'),
+    ),
+    '#default_value' => 'planting',
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_timeline_ajax',
+      'wrapper' => 'crop-plan-timeline',
+    ),
   );
+
+  // Crop plan timeline visualization.
+  $theme = 'farm_crop_plan_plantings';
+  if (isset($form_state['values']['mode']) && $form_state['values']['mode'] == 'area') {
+    $theme = 'farm_crop_plan_areas';
+  }
+  $form['timeline'] = array(
+    '#markup' => theme($theme, array('plan_id' => $plan->id)),
+    '#prefix' => '<div id="crop-plan-timeline">',
+    '#suffix' => '</div>',
+  );
+
+  return $form;
+}
+
+/**
+ * Crop plan form mode ajax callback.
+ */
+function farm_crop_plan_form_timeline_ajax($form, $form_state) {
+  return $form['timeline'];
 }
 
 /**
