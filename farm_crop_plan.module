@@ -198,10 +198,11 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
  * Planting details sub-form.
  */
 function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
+  $form = array();
 
   // If a plan ID is not available, bail.
   if (empty($plan->id)) {
-    return array();
+    return $form;
   }
 
   // Define the date format for logs.
