@@ -797,9 +797,6 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
       // Get the planting asset.
       $planting_asset = $planting_values['planting'];
 
-      // Get the planting id.
-      $planting_id = $planting_asset->id;
-
       // Keep track if planting was updated, so we can set a message afterwards.
       $updated_planting = FALSE;
 
