@@ -227,13 +227,7 @@ function theme_farm_crop_plan_plantings($variables) {
   });
 
   // Generate header columns for each week.
-  $header = array('');
-  $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
-  $time = $plan_start;
-  for ($i = 0; $i < $num_weeks; $i++) {
-    $header[] = date('M j', $time);
-    $time = strtotime('+7 days', $time);
-  }
+  $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
   // Generate rows for each area/planting combination.
   $rows = array();
@@ -273,6 +267,7 @@ function theme_farm_crop_plan_plantings($variables) {
     }
 
     // Generate all cells in the row.
+    $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
     for ($j = 0; $j < $num_weeks; $j++) {
       if (isset($stage_weeks[$j])) {
         $row[] = $stage_weeks[$j];
@@ -448,13 +443,7 @@ function theme_farm_crop_plan_areas($variables) {
   drupal_add_css('table td.planted {background-color: #E1EBD5;} table td.harvest {background-color: #9ADB7F;}','inline');
 
   // Generate header columns for each week.
-  $header = array('');
-  $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
-  $time = $plan_start;
-  for ($i = 0; $i < $num_weeks; $i++) {
-    $header[] = date('M j', $time);
-    $time = strtotime('+7 days', $time);
-  }
+  $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
   // Generate rows for each area/planting combination.
   $rows = array();
@@ -529,6 +518,7 @@ function theme_farm_crop_plan_areas($variables) {
       );
 
       // Generate all cells in the row.
+      $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
       for ($j = 0; $j < $num_weeks; $j++) {
         if ($j == $start_week) {
           $row[] = $planting_row;
@@ -557,6 +547,28 @@ function theme_farm_crop_plan_areas($variables) {
   $output .= theme('table', $options);
 
   return $output;
+}
+
+/**
+ * Helper function for generating header columns for each week.
+ *
+ * @param $start
+ *   Timestamp representing when the timeline starts.
+ * @param $end
+ *   Timestamp representing when the timeline ends.
+ *
+ * @return array
+ *   Returns a header array for use with theme_table().
+ */
+function farm_crop_plan_timeline_table_header($start, $end) {
+  $header = array('');
+  $num_weeks = farm_crop_plan_timeline_num_weeks($start, $end);
+  $time = $start;
+  for ($i = 0; $i < $num_weeks; $i++) {
+    $header[] = date('M j', $time);
+    $time = strtotime('+7 days', $time);
+  }
+  return $header;
 }
 
 /**
