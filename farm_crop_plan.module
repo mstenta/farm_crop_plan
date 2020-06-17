@@ -207,6 +207,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   // Define the date format for logs.
   $date_format = 'Y-m-d';
 
+  // Define form defaults.
   $defaults = array(
     'name' => NULL,
     'crop' => NULL,
@@ -233,6 +234,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     'harvest_window' => '',
   );
 
+  // Load values from the planting and logs to override the defaults.
   if (!empty($planting)) {
 
     // Get the planting metadata wrapper.
@@ -262,6 +264,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
       'seeding' => 'farm_seeding'
     );
 
+    // Iterate through the log types.
     foreach($log_types as $label => $type) {
 
       // Save the field name to lookup based on the log type.
@@ -312,6 +315,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
             }
           }
 
+          // Assemble the location name as a comma-separated list.
           $defaults[$label]['location'] = implode(', ', $areas);
 
           // Load quantity data from log.
@@ -449,6 +453,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
       '#collapsed' => TRUE,
     );
 
+    // Quantity measure.
     $form[$type]['quantity']['measure'] = array(
       '#type' => 'select',
       '#title' => t('Measure'),
@@ -456,12 +461,14 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
       '#default_value' => $defaults[$type]['quantity']['measure'],
     );
 
+    // Quantity value.
     $form[$type]['quantity']['value'] = array(
       '#type' => 'textfield',
       '#title' => t('Value'),
       '#default_value' => $defaults[$type]['quantity']['value'],
     );
 
+    // Quantity units.
     $form[$type]['quantity']['units'] = array(
       '#type' => 'textfield',
       '#title' => t('Units'),
@@ -540,6 +547,7 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
     }
   }
 
+  // Iterate through the submitted planting values.
   foreach($plantings as $form_values) {
 
     // Load the planting form and form_state.
@@ -638,6 +646,7 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
         $crop_required = FALSE;
       }
 
+      // Set a form error if the corp is required.
       if ($crop_required) {
         form_error($element['crop'], $planting_name . ': ' . t('Crop cannot be empty.'));
       }
@@ -913,8 +922,10 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
           // Load new areas.
           $areas = farm_term_parse_names($new_location, 'farm_areas', TRUE);
 
-          // Load the movement information associated with the log.
+          // If the log has a movement associated with it...
           if (!empty($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
+
+            // Load the movement information associated with the log.
             $movement = field_collection_item_load($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value']);
             $movement_wrapper = entity_metadata_wrapper('field_collection_item', $movement);
             $movement_wrapper->field_farm_move_to = array();
@@ -926,6 +937,8 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
             }
             $movement_wrapper->save();
           }
+
+          // Or, if the log does not have a movement associated with it...
           else {
 
             // Add a new movement to the log.
@@ -984,6 +997,7 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
             farm_quantity_log_add_measurements($planting_values[$name]['log'], $measurements);
           }
 
+          // Save the log and remember that we updated it.
           log_save($planting_values[$name]['log']);
           $updated_log = TRUE;
         }
