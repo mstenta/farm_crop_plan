@@ -1019,24 +1019,69 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
           // Load the log entity metadata wrapper.
           $log_wrapper = entity_metadata_wrapper('log', $planting_values[$name]['log']);
 
-          // Delete quantities from log if any exist.
-          if (!empty($log_wrapper->field_farm_quantity)) {
-            foreach ($log_wrapper->field_farm_quantity as $key => $quantity) {
-              entity_delete('field_collection_item', $quantity->item_id->value());
-              unset($planting_values[$name]['log']->field_farm_quantity[LANGUAGE_NONE][$key]);
-              log_save($planting_values[$name]['log']);
-            }
-          }
+          // Check if submitted quantity has a value.
+          // Quantities are only saved if a value is included.
+          $has_quantity = !(empty($planting_values[$name]['quantity']['value']));
 
-          // Build quantity measurements.
+          // Build new quantity measurements.
           $measurements = array();
-          if (!empty($planting_values[$name]['quantity']['value'])) {
+          if ($has_quantity) {
             $measurements[] = $planting_values[$name]['quantity'];
           }
 
-          // If there are quantity measurements, add them to the log.
-          if (!empty($measurements)) {
-            farm_quantity_log_add_measurements($planting_values[$name]['log'], $measurements);
+          // Check for existing quantity.
+          if (isset($log_wrapper->field_farm_quantity[0])) {
+
+            // Get the first quantity.
+            $quantity_wrapper = $log_wrapper->field_farm_quantity[0];
+
+            // Update existing quantity.
+            if ($has_quantity) {
+              // Get the measurement.
+              $measurement = $measurements[0];
+
+              // Set the quantity measure, if available.
+              if (!empty($measurement['measure'])) {
+                $quantity_wrapper->field_farm_quantity_measure->set($measurement['measure']);
+              }
+
+              // Set the quantity value, if available.
+              if (!empty($measurement['value'])) {
+
+                // Clear the old value.
+                $quantity_wrapper->field_farm_quantity_value = array();
+
+                $value_fraction = fraction_from_decimal($measurement['value']);
+                $quantity_wrapper->field_farm_quantity_value->numerator->set($value_fraction->getNumerator());
+                $quantity_wrapper->field_farm_quantity_value->denominator->set($value_fraction->getDenominator());
+              }
+
+              // Set the units, if available.
+              if (!empty($measurement['units'])) {
+
+                // Load/create units term.
+                $units_term = farm_term($measurement['units'], 'farm_quantity_units');
+
+                // Set the quantity units.
+                $quantity_wrapper->field_farm_quantity_units = $units_term;
+              }
+
+              // Save the quantity.
+              $quantity_wrapper->save();
+            }
+            // Remove the first quantity.
+            else {
+              entity_delete('field_collection_item', $quantity_wrapper->item_id->value());
+              unset($planting_values[$name]['log']->field_farm_quantity[LANGUAGE_NONE][0]);
+            }
+          }
+          // No quantities exist, create a new one.
+          else if ($has_quantity) {
+
+            // If there are quantity measurements, add them to the log.
+            if (!empty($measurements)) {
+              farm_quantity_log_add_measurements($planting_values[$name]['log'], $measurements);
+            }
           }
 
           // Save the log and remember that we updated it.
