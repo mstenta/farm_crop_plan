@@ -1,0 +1,12 @@
+table.farm-crop-plan th.current {
+  background-color: #dff0d8;
+}
+table.farm-crop-plan td.planted {
+  background-color: #E1EBD5;
+}
+table.farm-crop-plan td.transplanted {
+  background-color: #dff0d8;
+}
+table.farm-crop-plan td.harvest {
+  background-color: #9ADB7F;
+}

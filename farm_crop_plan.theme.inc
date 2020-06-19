@@ -291,12 +291,14 @@ function theme_farm_crop_plan_plantings($variables) {
   $options = array(
     'header' => $header,
     'rows' => $rows,
+    'attributes' => array(
+      'class' => 'farm-crop-plan',
+    ),
   );
   $output .= theme('table', $options);
 
-
-  // Add inline CSS.
-  drupal_add_css('table td.planted {background-color: #E1EBD5;} table td.transplanted {background-color: #dff0d8;} table td.harvest {background-color: #9ADB7F;}','inline');
+  // Add CSS.
+  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
 
   return $output;
 }
@@ -439,9 +441,6 @@ function theme_farm_crop_plan_areas($variables) {
     }
   }
 
-  // Add inline CSS.
-  drupal_add_css('table td.planted {background-color: #E1EBD5;} table td.harvest {background-color: #9ADB7F;}','inline');
-
   // Generate header columns.
   $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
@@ -543,8 +542,14 @@ function theme_farm_crop_plan_areas($variables) {
   $options = array(
     'header' => $header,
     'rows' => $rows,
+    'attributes' => array(
+      'class' => 'farm-crop-plan',
+    ),
   );
   $output .= theme('table', $options);
+
+  // Add CSS.
+  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
 
   return $output;
 }
@@ -572,7 +577,6 @@ function farm_crop_plan_timeline_table_header($start, $end) {
     );
     $next_time = strtotime('+7 days', $time);
     if (REQUEST_TIME >= $time && REQUEST_TIME <= $next_time) {
-      drupal_add_css('table th.current {background-color: #dff0d8;}','inline');
       $date['class'] = 'current';
     }
     $header[] = $date;
