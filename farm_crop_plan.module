@@ -88,13 +88,14 @@ function farm_crop_plan_access($plan) {
  */
 function farm_crop_plan_theme($existing, $type, $theme, $path) {
   return array(
-    'farm_crop_plan_areas' => array(
+    'farm_crop_plan_timeline' => array(
       'variables' => array(
         'plan_id' => NULL,
+        'mode' => 'planting',
       ),
       'file' => 'farm_crop_plan.theme.inc',
     ),
-    'farm_crop_plan_plantings' => array(
+    'farm_crop_plan_areas' => array(
       'variables' => array(
         'plan_id' => NULL,
       ),
@@ -127,6 +128,12 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
 function farm_crop_plan_form($form, &$form_state, $plan) {
   $form = array();
 
+  // Set the mode.
+  $mode = 'planting';
+  if (!empty($form_state['values']['mode']) &&  $form_state['values']['mode'] == 'area') {
+    $mode = 'area';
+  }
+
   // Add an options fieldset.
   $form['options'] = array(
     '#type' => 'fieldset',
@@ -151,12 +158,8 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   );
 
   // Crop plan timeline visualization.
-  $theme = 'farm_crop_plan_plantings';
-  if (isset($form_state['values']['mode']) && $form_state['values']['mode'] == 'area') {
-    $theme = 'farm_crop_plan_areas';
-  }
   $form['timeline'] = array(
-    '#markup' => theme($theme, array('plan_id' => $plan->id)),
+    '#markup' => theme('farm_crop_plan_timeline', array('plan_id' => $plan->id, 'mode' => $mode)),
     '#prefix' => '<div id="crop-plan-timeline">',
     '#suffix' => '</div>',
   );

@@ -6,33 +6,95 @@
  */
 
 /**
- * Theme function for the crop plan, organized by planting.
+ * Theme function for the crop plan timeline.
  */
-function theme_farm_crop_plan_plantings($variables) {
-  $output = '';
+function theme_farm_crop_plan_timeline($variables) {
 
   // Get the plan ID, bail if empty.
   if (empty($variables['plan_id'])) {
-    return $output;
+    return '';
   }
   $plan_id = $variables['plan_id'];
 
-  // Load record from the {farm_crop_plan_planting} table.
+  // Get the timeline display mode, bail if it isn't "planting" or "area".
+  if (empty($variables['mode']) || !in_array($variables['mode'], array('planting', 'area'))) {
+    return '';
+  }
+  $mode = $variables['mode'];
+
+  // Collect information about plantings in the plan.
+  $plantings = farm_crop_plan_timeline_plantings($plan_id);
+
+  // If there are no plantings, bail.
+  if (empty($plantings)) {
+    return '';
+  }
+
+  // Based on the planting info, calculate the plan's start and end timestamps.
+  $plan_start = NULL;
+  $plan_end = NULL;
+  foreach ($plantings as $planting) {
+    foreach ($planting['stages'] as $stage) {
+      if ((!empty($stage['start']) && $stage['start'] < $plan_start) || is_null($plan_start)) {
+        $plan_start = $stage['start'];
+      }
+      if ((!empty($stage['end']) && $stage['end'] > $plan_end) || is_null($plan_end)) {
+        $plan_end = $stage['end'];
+      }
+    }
+  }
+
+  // Generate header columns.
+  $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
+
+  // Build rows, depending on the mode.
+  if ($mode == 'area') {
+    $rows = farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end);
+  }
+  else {
+    $rows = farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_end);
+  }
+
+  // If there are no rows, bail.
+  if (empty($rows)) {
+    return '';
+  }
+
+  // Add CSS.
+  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
+
+  // Render the table.
+  $options = array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array(
+      'class' => 'farm-crop-plan',
+    ),
+  );
+  return theme('table', $options);
+}
+
+/**
+ * Collect information about plantings in a plan for timeline rendering.
+ *
+ * @param $plan_id
+ *   The ID of the plan.
+ *
+ * @return array
+ *   Returns an array of planting information.
+ */
+function farm_crop_plan_timeline_plantings($plan_id) {
+  $plantings = array();
+
+  // Load records from the {farm_crop_plan_planting} table.
   $planting_records = db_query('SELECT * FROM {farm_crop_plan_planting} WHERE plan_id = :plan_id', array(':plan_id' => $plan_id))->fetchAll();
 
   // If there are no planting records, bail.
   if (empty($planting_records)) {
-    return $output;
+    return $plantings;
   }
 
-  // Keep track of the earliest and latest timestamps in this plan.
-  $plan_start = NULL;
-  $plan_end= NULL;
-
-  // Maintain an array of plantings and logs to display.
-  $plantings = array();
-
-  // Iterate through the planting records.
+  // Iterate through the planting records to collect the information we need.
   foreach ($planting_records as $planting_record) {
 
     // Start an array of planting info.
@@ -74,14 +136,6 @@ function theme_farm_crop_plan_plantings($variables) {
       continue;
     }
 
-    // Update the plan's earliest timestamp.
-    if ((!empty($seeding_log->timestamp) && $seeding_log->timestamp < $plan_start) || is_null($plan_start)) {
-      $plan_start = $seeding_log->timestamp;
-    }
-    if ((!empty($transplanting_log->timestamp) && $transplanting_log->timestamp < $plan_start) || is_null($plan_start)) {
-      $plan_start = $transplanting_log->timestamp;
-    }
-
     // Calculate the harvest date. This will be calculated from the transplanting
     // date if it available. Otherwise, the seeding date will be used.
     $harvest_timestamp = NULL;
@@ -98,37 +152,14 @@ function theme_farm_crop_plan_plantings($variables) {
       $last_harvest_timestamp = strtotime('+' . $harvest_window . ' days', $harvest_timestamp);
     }
 
-    // Update the plan's latest timestamp.
-    if ($last_harvest_timestamp > $plan_end) {
-      $plan_end = $last_harvest_timestamp;
-    }
-
     // Start array of stages to visualize.
     $stages = array();
 
     // Display a seeding stage.
     if (!empty($seeding_log)) {
 
-      // Save seeding log as first timestamp.
-      $planting_info['first_timestamp'] = $seeding_log->timestamp;
-
       // Generate links to areas referenced by the seeding.
-      $area_links = array();
-      if (!empty($seeding_log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
-        $movement = field_collection_item_load($seeding_log->field_farm_movement[LANGUAGE_NONE][0]['value']);
-        if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
-          foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
-            // Get the area label and URI.
-            $area = taxonomy_term_load($area_ref['tid']);
-            $entity_label = entity_label('taxonomy_term', $area);
-            $entity_uri = entity_uri('taxonomy_term', $area);
-
-            // Generate a link to the area.
-            $area_link = l(t($entity_label), $entity_uri['path']);
-            $area_links[] = $area_link;
-          }
-        }
-      }
+      $area_links = farm_crop_plan_log_area_links($seeding_log);
 
       // Determine the timestamp when the planting will leave this area.
       // This will either be the transplanting timestamp (if a transplant
@@ -153,6 +184,7 @@ function theme_farm_crop_plan_plantings($variables) {
         'start' => $seeding_log->timestamp,
         'end' => $end,
         'type' => 'planted',
+        'areas' => array_keys($area_links),
         'data' => $log_text,
       );
     }
@@ -160,29 +192,8 @@ function theme_farm_crop_plan_plantings($variables) {
     // Display a transplanting stage.
     if (!empty($transplanting_log)) {
 
-      // Save transplanting log as first timestamp
-      // if seeding log does not exist.
-      if (empty($seeding_log)) {
-        $planting_info['first_timestamp'] = $transplanting_log->timestamp;
-      }
-
       // Generate links to areas referenced by the transplanting.
-      $area_links = array();
-      if (!empty($transplanting_log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
-        $movement = field_collection_item_load($transplanting_log->field_farm_movement[LANGUAGE_NONE][0]['value']);
-        if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
-          foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
-            // Get the area label and URI.
-            $area = taxonomy_term_load($area_ref['tid']);
-            $entity_label = entity_label('taxonomy_term', $area);
-            $entity_uri = entity_uri('taxonomy_term', $area);
-
-            // Generate a link to the area.
-            $area_link = l(t($entity_label), $entity_uri['path']);
-            $area_links[] = $area_link;
-          }
-        }
-      }
+      $area_links = farm_crop_plan_log_area_links($transplanting_log);
 
       // Generate a link to the transplanting log.
       $log_label = 'Transplanting: ' . date('Y-m-d', $transplanting_log->timestamp);
@@ -199,16 +210,21 @@ function theme_farm_crop_plan_plantings($variables) {
         'start' => $transplanting_log->timestamp,
         'end' => $harvest_timestamp,
         'type' => 'transplanted',
+        'areas' => array_keys($area_links),
         'data' => $log_text,
       );
     }
 
     // Display a harvest stage.
+    // The harvest will take place in the transplant area, if it exists.
+    // Otherwise it will take place in the seeding area.
+    $harvest_areas = !empty($area_links) ? array_keys($area_links) : array();
     if (!empty($planting_record->harvest_window)) {
       $stages[] = array(
         'start' => $harvest_timestamp,
         'end' => $last_harvest_timestamp,
         'type' => 'harvest',
+        'areas' => $harvest_areas,
         'data' => '<small>Harvest ' . date('Y-m-d', $harvest_timestamp) . ' for ' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
       );
     }
@@ -220,19 +236,100 @@ function theme_farm_crop_plan_plantings($variables) {
     $plantings[$planting_asset->id] = $planting_info;
   }
 
-  // Sort plantings by first timestamp.
-  // first_timestamp is calculated above for efficiency.
-  usort($plantings, function($a, $b) {
-    return $a['first_timestamp'] - $b['first_timestamp'];
-  });
+  return $plantings;
+}
 
-  // Generate header columns.
-  $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
+/**
+ * Sort plantings by first timestamp.
+ */
+function farm_crop_plan_plantings_sort($a, $b) {
+  $a_start = farm_crop_plan_planting_start($a);
+  $b_start = farm_crop_plan_planting_start($b);
+  if ($a_start == $b_start) {
+    return 0;
+  }
+  return ($a_start < $b_start) ? -1 : 1;
+}
 
-  // Generate rows for each area/planting combination.
+/**
+ * Determine the start timestamp of a planting.
+ *
+ * @param array $planting
+ *   An array of planting info from farm_crop_plan_plantings().
+ *
+ * @return int|bool
+ *   Returns the timestamp of the earliest stage. Returns FALSE if a timestamp
+ *   cannot be found.
+ */
+function farm_crop_plan_planting_start($planting) {
+  $start = FALSE;
+  foreach ($planting['stages'] as $stage) {
+    if ($stage['start'] < $start || $start === FALSE) {
+      $start = $stage['start'];
+    }
+  }
+  return $start;
+}
+
+/**
+ * Build an array of area links from a movement log.
+ *
+ * @param $log
+ *   The log entity.
+ *
+ * @return array
+ *   An array of links to areas, keyed by area ID.
+ */
+function farm_crop_plan_log_area_links($log) {
+  $area_links = array();
+  if (!empty($log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
+    $movement = field_collection_item_load($log->field_farm_movement[LANGUAGE_NONE][0]['value']);
+    if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
+      foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
+
+        // If the term ID is not available, skip it.
+        if (empty($area_ref['tid'])) {
+          continue;
+        }
+        $tid = $area_ref['tid'];
+
+        // Load the area.
+        $area = taxonomy_term_load($tid);
+
+        // Get the area label and URI.
+        $entity_label = entity_label('taxonomy_term', $area);
+        $entity_uri = entity_uri('taxonomy_term', $area);
+
+        // Generate a link to the area.
+        $area_link = l(t($entity_label), $entity_uri['path']);
+        $area_links[$tid] = $area_link;
+      }
+    }
+  }
+  return $area_links;
+}
+
+/**
+ * Build table rows for the "by planting" mode.
+ *
+ * @param array $plantings
+ *   An array of planting info compiled by theme_farm_crop_plan_timeline().
+ * @param int $plan_start
+ *   The timestamp when the plan starts.
+ * @param int $plan_end
+ *   The timestamp when the plan ends.
+ *
+ * @return array
+ *   An array of rows for use in theme_table().
+ */
+function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_end) {
   $rows = array();
-  foreach ($plantings as $planting_id => $planting) {
 
+  // Sort plantings by their start timestamps.
+  usort($plantings, 'farm_crop_plan_plantings_sort');
+
+  // Iterate through the plantings and build rows.
+  foreach ($plantings as $planting) {
     $row = array();
 
     // Generate a planting row to be added to the table.
@@ -287,166 +384,59 @@ function theme_farm_crop_plan_plantings($variables) {
     $rows[] = $row;
   }
 
-  // Render the table.
-  $options = array(
-    'header' => $header,
-    'rows' => $rows,
-    'attributes' => array(
-      'class' => 'farm-crop-plan',
-    ),
-  );
-  $output .= theme('table', $options);
-
-  // Add CSS.
-  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
-
-  return $output;
+  return $rows;
 }
 
 /**
- * Theme function for the crop plan, organized by area.
+ * Build table rows for the "by area" mode.
+ *
+ * @param array $plantings
+ *   An array of planting info compiled by theme_farm_crop_plan_timeline().
+ * @param int $plan_start
+ *   The timestamp when the plan starts.
+ * @param int $plan_end
+ *   The timestamp when the plan ends.
+ *
+ * @return array
+ *   An array of rows for use in theme_table().
  */
-function theme_farm_crop_plan_areas($variables) {
-  $output = '';
+function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
+  $rows = array();
 
-  // Get the plan ID, bail if empty.
-  if (empty($variables['plan_id'])) {
-    return $output;
-  }
-  $plan_id = $variables['plan_id'];
+  // Sort plantings by their start timestamps.
+  usort($plantings, 'farm_crop_plan_plantings_sort');
 
-  // Load record from the {farm_crop_plan_planting} table.
-  $planting_records = db_query('SELECT * FROM {farm_crop_plan_planting} WHERE plan_id = :plan_id', array(':plan_id' => $plan_id))->fetchAll();
-
-  // If there are no planting records, bail.
-  if (empty($planting_records)) {
-    return $output;
-  }
-
-  // Keep track of the earliest and latest timestamps in this plan.
-  $plan_start = NULL;
-  $plan_end= NULL;
-
-  // Maintain an index of plantings by area.
+  // Group the plantings into the areas that they are in.
   $areas_plantings = array();
+  foreach ($plantings as $delta => $planting) {
+    foreach ($planting['stages'] as $stage) {
+      foreach ($stage['areas'] as $area_id) {
 
-  // Iterate through the planting records.
-  foreach ($planting_records as $planting_record) {
-
-    // Load the planting asset.
-    $planting_asset = farm_asset_load($planting_record->asset_id);
-
-    // Load "Days to harvest". Skip if empty.
-    if (empty($planting_record->days_to_harvest)) {
-      continue;
-    }
-    $days_to_harvest = $planting_record->days_to_harvest;
-
-    // Load "Harvest window". Default to 0 days.
-    $harvest_window = $planting_record->harvest_window;
-    if (empty($harvest_window)) {
-      $harvest_window = 0;
-    }
-
-    // If there is a seeding log, load it.
-    $seeding_log = NULL;
-    if (!empty($planting_record->seeding_id)) {
-      $seeding_log = log_load($planting_record->seeding_id);
-    }
-
-    // If there is a transplanting log, load it.
-    $transplanting_log = NULL;
-    if (!empty($planting_record->transplanting_id)) {
-      $transplanting_log = log_load($planting_record->transplanting_id);
-    }
-
-    // If there is no seeding or transplanting log, skip.
-    if (empty($seeding_log) && empty($transplanting_log)) {
-      continue;
-    }
-
-    // Update the plan's earliest timestamp.
-    if ((!empty($seeding_log->timestamp) && $seeding_log->timestamp < $plan_start) || is_null($plan_start)) {
-      $plan_start = $seeding_log->timestamp;
-    }
-    if ((!empty($transplanting_log->timestamp) && $transplanting_log->timestamp < $plan_start) || is_null($plan_start)) {
-      $plan_start = $transplanting_log->timestamp;
-    }
-
-    // Calculate the harvest date. This will be calculated from the transplanting
-    // date if it available. Otherwise, the seeding date will be used.
-    $harvest_timestamp = NULL;
-    if (!empty($transplanting_log->timestamp)) {
-      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $transplanting_log->timestamp);
-    }
-    elseif (!empty($seeding_log->timestamp)) {
-      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $seeding_log->timestamp);
-    }
-
-    // Increase harvest timestamp by harvest days.
-    if (!empty($harvest_timestamp)) {
-      $harvest_timestamp = strtotime('+' . $harvest_window . ' days', $harvest_timestamp);
-    }
-
-    // Update the plan's latest timestamp.
-    if ($harvest_timestamp > $plan_end) {
-      $plan_end = $harvest_timestamp;
-    }
-
-    // Iterate through areas referenced by the seeding.
-    if (!empty($seeding_log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
-      $movement = field_collection_item_load($seeding_log->field_farm_movement[LANGUAGE_NONE][0]['value']);
-      if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
-        foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
-          if (!empty($area_ref['tid'])) {
-
-            // Determine the timestamp when the planting will leave this area.
-            // This will either be the transplanting timestamp (if a transplant
-            // log exists), or the harvest timestamp.
-            $end = $harvest_timestamp;
-            if (!empty($transplanting_log->timestamp)) {
-              $end = $transplanting_log->timestamp;
-            }
-
-            // Build a summary of the planting for this area.
-            $areas_plantings[$area_ref['tid']][] = array(
-              'asset' => $planting_asset,
-              'log' => $seeding_log,
-              'start' => $seeding_log->timestamp,
-              'end' => $end,
-            );
-          }
+        // Add the planting if it isn't already.
+        if (empty($areas_plantings[$area_id][$delta])) {
+          $areas_plantings[$area_id][$delta] = $planting;
         }
-      }
-    }
 
-    // Iterate through areas referenced by the transplanting.
-    if (!empty($transplanting_log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
-      $movement = field_collection_item_load($transplanting_log->field_farm_movement[LANGUAGE_NONE][0]['value']);
-      if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
-        foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
-          if (!empty($area_ref['tid'])) {
-
-            // Build a summary of the planting for this area.
-            $areas_plantings[$area_ref['tid']][] = array(
-              'asset' => $planting_asset,
-              'log' => $transplanting_log,
-              'start' => $transplanting_log->timestamp,
-              'end' => $harvest_timestamp,
-              'harvest_window' => $harvest_window,
-            );
-          }
+        // Add the seeding/transplanting log.
+        if ($stage['type'] == 'planted') {
+          $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['seeding'];
         }
+        elseif ($stage['type'] == 'transplanted') {
+          $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['transplanting'];
+        }
+        else {
+          continue;
+        }
+
+        // Set the start and end dates for this stage.
+        $areas_plantings[$area_id][$delta]['start'] = $stage['start'];
+        $areas_plantings[$area_id][$delta]['end'] = $stage['end'];
       }
     }
   }
-
-  // Generate header columns.
-  $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
   // Generate rows for each area/planting combination.
-  $rows = array();
-  foreach ($areas_plantings as $area_id => $plantings) {
+  foreach ($areas_plantings as $area_id => $area_plantings) {
 
     // Load the area.
     $area = taxonomy_term_load($area_id);
@@ -459,7 +449,7 @@ function theme_farm_crop_plan_areas($variables) {
     $area_link = l(t($entity_label), $entity_uri['path']);
 
     // Iterate through the plantings.
-    foreach ($plantings as $planting) {
+    foreach ($area_plantings as $planting) {
       $row = array();
 
       // Add the area link to the first column.
@@ -486,11 +476,15 @@ function theme_farm_crop_plan_areas($variables) {
         }
       }
 
+      // If a log is not available, skip it.
+      if (empty($planting['log'])) {
+        continue;
+      }
+
       // Generate a planting row to be added to the table.
       $planting_label = entity_label('farm_asset', $planting['asset']);
       $planting_uri = entity_uri('farm_asset', $planting['asset']);
       $planting_link = l(t($planting_label), $planting_uri['path']);
-      $log_label = '';
       switch ($planting['log']->type) {
         case 'farm_seeding':
           $log_label = t('Seeding');
@@ -498,6 +492,8 @@ function theme_farm_crop_plan_areas($variables) {
         case 'farm_transplanting':
           $log_label = t('Transplanting');
           break;
+        default:
+          continue 2;
       }
       $log_label .= ': ' . date('Y-m-d', $planting['log']->timestamp);
       $log_uri = entity_uri('log', $planting['log']);
@@ -538,20 +534,7 @@ function theme_farm_crop_plan_areas($variables) {
     }
   }
 
-  // Render the table.
-  $options = array(
-    'header' => $header,
-    'rows' => $rows,
-    'attributes' => array(
-      'class' => 'farm-crop-plan',
-    ),
-  );
-  $output .= theme('table', $options);
-
-  // Add CSS.
-  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
-
-  return $output;
+  return $rows;
 }
 
 /**
