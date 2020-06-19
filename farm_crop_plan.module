@@ -951,10 +951,6 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
           $timestamp = strtotime($new_date);
           $planting_values[$name]['log']->timestamp = $timestamp;
 
-          // Mark the log as done if the date is in the past.
-          $done = $timestamp < REQUEST_TIME;
-          $planting_values[$name]['log']->done = $done;
-
           log_save($planting_values[$name]['log']);
 
           // Remember that the log was updated.
@@ -1203,8 +1199,8 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
         $areas = farm_term_parse_names($log_values['location'], 'farm_areas', TRUE);
       }
 
-      // Mark the log as done if the date is in the past.
-      $done = $timestamp < REQUEST_TIME;
+      // Save the log status.
+      $done = $log_values['done'];
 
       // If there is a location, create a movement log.
       if (!empty($log_values['location'])) {
