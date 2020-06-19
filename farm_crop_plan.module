@@ -408,7 +408,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   // Add a checkbox for status of seeding log.
   $form['seeding']['done'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Seeding: ' . t('Done'),
+    '#title' => t('Completed'),
     '#default_value' => $defaults['seeding']['done'],
   );
 
@@ -453,7 +453,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   // Add a checkbox for status of transplanting log.
   $form['transplanting']['done'] = array(
     '#type' => 'checkbox',
-    '#title' => 'Transplanting: ' . t('Done'),
+    '#title' => t('Completed'),
     '#default_value' => $defaults['transplanting']['done'],
   );
 
