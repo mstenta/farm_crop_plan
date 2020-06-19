@@ -226,7 +226,7 @@ function theme_farm_crop_plan_plantings($variables) {
     return $a['first_timestamp'] - $b['first_timestamp'];
   });
 
-  // Generate header columns for each week.
+  // Generate header columns.
   $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
   // Generate rows for each area/planting combination.
@@ -243,37 +243,37 @@ function theme_farm_crop_plan_plantings($variables) {
     // Add the planting link to the first column.
     $row[] = $planting_link;
 
-    // Array mapping stage weeks to start week.
-    $stage_weeks = array();
+    // Array mapping stage days to start day.
+    $stage_days = array();
 
-    // Map stages to week columns.
+    // Map stages to day columns.
     foreach ($planting['stages'] as $stage) {
 
-      // Figure out the week that this planting will start in the area, and the
-      // total number of weeks it will spend there.
-      $start_week = (int) round(($stage['start'] - $plan_start) / (60 * 60 * 24 * 7));
-      $end_week = (int) round(($stage['end'] - $plan_start) / (60 * 60 * 24 * 7));
+      // Figure out the day that this planting will start in the area, and the
+      // total number of days it will spend there.
+      $start_day = (int) round(($stage['start'] - $plan_start) / (60 * 60 * 24));
+      $end_day = (int) round(($stage['end'] - $plan_start) / (60 * 60 * 24));
 
-      // Calculate total weeks as the difference to prevent edge cases that
+      // Calculate total days as the difference to prevent edge cases that
       // display a gap between harvest and transplant.
-      $total_weeks = $end_week - $start_week;
+      $total_days = $end_day - $start_day;
 
-      // Map stage to stage_weeks array by index of the start week.
-      $stage_weeks[$start_week] = array(
+      // Map stage to stage_days array by index of the start day.
+      $stage_days[$start_day] = array(
         'data' => $stage['data'],
         'class' => $stage['type'],
-        'colspan' => $total_weeks,
+        'colspan' => $total_days,
       );
     }
 
     // Generate all cells in the row.
-    $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
-    for ($j = 0; $j < $num_weeks; $j++) {
-      if (isset($stage_weeks[$j])) {
-        $row[] = $stage_weeks[$j];
+    $num_days = farm_crop_plan_timeline_num_days($plan_start, $plan_end);
+    for ($j = 0; $j < $num_days; $j++) {
+      if (isset($stage_days[$j])) {
+        $row[] = $stage_days[$j];
         // Update number of cells remaining.
         // Avoid rendering too many cells in each row.
-        $span = $stage_weeks[$j]['colspan'];
+        $span = $stage_days[$j]['colspan'];
         if ($span > 0) {
           $j += $span - 1;
         }
@@ -442,7 +442,7 @@ function theme_farm_crop_plan_areas($variables) {
   // Add inline CSS.
   drupal_add_css('table td.planted {background-color: #E1EBD5;} table td.harvest {background-color: #9ADB7F;}','inline');
 
-  // Generate header columns for each week.
+  // Generate header columns.
   $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
   // Generate rows for each area/planting combination.
@@ -469,21 +469,21 @@ function theme_farm_crop_plan_areas($variables) {
       // Only show the area link for the first planting.
       $area_link = '';
 
-      // Figure out the week that this planting will start in the area, and the
-      // total number of weeks it will spend there.
-      $start_week = (int) round(($planting['start'] - $plan_start) / (60 * 60 * 24 * 7));
-      $total_weeks = (int) round(($planting['end'] - $planting['start']) / (60 * 60 * 24 * 7));
+      // Figure out the day that this planting will start in the area, and the
+      // total number of days it will spend there.
+      $start_day = (int) round(($planting['start'] - $plan_start) / (60 * 60 * 24));
+      $total_days = (int) round(($planting['end'] - $planting['start']) / (60 * 60 * 24));
 
-      // Calculate harvest weeks if a harvest window was specified.
+      // Calculate harvest days if a harvest window was specified.
       $harvest_window = 0;
-      $harvest_weeks = 0;
+      $harvest_days = 0;
       if (!empty($planting['harvest_window'])) {
         $harvest_window = $planting['harvest_window'];
-        $harvest_weeks = (int) round($harvest_window / 7);
+        $harvest_days = (int) $harvest_window;
 
-        // Minimum of 1 week to ensure harvest window is displayed.
-        if ($harvest_weeks == 0) {
-          $harvest_weeks = 1;
+        // Minimum of 1 day to ensure harvest window is displayed.
+        if ($harvest_days == 0) {
+          $harvest_days = 1;
         }
       }
 
@@ -507,27 +507,27 @@ function theme_farm_crop_plan_areas($variables) {
       $planting_row = array(
         'data' => $planting_summary,
         'class' => 'planted',
-        'colspan' => $total_weeks - $harvest_weeks,
+        'colspan' => $total_days - $harvest_days,
       );
 
       // Define a row for the harvest window.
       $harvest_row = array(
         'data' => '<small>' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
         'class' => 'harvest',
-        'colspan' => $harvest_weeks,
+        'colspan' => $harvest_days,
       );
 
       // Generate all cells in the row.
-      $num_weeks = farm_crop_plan_timeline_num_weeks($plan_start, $plan_end);
-      for ($j = 0; $j < $num_weeks; $j++) {
-        if ($j == $start_week) {
+      $num_days = farm_crop_plan_timeline_num_days($plan_start, $plan_end);
+      for ($j = 0; $j < $num_days; $j++) {
+        if ($j == $start_day) {
           $row[] = $planting_row;
-          if ($harvest_weeks > 0) {
+          if ($harvest_days > 0) {
             $row[] = $harvest_row;
           }
           // Update number of cells remaining.
           // Avoid rendering too many cells in each row.
-          $j += $total_weeks - 1;
+          $j += $total_days - 1;
         }
         else {
           $row[] = '';
@@ -550,7 +550,7 @@ function theme_farm_crop_plan_areas($variables) {
 }
 
 /**
- * Helper function for generating header columns for each week.
+ * Helper function for generating header columns for the timeline.
  *
  * @param $start
  *   Timestamp representing when the timeline starts.
@@ -562,26 +562,28 @@ function theme_farm_crop_plan_areas($variables) {
  */
 function farm_crop_plan_timeline_table_header($start, $end) {
   $header = array('');
-  $num_weeks = farm_crop_plan_timeline_num_weeks($start, $end);
+  $num_days = farm_crop_plan_timeline_num_days($start, $end);
   $time = $start;
-  for ($i = 0; $i < $num_weeks; $i++) {
-    $date = date('M j', $time);
+  $i = 0;
+  while ($i < $num_days) {
+    $date = array(
+      'data' => date('M j', $time),
+      'colspan' => 7,
+    );
     $next_time = strtotime('+7 days', $time);
     if (REQUEST_TIME >= $time && REQUEST_TIME <= $next_time) {
       drupal_add_css('table th.current {background-color: #dff0d8;}','inline');
-      $date = array(
-        'class' => 'current',
-        'data' => $date,
-      );
+      $date['class'] = 'current';
     }
     $header[] = $date;
     $time = $next_time;
+    $i += 7;
   }
   return $header;
 }
 
 /**
- * Helper function for calculating the number of weeks in a given time span.
+ * Helper function for calculating the number of days in a given time span.
  *
  * @param $start
  *   Timestamp representing when the timeline starts.
@@ -589,8 +591,8 @@ function farm_crop_plan_timeline_table_header($start, $end) {
  *   Timestamp representing when the timeline ends.
  *
  * @return int
- *   Returns the number of weeks between the start and end timestamps.
+ *   Returns the number of days between the start and end timestamps.
  */
-function farm_crop_plan_timeline_num_weeks($start, $end) {
-  return (int) round(($end - $start) / (60 * 60 * 24 * 7));
+function farm_crop_plan_timeline_num_days($start, $end) {
+  return (int) round(($end - $start) / (60 * 60 * 24));
 }
