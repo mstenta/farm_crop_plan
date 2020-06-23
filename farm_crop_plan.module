@@ -110,6 +110,7 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
 
   // Add the crop plan form.
   $content['form'] = drupal_get_form('farm_crop_plan_form', $entity);
+  $content['form']['#access'] = farm_crop_plan_access($entity);
   $content['form']['#weight'] = 100;
 }
 
