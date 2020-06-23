@@ -9,26 +9,31 @@
  * Theme function for the crop plan timeline.
  */
 function theme_farm_crop_plan_timeline($variables) {
+  $form = $variables['form'];
+  $output = '';
 
-  // Get the plan ID, bail if empty.
-  if (empty($variables['plan_id'])) {
-    return '';
+  // Get the plan, bail if empty.
+  if (empty($form['#plan'])) {
+    return $output;
   }
-  $plan_id = $variables['plan_id'];
+  $plan = $form['#plan'];
 
   // Get the timeline display mode, bail if it isn't "planting" or "area".
-  if (empty($variables['mode']) || !in_array($variables['mode'], array('planting', 'area'))) {
-    return '';
+  if (empty($form['#mode']) || !in_array($form['#mode'], array('planting', 'area'))) {
+    return $output;
   }
-  $mode = $variables['mode'];
+  $mode = $form['#mode'];
 
   // Collect information about plantings in the plan.
-  $plantings = farm_crop_plan_timeline_plantings($plan_id);
+  $plantings = farm_crop_plan_timeline_plantings($plan->id);
 
   // If there are no plantings, bail.
   if (empty($plantings)) {
-    return '';
+    return $output;
   }
+
+  // Render the form options.
+  $output .= drupal_render($form['options']);
 
   // Based on the planting info, calculate the plan's start and end timestamps.
   $plan_start = NULL;
@@ -71,7 +76,13 @@ function theme_farm_crop_plan_timeline($variables) {
       'class' => 'farm-crop-plan',
     ),
   );
-  return theme('table', $options);
+  $output .= theme('table', $options);
+
+  // Render remaining form elements.
+  $output .= drupal_render_children($form);
+
+  // Return the output.
+  return $output;
 }
 
 /**
