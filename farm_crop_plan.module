@@ -54,22 +54,6 @@ function farm_crop_plan_farm_plan_record_relationships() {
 }
 
 /**
- * Implements hook_menu().
- */
-function farm_crop_plan_menu() {
-  $items['farm/plan/%farm_plan/plantings'] = array(
-    'title' => 'Plantings',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_crop_plan_form', 2),
-    'access callback' => 'farm_crop_plan_access',
-    'access arguments' => array(2),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
-  );
-  return $items;
-}
-
-/**
  * Access callback for crop plan tabs.
  */
 function farm_crop_plan_access($plan) {
