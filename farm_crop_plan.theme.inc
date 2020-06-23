@@ -184,7 +184,7 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
     $planting_link = l(t($planting_label), $planting_uri['path']);
 
     // Add the planting link to the first column.
-    $row[] = $planting_link;
+    $row[] = '<strong>' . $planting_link . '</strong>';
 
     // Array mapping stage days to start day.
     $stage_days = array();
