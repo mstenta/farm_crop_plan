@@ -95,12 +95,6 @@ function farm_crop_plan_theme($existing, $type, $theme, $path) {
       ),
       'file' => 'farm_crop_plan.theme.inc',
     ),
-    'farm_crop_plan_areas' => array(
-      'variables' => array(
-        'plan_id' => NULL,
-      ),
-      'file' => 'farm_crop_plan.theme.inc',
-    ),
   );
 }
 
