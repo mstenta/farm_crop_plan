@@ -1268,3 +1268,168 @@ function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
     drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
   }
 }
+
+/**
+ * Collect information about plantings in a plan.
+ *
+ * @param $plan_id
+ *   The ID of the plan.
+ *
+ * @return array
+ *   Returns an array of planting information.
+ */
+function farm_crop_plan_plantings($plan_id) {
+  $plantings = array();
+
+  // Load records from the {farm_crop_plan_planting} table.
+  $planting_records = db_query('SELECT * FROM {farm_crop_plan_planting} WHERE plan_id = :plan_id', array(':plan_id' => $plan_id))->fetchAll();
+
+  // If there are no planting records, bail.
+  if (empty($planting_records)) {
+    return $plantings;
+  }
+
+  // Iterate through the planting records to collect the information we need.
+  foreach ($planting_records as $planting_record) {
+
+    // Start an array of planting info.
+    $planting_info = array();
+
+    // Load the planting asset.
+    $planting_asset = farm_asset_load($planting_record->asset_id);
+    $planting_info['asset'] = $planting_asset;
+
+    // Load "Days to harvest". Skip if empty.
+    if (empty($planting_record->days_to_harvest)) {
+      continue;
+    }
+    $days_to_harvest = $planting_record->days_to_harvest;
+
+    // Load "Harvest window". Default to 0 days.
+    $harvest_window = $planting_record->harvest_window;
+    if (empty($harvest_window)) {
+      $harvest_window = 0;
+    }
+    $planting_info['harvest_window'] = $harvest_window;
+
+    // If there is a seeding log, load it.
+    $seeding_log = NULL;
+    if (!empty($planting_record->seeding_id)) {
+      $seeding_log = log_load($planting_record->seeding_id);
+      $planting_info['seeding'] = $seeding_log;
+    }
+
+    // If there is a transplanting log, load it.
+    $transplanting_log = NULL;
+    if (!empty($planting_record->transplanting_id)) {
+      $transplanting_log = log_load($planting_record->transplanting_id);
+      $planting_info['transplanting'] = $transplanting_log;
+    }
+
+    // If there is no seeding or transplanting log, skip.
+    if (empty($seeding_log) && empty($transplanting_log)) {
+      continue;
+    }
+
+    // Calculate the harvest date. This will be calculated from the seeding
+    // date if it available. Otherwise, the transplanting date will be used.
+    $harvest_timestamp = NULL;
+    if (!empty($seeding_log->timestamp)) {
+      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $seeding_log->timestamp);
+    }
+    elseif (!empty($transplanting_log->timestamp)) {
+      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $transplanting_log->timestamp);
+    }
+
+    // Increase harvest timestamp by harvest days.
+    $last_harvest_timestamp = $harvest_timestamp;
+    if (!empty($harvest_window)) {
+      $last_harvest_timestamp = strtotime('+' . $harvest_window . ' days', $harvest_timestamp);
+    }
+
+    // Start array of stages to visualize.
+    $stages = array();
+
+    // Display a seeding stage.
+    if (!empty($seeding_log)) {
+
+      // Generate links to areas referenced by the seeding.
+      $area_links = farm_crop_plan_log_area_links($seeding_log);
+
+      // Determine the timestamp when the planting will leave this area.
+      // This will either be the transplanting timestamp (if a transplant
+      // log exists), or the harvest timestamp.
+      $end = $harvest_timestamp;
+      if (!empty($transplanting_log->timestamp)) {
+        $end = $transplanting_log->timestamp;
+      }
+
+      // Generate a link to the seeding log.
+      $log_label = 'Seeding: ' . date('Y-m-d', $seeding_log->timestamp);
+      $log_uri = entity_uri('log', $seeding_log);
+      $log_link = l($log_label, $log_uri['path']);
+      $log_text = '<small>' . $log_link . '</small>';
+
+      // Add area links if location is included.
+      if (!empty($area_links)) {
+        $log_text .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
+      }
+
+      $stages[] = array(
+        'start' => $seeding_log->timestamp,
+        'end' => $end,
+        'type' => 'planted',
+        'areas' => array_keys($area_links),
+        'data' => $log_text,
+      );
+    }
+
+    // Display a transplanting stage.
+    if (!empty($transplanting_log)) {
+
+      // Generate links to areas referenced by the transplanting.
+      $area_links = farm_crop_plan_log_area_links($transplanting_log);
+
+      // Generate a link to the transplanting log.
+      $log_label = 'Transplanting: ' . date('Y-m-d', $transplanting_log->timestamp);
+      $log_uri = entity_uri('log', $transplanting_log);
+      $log_link = l($log_label, $log_uri['path']);
+      $log_text = '<small>' . $log_link . '</small>';
+
+      // Add area links if location is included.
+      if (!empty($area_links)) {
+        $log_text .= '<br /> to <small>' . implode(', ', $area_links) . '</small>';
+      }
+
+      $stages[] = array(
+        'start' => $transplanting_log->timestamp,
+        'end' => $harvest_timestamp,
+        'type' => 'transplanted',
+        'areas' => array_keys($area_links),
+        'data' => $log_text,
+      );
+    }
+
+    // Display a harvest stage.
+    // The harvest will take place in the transplant area, if it exists.
+    // Otherwise it will take place in the seeding area.
+    $harvest_areas = !empty($area_links) ? array_keys($area_links) : array();
+    if (!empty($planting_record->harvest_window)) {
+      $stages[] = array(
+        'start' => $harvest_timestamp,
+        'end' => $last_harvest_timestamp,
+        'type' => 'harvest',
+        'areas' => $harvest_areas,
+        'data' => '<small>Harvest ' . date('Y-m-d', $harvest_timestamp) . ' for ' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
+      );
+    }
+
+    // Add stages to the planting info.
+    $planting_info['stages'] = $stages;
+
+    // Add planting info to plantings array.
+    $plantings[$planting_asset->id] = $planting_info;
+  }
+
+  return $plantings;
+}
