@@ -60,7 +60,7 @@ function farm_crop_plan_menu() {
   $items['farm/plan/%farm_plan/plantings'] = array(
     'title' => 'Plantings',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('farm_crop_plan_planting_form', 2),
+    'page arguments' => array('farm_crop_plan_form', 2),
     'access callback' => 'farm_crop_plan_access',
     'access arguments' => array(2),
     'type' => MENU_LOCAL_TASK,
@@ -117,7 +117,13 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
  * Crop plan form.
  */
 function farm_crop_plan_form($form, &$form_state, $plan) {
-  $form = array();
+  $form['#tree'] = TRUE;
+
+  // Store the plan entity for use in submit.
+  $form['plan'] = array(
+    '#type' => 'value',
+    '#value' => $plan,
+  );
 
   // Add an options fieldset.
   $form['options'] = array(
@@ -144,7 +150,7 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
 
   // Set the mode.
   $mode = 'planting';
-  if (!empty($form_state['values']['mode']) &&  $form_state['values']['mode'] == 'area') {
+  if (!empty($form_state['values']['options']['mode']) &&  $form_state['values']['options']['mode'] == 'area') {
     $mode = 'area';
   }
 
@@ -156,28 +162,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     '#mode' => $mode,
     '#prefix' => '<div id="crop-plan-timeline">',
     '#suffix' => '</div>',
-  );
-
-  return $form;
-}
-
-/**
- * Crop plan form mode ajax callback.
- */
-function farm_crop_plan_form_timeline_ajax($form, $form_state) {
-  return $form['timeline'];
-}
-
-/**
- * Planting form.
- */
-function farm_crop_plan_planting_form($form, &$form_state, $plan) {
-  $form['#tree'] = TRUE;
-
-  // Store the plan entity for use in submit.
-  $form['plan'] = array(
-    '#type' => 'value',
-    '#value' => $plan,
   );
 
   // Add Planting fieldset.
@@ -236,6 +220,13 @@ function farm_crop_plan_planting_form($form, &$form_state, $plan) {
   drupal_add_js(drupal_get_path('module', 'farm_crop_plan') . '/js/farm_crop_plan_log_status.js');
 
   return $form;
+}
+
+/**
+ * Crop plan form mode ajax callback.
+ */
+function farm_crop_plan_form_timeline_ajax($form, $form_state) {
+  return $form['timeline'];
 }
 
 /**
@@ -576,7 +567,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 /**
  * Planting form validation.
  */
-function farm_crop_plan_planting_form_validate($form, &$form_state) {
+function farm_crop_plan_form_validate($form, &$form_state) {
 
   // Start an array of plantings to validate.
   $plantings = array();
@@ -707,7 +698,7 @@ function farm_crop_plan_planting_form_validate($form, &$form_state) {
 /**
  * Planting form submit.
  */
-function farm_crop_plan_planting_form_submit(&$form, &$form_state) {
+function farm_crop_plan_form_submit(&$form, &$form_state) {
 
   // Load the plan.
   $plan = $form_state['values']['plan'];
