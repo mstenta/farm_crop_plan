@@ -1255,6 +1255,14 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
  *   Returns an array of planting information.
  */
 function farm_crop_plan_plantings($plan_id) {
+
+  // Loading planting info can be heavy, so static cache the results.
+  $plantings = &drupal_static(__FUNCTION__);
+  if (isset($plantings)) {
+    return $plantings;
+  }
+
+  // Start with an empty array.
   $plantings = array();
 
   // Load records from the {farm_crop_plan_planting} table.
