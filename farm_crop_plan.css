@@ -1,3 +1,6 @@
+form#farm-crop-plan-form {
+  margin-top: 1em;
+}
 table.farm-crop-plan {
   color: #333333;
 }
