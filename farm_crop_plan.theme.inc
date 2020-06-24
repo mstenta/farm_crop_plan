@@ -149,7 +149,9 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
 
   // Iterate through the plantings and build rows.
   foreach ($plantings as $planting) {
-    $row = array();
+    $row = array(
+      'data' => array(),
+    );
 
     // If the asset doesn't exist, skip.
     if (empty($planting['asset'])) {
@@ -162,7 +164,7 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
     $planting_link = l(t($planting_label), $planting_uri['path']);
 
     // Add the planting link to the first column.
-    $row[] = array(
+    $row['data'][] = array(
       'data' => '<strong>' . $planting_link . '</strong>',
       'class' => array('left'),
     );
@@ -233,7 +235,7 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
     $num_days = farm_crop_plan_timeline_num_days($plan_start, $plan_end);
     for ($j = 0; $j < $num_days; $j++) {
       if (isset($stage_days[$j])) {
-        $row[] = $stage_days[$j];
+        $row['data'][] = $stage_days[$j];
         // Update number of cells remaining.
         // Avoid rendering too many cells in each row.
         $span = $stage_days[$j]['colspan'];
@@ -242,21 +244,39 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
         }
       }
       else {
-        $row[] = '';
+        $row['data'][] = '';
       }
     }
 
-    // Add the row.
-    $rows[] = $row;
-
-    // Add the planting form as a second row.
+    // If a planting form exists with a matching planting ID, assemble a second
+    // row for it.
     if (!empty($form['plantings'][$planting['asset']->id])) {
-      $rows[] = array(
+
+      // Generate a unique for the planting form row.
+      $planting_form_id = drupal_html_id('farm-crop-plan-planting-form-' . $planting['asset']->id);
+
+      // Add a link to the timeline row for toggling form collapse state.
+      $toggle = '<a class="btn btn-sm btn-info" role="button" data-toggle="collapse" href="#' . $planting_form_id . '" aria-expanded="false" aria-controls="' . $planting_form_id . '">Edit</a>';
+      $row['data'][0]['data'] .= '<br />' . $toggle;
+
+      // Unset the fieldset title and collapsed state, because the timeline row
+      // will take over as the collapse controller.
+      unset($form['plantings'][$planting['asset']->id]['#title']);
+      unset($form['plantings'][$planting['asset']->id]['#collapsed']);
+
+      // Assemble the form row with a full-width colspan.
+      $form_row = array(
         array(
-          'data' => drupal_render($form['plantings'][$planting['asset']->id]),
+          'data' => '<div id="' . $planting_form_id . '" class="collapse">' . drupal_render($form['plantings'][$planting['asset']->id]) . '</div>',
           'colspan' => $num_days,
         ),
       );
+    }
+
+    // Add the rows.
+    $rows[] = $row;
+    if (!empty($form_row)) {
+      $rows[] = $form_row;
     }
   }
 
