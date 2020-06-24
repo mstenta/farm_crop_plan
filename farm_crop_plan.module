@@ -110,6 +110,22 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     '#value' => $plan,
   );
 
+  // Set the mode.
+  $mode = 'planting';
+  if (!empty($form_state['values']['options']['mode']) &&  $form_state['values']['options']['mode'] == 'area') {
+    $mode = 'area';
+  }
+
+  // Crop plan timeline container.
+  $form['timeline'] = array(
+    '#type' => 'container',
+    '#theme' => 'farm_crop_plan_timeline',
+    '#plan' => $plan,
+    '#mode' => $mode,
+    '#prefix' => '<div id="crop-plan-timeline">',
+    '#suffix' => '</div>',
+  );
+
   // Add an options fieldset.
   $form['options'] = array(
     '#type' => 'fieldset',
@@ -131,22 +147,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
       'callback' => 'farm_crop_plan_form_timeline_ajax',
       'wrapper' => 'crop-plan-timeline',
     ),
-  );
-
-  // Set the mode.
-  $mode = 'planting';
-  if (!empty($form_state['values']['options']['mode']) &&  $form_state['values']['options']['mode'] == 'area') {
-    $mode = 'area';
-  }
-
-  // Crop plan timeline container.
-  $form['timeline'] = array(
-    '#type' => 'container',
-    '#theme' => 'farm_crop_plan_timeline',
-    '#plan' => $plan,
-    '#mode' => $mode,
-    '#prefix' => '<div id="crop-plan-timeline">',
-    '#suffix' => '</div>',
   );
 
   // Add Planting fieldset.
