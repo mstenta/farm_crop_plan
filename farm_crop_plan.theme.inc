@@ -148,6 +148,11 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
   foreach ($plantings as $planting) {
     $row = array();
 
+    // If the asset doesn't exist, skip.
+    if (empty($planting['asset'])) {
+      continue;
+    }
+
     // Generate a planting row to be added to the table.
     $planting_label = entity_label('farm_asset', $planting['asset']);
     $planting_uri = entity_uri('farm_asset', $planting['asset']);
@@ -169,9 +174,6 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
       $stage_content = '';
       if ($stage['type'] == 'planted') {
 
-        // Generate links to areas referenced by the seeding.
-        $area_links = farm_crop_plan_movement_log_area_links($planting['seeding']);
-
         // Generate a link to the seeding log.
         $log_label = 'Seeding: ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['seeding']);
@@ -179,14 +181,12 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
         $stage_content = '<small>' . $log_link . '</small>';
 
         // Add area links if location is included.
+        $area_links = farm_crop_plan_movement_log_area_links($planting['seeding']);
         if (!empty($area_links)) {
           $stage_content .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
         }
       }
       elseif ($stage['type'] == 'transplanted') {
-
-        // Generate links to areas referenced by the transplanting.
-        $area_links = farm_crop_plan_movement_log_area_links($planting['transplanting']);
 
         // Generate a link to the transplanting log.
         $log_label = 'Transplanting: ' . date('Y-m-d', $stage['start']);
@@ -195,12 +195,18 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
         $stage_content = '<small>' . $log_link . '</small>';
 
         // Add area links if location is included.
+        $area_links = farm_crop_plan_movement_log_area_links($planting['transplanting']);
         if (!empty($area_links)) {
           $stage_content .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
         }
       }
       elseif ($stage['type'] == 'harvest') {
         $stage_content = '<small>Harvest ' . date('Y-m-d', $stage['start']) . ' for ' . format_plural($planting['harvest_window'], '1 day', '@count days') . '</small>';
+      }
+
+      // If both start and end timestamps are not available, stop now.
+      if (empty($stage['start']) || empty($stage['end'])) {
+        continue;
       }
 
       // Figure out the day that this planting will start in the area, and the
@@ -282,6 +288,11 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
           $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['transplanting'];
         }
         else {
+          continue;
+        }
+
+        // If both start and end timestamps are not available, stop now.
+        if (empty($stage['start']) || empty($stage['end'])) {
           continue;
         }
 

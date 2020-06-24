@@ -162,6 +162,11 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   // Iterate through the plantings and build forms.
   foreach ($plantings as $planting) {
 
+    // If the asset is empty, skip it.
+    if (empty($planting['asset'])) {
+      continue;
+    }
+
     // Add a planting details form.
     $planting_form = farm_crop_plan_planting_details_form($plan, $planting['asset']);
 
@@ -1263,117 +1268,104 @@ function farm_crop_plan_plantings($plan_id) {
   // Iterate through the planting records to collect the information we need.
   foreach ($planting_records as $planting_record) {
 
-    // Start an array of planting info.
-    $planting_info = array();
+    // Start an array of planting info with empty data.
+    $planting_info = array(
+      'asset' => NULL,
+      'days_to_harvest' => NULL,
+      'harvest_window' => NULL,
+      'seeding' => NULL,
+      'transplanting' => NULL,
+      'stages' => array(),
+    );
 
     // Load the planting asset.
     $planting_asset = farm_asset_load($planting_record->asset_id);
-    $planting_info['asset'] = $planting_asset;
-
-    // Load "Days to harvest". Skip if empty.
-    /**
-     * @todo
-     * Don't skip. Still need to include this.
-     */
-    if (empty($planting_record->days_to_harvest)) {
-      continue;
+    if (!empty($planting_asset)) {
+      $planting_info['asset'] = $planting_asset;
     }
-    $days_to_harvest = $planting_record->days_to_harvest;
-    $planting_info['days_to_harvest'] = $days_to_harvest;
 
-    // Load "Harvest window". Default to 0 days.
-    $harvest_window = $planting_record->harvest_window;
-    if (empty($harvest_window)) {
-      $harvest_window = 0;
+    // Load "days to harvest", if available.
+    if (!empty($planting_record->days_to_harvest)) {
+      $planting_info['days_to_harvest'] = $planting_record->days_to_harvest;
     }
-    $planting_info['harvest_window'] = $harvest_window;
+
+    // Load "harvest window".
+    if (!empty($planting_record->harvest_window)) {
+      $planting_info['harvest_window'] = $planting_record->harvest_window;
+    }
 
     // If there is a seeding log, load it.
-    $seeding_log = NULL;
     if (!empty($planting_record->seeding_id)) {
-      $seeding_log = log_load($planting_record->seeding_id);
-      $planting_info['seeding'] = $seeding_log;
+      $planting_info['seeding'] = log_load($planting_record->seeding_id);
     }
 
     // If there is a transplanting log, load it.
-    $transplanting_log = NULL;
     if (!empty($planting_record->transplanting_id)) {
-      $transplanting_log = log_load($planting_record->transplanting_id);
-      $planting_info['transplanting'] = $transplanting_log;
+      $planting_info['transplanting'] = log_load($planting_record->transplanting_id);
     }
 
-    // If there is no seeding or transplanting log, skip.
-    /**
-     * @todo
-     * Don't skip. Still need to include this.
-     */
-    if (empty($seeding_log) && empty($transplanting_log)) {
-      continue;
+    // If "days to harvest" is set , and either a seeding or transplanting log
+    // exists, calculate the harvest start and end dates. This will be
+    // calculated from the seeding date if it available. Otherwise, the
+    // transplanting date will be used.
+    $harvest_start = NULL;
+    if (!empty($planting_info['days_to_harvest'])) {
+      if (!empty($planting_info['seeding']->timestamp)) {
+        $harvest_start = strtotime('+' . $planting_info['days_to_harvest'] . ' days', $planting_info['seeding']->timestamp);
+      }
+      elseif (!empty($planting_info['transplanting']->timestamp)) {
+        $harvest_start = strtotime('+' . $planting_info['days_to_harvest'] . ' days', $planting_info['transplanting']->timestamp);
+      }
     }
 
-    // Calculate the harvest date. This will be calculated from the seeding
-    // date if it available. Otherwise, the transplanting date will be used.
-    $harvest_timestamp = NULL;
-    if (!empty($seeding_log->timestamp)) {
-      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $seeding_log->timestamp);
-    }
-    elseif (!empty($transplanting_log->timestamp)) {
-      $harvest_timestamp = strtotime('+' . $days_to_harvest . ' days', $transplanting_log->timestamp);
+    // If the harvest start date and harvest window are available, calculate the
+    // harvest end date.
+    $harvest_end = NULL;
+    if (!empty($harvest_start) && !empty($planting_info['harvest_window'])) {
+      $harvest_end = strtotime('+' . $planting_info['harvest_window'] . ' days', $harvest_start);
     }
 
-    // Increase harvest timestamp by harvest days.
-    $last_harvest_timestamp = $harvest_timestamp;
-    if (!empty($harvest_window)) {
-      $last_harvest_timestamp = strtotime('+' . $harvest_window . ' days', $harvest_timestamp);
-    }
-
-    // Start array of stages to visualize.
-    $stages = array();
-
-    // Display a seeding stage.
-    if (!empty($seeding_log)) {
+    // Add a seeding stage.
+    if (!empty($planting_info['seeding'])) {
 
       // Determine the timestamp when the planting will leave this area.
       // This will either be the transplanting timestamp (if a transplant
       // log exists), or the harvest timestamp.
-      $end = $harvest_timestamp;
-      if (!empty($transplanting_log->timestamp)) {
-        $end = $transplanting_log->timestamp;
+      $end = $harvest_start;
+      if (!empty($planting_info['transplanting']->timestamp)) {
+        $end = $planting_info['transplanting']->timestamp;
       }
 
-      $stages[] = array(
-        'start' => $seeding_log->timestamp,
+      $planting_info['stages'][] = array(
+        'start' => $planting_info['seeding']->timestamp,
         'end' => $end,
         'type' => 'planted',
-        'areas' => farm_crop_plan_movement_log_area_ids($seeding_log),
+        'areas' => farm_crop_plan_movement_log_area_ids($planting_info['seeding']),
       );
     }
 
-    // Display a transplanting stage.
-    if (!empty($transplanting_log)) {
-      $stages[] = array(
-        'start' => $transplanting_log->timestamp,
-        'end' => $harvest_timestamp,
+    // Add a transplanting stage.
+    if (!empty($planting_info['transplanting'])) {
+      $planting_info['stages'][] = array(
+        'start' => $planting_info['transplanting']->timestamp,
+        'end' => $harvest_start,
         'type' => 'transplanted',
-        'areas' => farm_crop_plan_movement_log_area_ids($transplanting_log),
+        'areas' => farm_crop_plan_movement_log_area_ids($planting_info['transplanting']),
       );
     }
 
-    // Display a harvest stage.
+    // Add a harvest stage.
     // The harvest will take place in the transplant area, if it exists.
     // Otherwise it will take place in the seeding area.
     $harvest_areas = !empty($area_links) ? array_keys($area_links) : array();
     if (!empty($planting_record->harvest_window)) {
-      $stages[] = array(
-        'start' => $harvest_timestamp,
-        'end' => $last_harvest_timestamp,
+      $planting_info['stages'][] = array(
+        'start' => $harvest_start,
+        'end' => $harvest_end,
         'type' => 'harvest',
         'areas' => $harvest_areas,
       );
     }
-
-    // Add stages to the planting info.
-    $planting_info['stages'] = $stages;
 
     // Add planting info to plantings array.
     $plantings[$planting_asset->id] = $planting_info;
