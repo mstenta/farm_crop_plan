@@ -1330,7 +1330,7 @@ function farm_crop_plan_plantings($plan_id) {
     if (!empty($seeding_log)) {
 
       // Generate links to areas referenced by the seeding.
-      $area_links = farm_crop_plan_log_area_links($seeding_log);
+      $area_links = farm_crop_plan_movement_log_area_links($seeding_log);
 
       // Determine the timestamp when the planting will leave this area.
       // This will either be the transplanting timestamp (if a transplant
@@ -1355,8 +1355,8 @@ function farm_crop_plan_plantings($plan_id) {
         'start' => $seeding_log->timestamp,
         'end' => $end,
         'type' => 'planted',
-        'areas' => array_keys($area_links),
         'data' => $log_text,
+        'areas' => farm_crop_plan_movement_log_area_ids($seeding_log),
       );
     }
 
@@ -1364,7 +1364,7 @@ function farm_crop_plan_plantings($plan_id) {
     if (!empty($transplanting_log)) {
 
       // Generate links to areas referenced by the transplanting.
-      $area_links = farm_crop_plan_log_area_links($transplanting_log);
+      $area_links = farm_crop_plan_movement_log_area_links($transplanting_log);
 
       // Generate a link to the transplanting log.
       $log_label = 'Transplanting: ' . date('Y-m-d', $transplanting_log->timestamp);
@@ -1381,8 +1381,8 @@ function farm_crop_plan_plantings($plan_id) {
         'start' => $transplanting_log->timestamp,
         'end' => $harvest_timestamp,
         'type' => 'transplanted',
-        'areas' => array_keys($area_links),
         'data' => $log_text,
+        'areas' => farm_crop_plan_movement_log_area_ids($transplanting_log),
       );
     }
 
@@ -1408,4 +1408,51 @@ function farm_crop_plan_plantings($plan_id) {
   }
 
   return $plantings;
+}
+
+/**
+ * Get area IDs associated with a movement log.
+ *
+ * @param $log
+ *   A log entity.
+ *
+ * @return array
+ *   An array of area IDs.
+ */
+function farm_crop_plan_movement_log_area_ids($log) {
+  $area_ids = array();
+  if (!empty($log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
+    $movement = field_collection_item_load($log->field_farm_movement[LANGUAGE_NONE][0]['value']);
+    if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
+      foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
+        if (empty($area_ref['tid'])) {
+          continue;
+        }
+        $area_ids[] = $area_ref['tid'];
+      }
+    }
+  }
+  return $area_ids;
+}
+
+/**
+ * Build an array of area links from a movement log.
+ *
+ * @param $log
+ *   A log entity.
+ *
+ * @return array
+ *   An array of links to areas, keyed by area ID.
+ */
+function farm_crop_plan_movement_log_area_links($log) {
+  $area_ids = farm_crop_plan_movement_log_area_ids($log);
+  $area_links = array();
+  foreach ($area_ids as $area_id) {
+    $area = taxonomy_term_load($area_id);
+    $entity_label = entity_label('taxonomy_term', $area);
+    $entity_uri = entity_uri('taxonomy_term', $area);
+    $area_link = l(t($entity_label), $entity_uri['path']);
+    $area_links[$area_id] = $area_link;
+  }
+  return $area_links;
 }

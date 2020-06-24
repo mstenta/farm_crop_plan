@@ -126,44 +126,6 @@ function farm_crop_plan_planting_start($planting) {
 }
 
 /**
- * Build an array of area links from a movement log.
- *
- * @param $log
- *   The log entity.
- *
- * @return array
- *   An array of links to areas, keyed by area ID.
- */
-function farm_crop_plan_log_area_links($log) {
-  $area_links = array();
-  if (!empty($log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
-    $movement = field_collection_item_load($log->field_farm_movement[LANGUAGE_NONE][0]['value']);
-    if (!empty($movement->field_farm_move_to[LANGUAGE_NONE])) {
-      foreach ($movement->field_farm_move_to[LANGUAGE_NONE] as $area_ref) {
-
-        // If the term ID is not available, skip it.
-        if (empty($area_ref['tid'])) {
-          continue;
-        }
-        $tid = $area_ref['tid'];
-
-        // Load the area.
-        $area = taxonomy_term_load($tid);
-
-        // Get the area label and URI.
-        $entity_label = entity_label('taxonomy_term', $area);
-        $entity_uri = entity_uri('taxonomy_term', $area);
-
-        // Generate a link to the area.
-        $area_link = l(t($entity_label), $entity_uri['path']);
-        $area_links[$tid] = $area_link;
-      }
-    }
-  }
-  return $area_links;
-}
-
-/**
  * Build table rows for the "by planting" mode.
  *
  * @param array $plantings
