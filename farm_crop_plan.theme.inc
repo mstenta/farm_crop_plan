@@ -64,7 +64,7 @@ function theme_farm_crop_plan_timeline($variables) {
     $rows = farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end);
   }
   else {
-    $rows = farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_end);
+    $rows = farm_crop_plan_timeline_planting_rows($form, $plantings, $plan_start, $plan_end);
   }
 
   // If there are no rows, bail.
@@ -128,6 +128,9 @@ function farm_crop_plan_planting_start($planting) {
 /**
  * Build table rows for the "by planting" mode.
  *
+ * @param array &$form
+ *   The form array from theme_farm_crop_plan_timeline(). Passed as reference so
+ *   that drupal_render() can be run on child elements.
  * @param array $plantings
  *   An array of planting info compiled by theme_farm_crop_plan_timeline().
  * @param int $plan_start
@@ -138,7 +141,7 @@ function farm_crop_plan_planting_start($planting) {
  * @return array
  *   An array of rows for use in theme_table().
  */
-function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_end) {
+function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, $plan_end) {
   $rows = array();
 
   // Sort plantings by their start timestamps.
@@ -245,6 +248,16 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
 
     // Add the row.
     $rows[] = $row;
+
+    // Add the planting form as a second row.
+    if (!empty($form['plantings'][$planting['asset']->id])) {
+      $rows[] = array(
+        array(
+          'data' => drupal_render($form['plantings'][$planting['asset']->id]),
+          'colspan' => $num_days,
+        ),
+      );
+    }
   }
 
   return $rows;

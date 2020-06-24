@@ -191,7 +191,7 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
       );
     }
 
-    $form['plantings'][$planting['asset']->id] = $planting_form;
+    $form['timeline']['plantings'][$planting['asset']->id] = $planting_form;
   }
 
   // Submit button for saving all changes.
@@ -564,11 +564,11 @@ function farm_crop_plan_form_validate($form, &$form_state) {
   );
 
   // Add existing plantings to list for validation.
-  if (!empty($form_state['values']['plantings'])) {
-    foreach ($form_state['values']['plantings'] as $planting_id => $planting_values) {
+  if (!empty($form_state['values']['timeline']['plantings'])) {
+    foreach ($form_state['values']['timeline']['plantings'] as $planting_id => $planting_values) {
       $plantings[] = array(
-        'form_state' => $form_state['values']['plantings'][$planting_id],
-        'form' => $form['plantings'][$planting_id],
+        'form_state' => $form_state['values']['timeline']['plantings'][$planting_id],
+        'form' => $form['timeline']['plantings'][$planting_id],
       );
     }
   }
@@ -710,11 +710,11 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
   );
 
   // Add existing plantings to list for validation.
-  if (!empty($form_state['values']['plantings'])) {
-    foreach ($form_state['values']['plantings'] as $planting_id => $planting_values) {
+  if (!empty($form_state['values']['timeline']['plantings'])) {
+    foreach ($form_state['values']['timeline']['plantings'] as $planting_id => $planting_values) {
       $plantings[] = array(
         'submitted' => $planting_values,
-        'current' => $form['plantings'][$planting_id],
+        'current' => $form['timeline']['plantings'][$planting_id],
       );
     }
   }
