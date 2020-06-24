@@ -151,10 +151,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
 
   // Add Planting fieldset.
   $form['new'] = farm_crop_plan_planting_details_form($plan);
-  $form['new']['#type'] = 'fieldset';
-  $form['new']['#title'] = t('Add a planting');
-  $form['new']['#collapsible'] = TRUE;
-  $form['new']['#collapsed'] = TRUE;
 
   // Load information about plantings in this plan.
   $plantings = farm_crop_plan_plantings($plan->id);
@@ -169,12 +165,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
 
     // Add a planting details form.
     $planting_form = farm_crop_plan_planting_details_form($plan, $planting['asset']);
-
-    // Make it a fieldset with a title.
-    $planting_form['#type'] = 'fieldset';
-    $planting_form['#collapsible'] = TRUE;
-    $planting_form['#collapsed'] = TRUE;
-    $planting_form['#title'] = entity_label('farm_asset', $planting['asset']);
 
     // Add the planting to the form values, for use in form submission.
     $planting_form['planting'] = array(
@@ -218,7 +208,21 @@ function farm_crop_plan_form_timeline_ajax($form, $form_state) {
  * Planting details sub-form.
  */
 function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
-  $form = array();
+
+  // Start with a fieldset.
+  $form = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // Set the fieldset title.
+  if (!empty($planting)) {
+    $form['#title'] = check_plain(entity_label('farm_asset', $planting));
+  }
+  else {
+    $form['#title'] = t('Add a planting');
+  }
 
   // If a plan ID is not available, bail.
   if (empty($plan->id)) {
