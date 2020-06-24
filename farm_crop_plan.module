@@ -374,6 +374,8 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   $form['seeding'] = array(
     '#type' => 'fieldset',
     '#title' => t('Seeding'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
     '#weight' => 2,
   );
 
@@ -419,6 +421,8 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   $form['transplanting'] = array(
     '#type' => 'fieldset',
     '#title' => t('Transplanting'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
     '#weight' => 3,
   );
 
@@ -511,6 +515,8 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   $form['harvest'] = array(
     '#type' => 'fieldset',
     '#title' => t('Harvest'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
     '#weight' => 4,
   );
 
