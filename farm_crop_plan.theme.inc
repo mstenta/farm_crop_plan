@@ -49,6 +49,16 @@ function theme_farm_crop_plan_timeline($variables) {
     }
   }
 
+  // Set colgroup widths.
+  $colgroups = array();
+  $days = farm_crop_plan_timeline_num_days($plan_start, $plan_end);
+  $percentage = round(1 / $days, 2);
+  for ($i = 0; $i <= $days; $i++) {
+    $colgroups[0][] = array(
+      'style' => 'width: ' . $percentage . '%;',
+    );
+  }
+
   // Generate header columns.
   $header = farm_crop_plan_timeline_table_header($plan_start, $plan_end);
 
@@ -70,6 +80,7 @@ function theme_farm_crop_plan_timeline($variables) {
 
   // Render the table.
   $options = array(
+    'colgroups' => $colgroups,
     'header' => $header,
     'rows' => $rows,
     'attributes' => array(
@@ -184,7 +195,10 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
     $planting_link = l(t($planting_label), $planting_uri['path']);
 
     // Add the planting link to the first column.
-    $row[] = '<strong>' . $planting_link . '</strong>';
+    $row[] = array(
+      'data' => '<strong>' . $planting_link . '</strong>',
+      'class' => array('left'),
+    );
 
     // Array mapping stage days to start day.
     $stage_days = array();
@@ -204,7 +218,7 @@ function farm_crop_plan_timeline_planting_rows($plantings, $plan_start, $plan_en
       // Map stage to stage_days array by index of the start day.
       $stage_days[$start_day] = array(
         'data' => $stage['data'],
-        'class' => $stage['type'],
+        'class' => array('stage', $stage['type']),
         'colspan' => $total_days,
       );
     }
@@ -299,7 +313,10 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       $row = array();
 
       // Add the area link to the first column.
-      $row[] = $area_link;
+      $row[] = array(
+        'data' => $area_link,
+        'class' => array('left'),
+      );
 
       // Only show the area link for the first planting.
       $area_link = '';
@@ -347,14 +364,14 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       $planting_summary = '<strong>' . $planting_link . '</strong><br /><small>' . $log_link . '</small>';
       $planting_row = array(
         'data' => $planting_summary,
-        'class' => 'planted',
+        'class' => array('stage', 'planted'),
         'colspan' => $total_days - $harvest_days,
       );
 
       // Define a row for the harvest window.
       $harvest_row = array(
         'data' => '<small>' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
-        'class' => 'harvest',
+        'class' => array('stage', 'harvest'),
         'colspan' => $harvest_days,
       );
 
