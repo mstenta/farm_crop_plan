@@ -113,7 +113,7 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   // Add an options fieldset.
   $form['options'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Options'),
+    '#title' => t('Display options'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
