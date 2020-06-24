@@ -1280,6 +1280,7 @@ function farm_crop_plan_plantings($plan_id) {
       continue;
     }
     $days_to_harvest = $planting_record->days_to_harvest;
+    $planting_info['days_to_harvest'] = $days_to_harvest;
 
     // Load "Harvest window". Default to 0 days.
     $harvest_window = $planting_record->harvest_window;
@@ -1329,9 +1330,6 @@ function farm_crop_plan_plantings($plan_id) {
     // Display a seeding stage.
     if (!empty($seeding_log)) {
 
-      // Generate links to areas referenced by the seeding.
-      $area_links = farm_crop_plan_movement_log_area_links($seeding_log);
-
       // Determine the timestamp when the planting will leave this area.
       // This will either be the transplanting timestamp (if a transplant
       // log exists), or the harvest timestamp.
@@ -1340,48 +1338,20 @@ function farm_crop_plan_plantings($plan_id) {
         $end = $transplanting_log->timestamp;
       }
 
-      // Generate a link to the seeding log.
-      $log_label = 'Seeding: ' . date('Y-m-d', $seeding_log->timestamp);
-      $log_uri = entity_uri('log', $seeding_log);
-      $log_link = l($log_label, $log_uri['path']);
-      $log_text = '<small>' . $log_link . '</small>';
-
-      // Add area links if location is included.
-      if (!empty($area_links)) {
-        $log_text .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
-      }
-
       $stages[] = array(
         'start' => $seeding_log->timestamp,
         'end' => $end,
         'type' => 'planted',
-        'data' => $log_text,
         'areas' => farm_crop_plan_movement_log_area_ids($seeding_log),
       );
     }
 
     // Display a transplanting stage.
     if (!empty($transplanting_log)) {
-
-      // Generate links to areas referenced by the transplanting.
-      $area_links = farm_crop_plan_movement_log_area_links($transplanting_log);
-
-      // Generate a link to the transplanting log.
-      $log_label = 'Transplanting: ' . date('Y-m-d', $transplanting_log->timestamp);
-      $log_uri = entity_uri('log', $transplanting_log);
-      $log_link = l($log_label, $log_uri['path']);
-      $log_text = '<small>' . $log_link . '</small>';
-
-      // Add area links if location is included.
-      if (!empty($area_links)) {
-        $log_text .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
-      }
-
       $stages[] = array(
         'start' => $transplanting_log->timestamp,
         'end' => $harvest_timestamp,
         'type' => 'transplanted',
-        'data' => $log_text,
         'areas' => farm_crop_plan_movement_log_area_ids($transplanting_log),
       );
     }
@@ -1396,7 +1366,6 @@ function farm_crop_plan_plantings($plan_id) {
         'end' => $last_harvest_timestamp,
         'type' => 'harvest',
         'areas' => $harvest_areas,
-        'data' => '<small>Harvest ' . date('Y-m-d', $harvest_timestamp) . ' for ' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
       );
     }
 
