@@ -156,42 +156,37 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   $form['new']['#collapsible'] = TRUE;
   $form['new']['#collapsed'] = TRUE;
 
-  // Display Plantings associated with this plan.
-  // Load plantings associated with this plan.
-  $planting_ids = farm_plan_linked_records('farm_crop_plan_planting', $plan->id);
-  $plantings = farm_asset_load_multiple($planting_ids);
-
-  // Sort plantings by name.
-  usort($plantings, function($a, $b) { return strcmp($a->name, $b->name);});
+  // Load information about plantings in this plan.
+  $plantings = farm_crop_plan_plantings($plan->id);
 
   // Iterate through the plantings and build forms.
   foreach ($plantings as $planting) {
 
     // Add a planting details form.
-    $planting_form = farm_crop_plan_planting_details_form($plan, $planting);
+    $planting_form = farm_crop_plan_planting_details_form($plan, $planting['asset']);
 
     // Make it a fieldset with a title.
     $planting_form['#type'] = 'fieldset';
     $planting_form['#collapsible'] = TRUE;
     $planting_form['#collapsed'] = TRUE;
-    $planting_form['#title'] = entity_label('farm_asset', $planting);
+    $planting_form['#title'] = entity_label('farm_asset', $planting['asset']);
 
     // Add the planting to the form values, for use in form submission.
     $planting_form['planting'] = array(
       '#type' => 'value',
-      '#value' => $planting,
+      '#value' => $planting['asset'],
     );
 
     // If the planting has an ID, add a link to remove it.
-    if (!empty($planting->id)) {
+    if (!empty($planting['asset']->id)) {
       $planting_form['remove'] = array(
         '#type' => 'markup',
-        '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/farm_crop_plan_planting/' . $planting->id . '/delete', array('query' => array('destination' => current_path()))),
+        '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/farm_crop_plan_planting/' . $planting['asset']->id . '/delete', array('query' => array('destination' => current_path()))),
         '#weight' => 100,
       );
     }
 
-    $form['plantings'][$planting->id] = $planting_form;
+    $form['plantings'][$planting['asset']->id] = $planting_form;
   }
 
   // Submit button for saving all changes.
@@ -1276,6 +1271,10 @@ function farm_crop_plan_plantings($plan_id) {
     $planting_info['asset'] = $planting_asset;
 
     // Load "Days to harvest". Skip if empty.
+    /**
+     * @todo
+     * Don't skip. Still need to include this.
+     */
     if (empty($planting_record->days_to_harvest)) {
       continue;
     }
@@ -1304,6 +1303,10 @@ function farm_crop_plan_plantings($plan_id) {
     }
 
     // If there is no seeding or transplanting log, skip.
+    /**
+     * @todo
+     * Don't skip. Still need to include this.
+     */
     if (empty($seeding_log) && empty($transplanting_log)) {
       continue;
     }
