@@ -32,9 +32,6 @@ function theme_farm_crop_plan_timeline($variables) {
     return $output;
   }
 
-  // Render the form options.
-  $output .= drupal_render($form['options']);
-
   // Based on the planting info, calculate the plan's start and end timestamps.
   $plan_start = NULL;
   $plan_end = NULL;
