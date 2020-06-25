@@ -178,35 +178,33 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
       // Build the stage content, depending on the type.
       $stage_content = '';
       if ($stage['type'] == 'planted') {
-
-        // Generate a link to the seeding log.
         $log_label = 'Seeding: ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['seeding']);
         $log_link = l($log_label, $log_uri['path']);
         $stage_content = '<small>' . $log_link . '</small>';
-
-        // Add area links if location is included.
-        $area_links = farm_crop_plan_movement_log_area_links($planting['seeding']);
-        if (!empty($area_links)) {
-          $stage_content .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
-        }
       }
       elseif ($stage['type'] == 'transplanted') {
-
-        // Generate a link to the transplanting log.
         $log_label = 'Transplanting: ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['transplanting']);
         $log_link = l($log_label, $log_uri['path']);
         $stage_content = '<small>' . $log_link . '</small>';
-
-        // Add area links if location is included.
-        $area_links = farm_crop_plan_movement_log_area_links($planting['transplanting']);
-        if (!empty($area_links)) {
-          $stage_content .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
-        }
       }
       elseif ($stage['type'] == 'harvest') {
         $stage_content = '<small>Harvest ' . date('Y-m-d', $stage['start']) . ' for ' . format_plural($planting['harvest_window'], '1 day', '@count days') . '</small>';
+      }
+
+      // Add area links to seeding/transplanting stages, if available.
+      if (in_array($stage['type'], array('planted', 'transplanted'))) {
+        if ($stage['type'] == 'planted') {
+          $log = $planting['seeding'];
+        }
+        elseif ($stage['type'] == 'transplanted') {
+          $log = $planting['transplanting'];
+        }
+        $area_links = farm_crop_plan_movement_log_area_links($log);
+        if (!empty($area_links)) {
+          $stage_content .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
+        }
       }
 
       // If both start and end timestamps are not available, stop now.
