@@ -266,6 +266,7 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
       $form_row = array(
         array(
           'data' => '<div id="' . $planting_form_id . '" class="collapse">' . drupal_render($form['plantings'][$planting['asset']->id]) . '</div>',
+          'class' => array('planting-form'),
           'colspan' => $num_days,
         ),
       );

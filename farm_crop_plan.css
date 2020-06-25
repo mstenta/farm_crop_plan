@@ -8,6 +8,13 @@ table.farm-crop-plan > tbody > tr > td {
   padding-left: 0;
   padding-right: 0;
 }
+table.farm-crop-plan > tbody > tr > td.planting-form {
+  border: 0;
+  padding: 0;
+}
+table.farm-crop-plan > tbody > tr > td.planting-form > div {
+  padding-top: 8px;
+}
 table.farm-crop-plan > tbody > tr > td.left,
 table.farm-crop-plan > tbody > tr > td.stage {
   padding: 8px;
