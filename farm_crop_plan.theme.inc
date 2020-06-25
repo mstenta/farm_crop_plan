@@ -178,19 +178,19 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
       // Build the stage content, depending on the type.
       $stage_content = '';
       if ($stage['type'] == 'planted') {
-        $log_label = 'Seeding: ' . date('Y-m-d', $stage['start']);
+        $log_label = t('Seeding') . ': ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['seeding']);
         $log_link = l($log_label, $log_uri['path']);
         $stage_content = '<small>' . $log_link . '</small>';
       }
       elseif ($stage['type'] == 'transplanted') {
-        $log_label = 'Transplanting: ' . date('Y-m-d', $stage['start']);
+        $log_label = t('Transplanting') . ': ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['transplanting']);
         $log_link = l($log_label, $log_uri['path']);
         $stage_content = '<small>' . $log_link . '</small>';
       }
       elseif ($stage['type'] == 'harvest') {
-        $stage_content = '<small>Harvest ' . date('Y-m-d', $stage['start']) . ' for ' . format_plural($planting['harvest_window'], '1 day', '@count days') . '</small>';
+        $stage_content = '<small>'. t('Harvest') . ' ' . date('Y-m-d', $stage['start']) . ' ' . t('for') . ' ' . format_plural($planting['harvest_window'], '1 day', '@count days') . '</small>';
       }
 
       // Add area links to seeding/transplanting stages, if available.
@@ -203,7 +203,7 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
         }
         $area_links = farm_crop_plan_movement_log_area_links($log);
         if (!empty($area_links)) {
-          $stage_content .= '<br /> in <small>' . implode(', ', $area_links) . '</small>';
+          $stage_content .= '<br /> ' . t('in') . ' <small>' . implode(', ', $area_links) . '</small>';
         }
       }
 

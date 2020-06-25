@@ -1083,8 +1083,8 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
           $log_uri = entity_uri('log', $planting_values[$name]['log']);
           $log_url = url($log_uri['path']);
           drupal_set_message(
-            t('The @log_type log <a href="@log_url">@log_name</a> was updated.',
-              array('@log_type' => $name, '@log_url' => $log_url, '@log_name' => $log_name))
+            t('The @log_type log <a href="!log_url">@log_name</a> was updated.',
+              array('@log_type' => $name, '!log_url' => $log_url, '@log_name' => $log_name))
           );
         }
       }
@@ -1095,8 +1095,8 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         $planting_uri = entity_uri('farm_asset', $planting_asset);
         $planting_url = url($planting_uri['path']);
         drupal_set_message(
-          t('The planting asset <a href="@planting_url">@planting_name</a> was updated.',
-          array('@planting_url' => $planting_url, '@planting_name' => $planting_name))
+          t('The planting asset <a href="!planting_url">@planting_name</a> was updated.',
+          array('!planting_url' => $planting_url, '@planting_name' => $planting_name))
         );
       }
     }
@@ -1136,9 +1136,13 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
       farm_plan_link_record('farm_crop_plan_planting', $plan->id, $planting_asset->id);
 
       // Set a message.
-      $label = entity_label('farm_asset', $planting_asset);
-      $uri = entity_uri('farm_asset', $planting_asset);
-      drupal_set_message('Planting created: ' . l($label, $uri['path']));
+      $planting_name = entity_label('farm_asset', $planting_asset);
+      $planting_uri = entity_uri('farm_asset', $planting_asset);
+      $planting_url = url($planting_uri['path']);
+      drupal_set_message(
+        t('Planting created: <a href="!planting_url">@planting_name</a>',
+          array('!planting_url' => $planting_url, '@planting_name' => $planting_name))
+      );
 
       // Load values for logs that need to be created.
       foreach ($log_types as $name => $type) {
