@@ -596,6 +596,13 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#weight' => 6,
   );
 
+  // Submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#weight' => 100,
+  );
+
   return $form;
 }
 
