@@ -94,38 +94,6 @@ function theme_farm_crop_plan_timeline($variables) {
 }
 
 /**
- * Sort plantings by first timestamp.
- */
-function farm_crop_plan_plantings_sort($a, $b) {
-  $a_start = farm_crop_plan_planting_start($a);
-  $b_start = farm_crop_plan_planting_start($b);
-  if ($a_start == $b_start) {
-    return 0;
-  }
-  return ($a_start < $b_start) ? -1 : 1;
-}
-
-/**
- * Determine the start timestamp of a planting.
- *
- * @param array $planting
- *   An array of planting info from farm_crop_plan_plantings().
- *
- * @return int|bool
- *   Returns the timestamp of the earliest stage. Returns FALSE if a timestamp
- *   cannot be found.
- */
-function farm_crop_plan_planting_start($planting) {
-  $start = FALSE;
-  foreach ($planting['stages'] as $stage) {
-    if ($stage['start'] < $start || $start === FALSE) {
-      $start = $stage['start'];
-    }
-  }
-  return $start;
-}
-
-/**
  * Build table rows for the "by planting" mode.
  *
  * @param array &$form
@@ -488,4 +456,36 @@ function farm_crop_plan_timeline_table_header($start, $end) {
  */
 function farm_crop_plan_timeline_num_days($start, $end) {
   return (int) round(($end - $start) / (60 * 60 * 24));
+}
+
+/**
+ * Sort plantings by first timestamp.
+ */
+function farm_crop_plan_plantings_sort($a, $b) {
+  $a_start = farm_crop_plan_planting_start($a);
+  $b_start = farm_crop_plan_planting_start($b);
+  if ($a_start == $b_start) {
+    return 0;
+  }
+  return ($a_start < $b_start) ? -1 : 1;
+}
+
+/**
+ * Determine the start timestamp of a planting.
+ *
+ * @param array $planting
+ *   An array of planting info from farm_crop_plan_plantings().
+ *
+ * @return int|bool
+ *   Returns the timestamp of the earliest stage. Returns FALSE if a timestamp
+ *   cannot be found.
+ */
+function farm_crop_plan_planting_start($planting) {
+  $start = FALSE;
+  foreach ($planting['stages'] as $stage) {
+    if ($stage['start'] < $start || $start === FALSE) {
+      $start = $stage['start'];
+    }
+  }
+  return $start;
 }
