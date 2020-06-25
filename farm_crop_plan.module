@@ -601,16 +601,6 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#weight' => 100,
   );
 
-  // If this is an existing planting, enable saving via AJAX.
-  // This doesn't currently work for new plantings because the "Add a planting"
-  // form is not inside the timeline, so it doesn't get refreshed via AJAX.
-  if (!empty($planting)) {
-    $form['submit']['#ajax'] = array(
-      'callback' => 'farm_crop_plan_form_timeline_ajax',
-      'wrapper' => 'crop-plan-timeline',
-    );
-  }
-
   return $form;
 }
 
