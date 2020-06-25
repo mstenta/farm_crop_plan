@@ -1408,7 +1408,7 @@ function farm_crop_plan_plantings($plan_id) {
       $planting_info['stages'][] = array(
         'start' => $planting_info['seeding']->timestamp,
         'end' => $end,
-        'type' => 'planted',
+        'type' => 'seeding',
         'areas' => farm_crop_plan_movement_log_area_ids($planting_info['seeding']),
       );
     }
@@ -1418,7 +1418,7 @@ function farm_crop_plan_plantings($plan_id) {
       $planting_info['stages'][] = array(
         'start' => $planting_info['transplanting']->timestamp,
         'end' => $harvest_start,
-        'type' => 'transplanted',
+        'type' => 'transplanting',
         'areas' => farm_crop_plan_movement_log_area_ids($planting_info['transplanting']),
       );
     }

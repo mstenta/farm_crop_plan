@@ -177,13 +177,13 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
 
       // Build the stage content, depending on the type.
       $stage_content = '';
-      if ($stage['type'] == 'planted') {
+      if ($stage['type'] == 'seeding') {
         $log_label = t('Seeding') . ': ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['seeding']);
         $log_link = l($log_label, $log_uri['path']);
         $stage_content = '<small>' . $log_link . '</small>';
       }
-      elseif ($stage['type'] == 'transplanted') {
+      elseif ($stage['type'] == 'transplanting') {
         $log_label = t('Transplanting') . ': ' . date('Y-m-d', $stage['start']);
         $log_uri = entity_uri('log', $planting['transplanting']);
         $log_link = l($log_label, $log_uri['path']);
@@ -194,11 +194,11 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
       }
 
       // Add area links to seeding/transplanting stages, if available.
-      if (in_array($stage['type'], array('planted', 'transplanted'))) {
-        if ($stage['type'] == 'planted') {
+      if (in_array($stage['type'], array('seeding', 'transplanting'))) {
+        if ($stage['type'] == 'seeding') {
           $log = $planting['seeding'];
         }
-        elseif ($stage['type'] == 'transplanted') {
+        elseif ($stage['type'] == 'transplanting') {
           $log = $planting['transplanting'];
         }
         $area_links = farm_crop_plan_movement_log_area_links($log);
@@ -313,10 +313,10 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
         }
 
         // Add the seeding/transplanting log.
-        if ($stage['type'] == 'planted') {
+        if ($stage['type'] == 'seeding') {
           $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['seeding'];
         }
-        elseif ($stage['type'] == 'transplanted') {
+        elseif ($stage['type'] == 'transplanting') {
           $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['transplanting'];
         }
         else {
@@ -391,9 +391,11 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       switch ($planting['log']->type) {
         case 'farm_seeding':
           $log_label = t('Seeding');
+          $stage_type = 'seeding';
           break;
         case 'farm_transplanting':
           $log_label = t('Transplanting');
+          $stage_type = 'transplanting';
           break;
         default:
           continue 2;
@@ -404,7 +406,7 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       $planting_summary = '<strong>' . $planting_link . '</strong><br /><small>' . $log_link . '</small>';
       $planting_row = array(
         'data' => $planting_summary,
-        'class' => array('stage', 'planted'),
+        'class' => array('stage', $stage_type),
         'colspan' => $total_days - $harvest_days,
       );
 

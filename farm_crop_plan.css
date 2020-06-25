@@ -22,10 +22,10 @@ table.farm-crop-plan > tbody > tr > td.stage {
 table.farm-crop-plan th.current {
   background-color: #B6EB73;
 }
-table.farm-crop-plan td.planted {
+table.farm-crop-plan td.seeding {
   background-color: #D3FD9D;
 }
-table.farm-crop-plan td.transplanted {
+table.farm-crop-plan td.transplanting {
   background-color: #B6EB73;
 }
 table.farm-crop-plan td.harvest {
