@@ -254,7 +254,7 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
       $planting_form_id = drupal_html_id('farm-crop-plan-planting-form-' . $planting['asset']->id);
 
       // Add a link to the timeline row for toggling form collapse state.
-      $toggle = '<a class="btn btn-sm btn-info" role="button" data-toggle="collapse" href="#' . $planting_form_id . '" aria-expanded="false" aria-controls="' . $planting_form_id . '">Edit</a>';
+      $toggle = '<a class="btn btn-sm btn-success" role="button" data-toggle="collapse" href="#' . $planting_form_id . '" aria-expanded="false" aria-controls="' . $planting_form_id . '">Edit</a>';
       $row['data'][0]['data'] .= '<br />' . $toggle;
 
       // Unset the fieldset title and collapsed state, because the timeline row
