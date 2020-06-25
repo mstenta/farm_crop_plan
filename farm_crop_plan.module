@@ -249,6 +249,11 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     '#collapsed' => TRUE,
   );
 
+  // If this is a new planting, expand the fieldset.
+  if (empty($planting)) {
+    $form['#collapsed'] = FALSE;
+  }
+
   // Set the fieldset title.
   if (!empty($planting)) {
     $form['#title'] = htmlspecialchars(entity_label('farm_asset', $planting));
