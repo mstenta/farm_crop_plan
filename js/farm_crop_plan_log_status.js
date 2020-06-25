@@ -9,8 +9,9 @@
         // timeline[plantings][id][log_type][date]
         // new[log_type][date]
         const matches = this.name.match(/^(new|timeline\[plantings\]\[\d+\])(\[.*\]\[date\])/);
+
         // Bail if no matches.
-        if (matches[0] === 'undefined') {
+        if (!matches || matches[0] === 'undefined') {
           return;
         }
         const dateName = matches[0];
