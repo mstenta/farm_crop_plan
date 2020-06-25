@@ -332,6 +332,11 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       // Only show the area link for the first planting.
       $area_link = '';
 
+      // If the planting start and end timestamps are not set, skip.
+      if (empty($planting['start']) || empty($planting['end'])) {
+        continue;
+      }
+
       // Figure out the day that this planting will start in the area, and the
       // total number of days it will spend there.
       $start_day = (int) round(($planting['start'] - $plan_start) / (60 * 60 * 24));
