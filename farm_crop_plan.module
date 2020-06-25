@@ -8,6 +8,46 @@
 include_once 'farm_crop_plan.features.inc';
 
 /**
+ * Implements hook_help().
+ */
+function farm_crop_plan_help($path, $arg) {
+
+  // Add help text to the crop plan list page.
+  if ($path == 'farm/plans/forest') {
+    $help = '<p>' . t('This page lists all forest plans. Select one from the list below to view it, or click "Add forest plan" to create a new one.') . '</p>';
+    $help .= '<p>' . t('Plans can be archived for future reference. To view archived plans, use the "Filter" options in the list below.') . '</p>';
+    return $help;
+  }
+
+  // If the path starts with 'farm/plan/%', then load the plan and see if it is
+  // a crop plan. If not, bail. Otherwise continue.
+  if (strpos($path, 'farm/plan/%') === 0) {
+    $plan = farm_plan_load($arg[2]);
+    if (empty($plan) || $plan->type != 'crop') {
+      return '';
+    }
+  }
+
+  // Add help text to all farm/plan/% paths.
+  switch ($path) {
+
+    // Plan add/edit form.
+    case 'farm/plan/add/crop':
+    case 'farm/plan/%/edit':
+      $help = '<p>' . t('Use the form below to configure the basic settings for this crop plan. Plantings can be added/edited on the main "Plan" tab.') . '</p>';
+      return $help;
+
+    // Plan view page.
+    case 'farm/plan/%':
+    case 'farm/plan/%/view':
+      $help = '<p>' . t('This page summarizes the details of this crop plan. New plantings can be added to the plan via the "Add a planting" form at the bottom.') . '</p>';
+      $help .= '<p>' . t('The timeline will display all plantings based on their seeding/transplanting/harvest dates, and can be viewed "by planting" (one row per planting) or "by area" (one row per area).') . '</p>';
+      $help .= '<p>' . t('To edit the plan, click the "Settings" tab.') . '</p>';
+      return $help;
+  }
+}
+
+/**
  * Implements hook_farm_ui_entities().
  */
 function farm_crop_plan_farm_ui_entities() {
