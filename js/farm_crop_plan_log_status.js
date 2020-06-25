@@ -6,9 +6,9 @@
       $("input[name*='[date]']").change(function() {
 
         // Get the name to match later on - should be:
-        // plantings[id][log_type][date]
+        // timeline[plantings][id][log_type][date]
         // new[log_type][date]
-        const matches = this.name.match(/^(new|plantings\[\d+\])(\[.*\]\[date\])/);
+        const matches = this.name.match(/^(new|timeline\[plantings\]\[\d+\])(\[.*\]\[date\])/);
         // Bail if no matches.
         if (matches[0] === 'undefined') {
           return;
