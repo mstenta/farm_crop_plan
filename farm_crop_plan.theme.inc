@@ -159,9 +159,9 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
     }
 
     // Generate a planting row to be added to the table.
-    $planting_label = entity_label('farm_asset', $planting['asset']);
+    $planting_label = htmlspecialchars(entity_label('farm_asset', $planting['asset']));
     $planting_uri = entity_uri('farm_asset', $planting['asset']);
-    $planting_link = l(t($planting_label), $planting_uri['path']);
+    $planting_link = l($planting_label, $planting_uri['path']);
 
     // Add the planting link to the first column.
     $row['data'][] = array(
@@ -341,11 +341,11 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
     $area = taxonomy_term_load($area_id);
 
     // Get the area label and URI.
-    $entity_label = entity_label('taxonomy_term', $area);
+    $entity_label = htmlspecialchars(entity_label('taxonomy_term', $area));
     $entity_uri = entity_uri('taxonomy_term', $area);
 
     // Generate a link to the area.
-    $area_link = l(t($entity_label), $entity_uri['path']);
+    $area_link = l($entity_label, $entity_uri['path']);
 
     // Iterate through the plantings.
     foreach ($area_plantings as $planting) {
@@ -384,9 +384,9 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       }
 
       // Generate a planting row to be added to the table.
-      $planting_label = entity_label('farm_asset', $planting['asset']);
+      $planting_label = htmlspecialchars(entity_label('farm_asset', $planting['asset']));
       $planting_uri = entity_uri('farm_asset', $planting['asset']);
-      $planting_link = l(t($planting_label), $planting_uri['path']);
+      $planting_link = l($planting_label, $planting_uri['path']);
       switch ($planting['log']->type) {
         case 'farm_seeding':
           $log_label = t('Seeding');
