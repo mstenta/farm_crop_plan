@@ -303,6 +303,9 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
     }
   }
 
+  // Sort areas and plantings by first timestamp.
+  uasort($areas_plantings, 'farm_crop_plan_areas_plantings_sort');
+
   // Generate rows for each area/planting combination.
   foreach ($areas_plantings as $area_id => $area_plantings) {
 
@@ -456,6 +459,20 @@ function farm_crop_plan_timeline_table_header($start, $end) {
  */
 function farm_crop_plan_timeline_num_days($start, $end) {
   return (int) round(($end - $start) / (60 * 60 * 24));
+}
+
+/**
+ * Sort areas and plantings by first timestamp.
+ */
+function farm_crop_plan_areas_plantings_sort($a, $b) {
+  usort($a, 'farm_crop_plan_plantings_sort');
+  usort($b, 'farm_crop_plan_plantings_sort');
+  $a_start = farm_crop_plan_planting_start($a[0]);
+  $b_start = farm_crop_plan_planting_start($b[0]);
+  if ($a_start == $b_start) {
+    return 0;
+  }
+  return ($a_start < $b_start) ? -1 : 1;
 }
 
 /**
