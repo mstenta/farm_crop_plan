@@ -156,6 +156,18 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     '#value' => $plan,
   );
 
+  // Add Planting fieldset.
+  $form['new'] = farm_crop_plan_planting_details_form($plan, NULL, $form_state, array('new'));
+  $form['new']['#weight'] = 100;
+
+  // Load information about plantings in this plan.
+  $plantings = farm_crop_plan_plantings($plan->id);
+
+  // If there are no plantings, stop here.
+  if (empty($plantings)) {
+    return $form;
+  }
+
   // Set the mode.
   $mode = 'planting';
   if (!empty($form_state['values']['options']['mode']) &&  $form_state['values']['options']['mode'] == 'area') {
@@ -194,12 +206,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     '#prefix' => '<div id="crop-plan-timeline">',
     '#suffix' => '</div>',
   );
-
-  // Add Planting fieldset.
-  $form['new'] = farm_crop_plan_planting_details_form($plan, NULL, $form_state, array('new'));
-
-  // Load information about plantings in this plan.
-  $plantings = farm_crop_plan_plantings($plan->id);
 
   // Iterate through the plantings and build forms.
   foreach ($plantings as $planting) {
