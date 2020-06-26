@@ -147,6 +147,9 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   // Add CSS.
   drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
 
+  // Add JS behavior to automatically check log status checkboxes.
+  drupal_add_js(drupal_get_path('module', 'farm_crop_plan') . '/js/farm_crop_plan_log_status.js');
+
   // Store the plan entity for use in submit.
   $form['plan'] = array(
     '#type' => 'value',
@@ -224,9 +227,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
 
     $form['timeline']['plantings'][$planting['asset']->id] = $planting_form;
   }
-
-  // Add JS behavior to autocheck log status checkboxes.
-  drupal_add_js(drupal_get_path('module', 'farm_crop_plan') . '/js/farm_crop_plan_log_status.js');
 
   return $form;
 }
