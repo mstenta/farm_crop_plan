@@ -212,14 +212,12 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
       '#value' => $planting['asset'],
     );
 
-    // If the planting has an ID, add a link to remove it.
-    if (!empty($planting['asset']->id)) {
-      $planting_form['remove'] = array(
-        '#type' => 'markup',
-        '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/farm_crop_plan_planting/' . $planting['asset']->id . '/delete', array('query' => array('destination' => current_path()))),
-        '#weight' => 100,
-      );
-    }
+    // Add a link to remove the planting.
+    $planting_form['remove'] = array(
+      '#type' => 'markup',
+      '#markup' => l(t('Remove'), 'farm/plan/' . $plan->id . '/farm_crop_plan_planting/' . $planting['asset']->id . '/delete', array('query' => array('destination' => current_path()))),
+      '#weight' => 100,
+    );
 
     $form['timeline']['plantings'][$planting['asset']->id] = $planting_form;
   }
