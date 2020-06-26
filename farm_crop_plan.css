@@ -31,3 +31,11 @@ table.farm-crop-plan td.transplanting {
 table.farm-crop-plan td.harvest {
   background-color: #A2DF54;
 }
+
+/**
+ * @todo
+ * This should be in the farmOS theme, because it is Bootstrap specific.
+ */
+#ui-datepicker-div {
+  z-index: 100 !important;
+}

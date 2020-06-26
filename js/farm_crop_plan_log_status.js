@@ -3,9 +3,9 @@
     attach: function (context, settings) {
 
       // Select date elements, update on change.
-      $("select[name*='[date]']").change(function() {
+      $("input[name*='[date]']").change(function() {
 
-        // Get the name prefix to match later on - should be:
+        // Get the name to match later on - should be:
         // plantings[id][log_type][date]
         // new[log_type][date]
         const matches = this.name.match(/^(new|plantings\[\d+\])(\[.*\]\[date\])/);
@@ -13,33 +13,29 @@
         if (matches[0] === 'undefined') {
           return;
         }
-        const prefix = matches[0];
+        const dateName = matches[0];
 
-        // Get date parts.
-        const year = $(`select[name='${prefix}[year]']`).val();
-        const month = $(`select[name='${prefix}[month]']`).val();
-        const day = $(`select[name='${prefix}[day]']`).val();
-
-        // Bail if incomplete date.
-        if (!year || !month || !day) {
+        // Get date value, bail if empty.
+        const dateval = $(`input[name='${dateName}']`).val();
+        if (!dateval) {
           return;
         }
 
         // Calculate date.
-        const date = Date.parse(`${year}/${month}/${day}`);
+        const date = Date.parse(dateval);
 
         // Get timestamp of today midnight.
         const today = new Date();
-        today.setHours(24,0,0,0);
+        today.setUTCHours(0,0,0,0);
 
         // Calculate the log status from current date.
         let completed = false;
-        if (date < today) {
+        if (date < today.getTime()) {
           completed = true;
         }
 
         // Update relative checkbox.
-        const doneName = prefix.slice(0, -6) + '[done]';
+        const doneName = dateName.slice(0, -12) + '[done]';
         $(`input[name='${doneName}']`).prop("checked", completed);
       });
     }

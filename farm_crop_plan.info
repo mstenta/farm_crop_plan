@@ -3,6 +3,7 @@ description = Crop plan type and related features for farmOS.
 core = 7.x
 package = farmOS Contrib
 dependencies[] = ctools
+dependencies[] = date_popup
 dependencies[] = entity
 dependencies[] = farm_fields
 dependencies[] = farm_plan

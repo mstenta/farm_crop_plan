@@ -434,7 +434,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
   // Seeding date.
   $form['seeding']['date'] = array(
-    '#type' => 'date_select',
+    '#type' => 'date_popup',
     '#title' => t('Seeding date'),
     '#date_format' => $date_format,
     '#date_label_position' => 'within',
@@ -490,7 +490,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
   // Transplanting date.
   $form['transplanting']['date'] = array(
-    '#type' => 'date_select',
+    '#type' => 'date_popup',
     '#title' => t('Transplanting date'),
     '#description' => t('Specify a specific transplanting date. This will override the days to transplant field if changed.'),
     '#date_format' => $date_format,
@@ -568,7 +568,7 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
   // First harvest date.
   $form['harvest']['first_harvest_date'] = array(
-    '#type' => 'date_select',
+    '#type' => 'date_popup',
     '#title' => t('First harvest date'),
     '#description' => t('Date of first harvest. Use this to plan backwards.'),
     '#date_format' => $date_format,
