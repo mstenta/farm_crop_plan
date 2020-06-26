@@ -237,6 +237,14 @@ function farm_crop_plan_form_timeline_ajax($form, $form_state) {
 
 /**
  * Planting details sub-form.
+ *
+ * @param $plan
+ *   The plan entity.
+ * @param $planting
+ *   The planting entity, if it exists. NULL for a "new planting" form.
+ *
+ * @return array
+ *   Returns a form array for use in the larger crop plan form.
  */
 function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
 
