@@ -72,9 +72,6 @@ function theme_farm_crop_plan_timeline($variables) {
     return '';
   }
 
-  // Add CSS.
-  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
-
   // Render the table.
   $options = array(
     'colgroups' => $colgroups,

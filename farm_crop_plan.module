@@ -144,6 +144,9 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
 function farm_crop_plan_form($form, &$form_state, $plan) {
   $form['#tree'] = TRUE;
 
+  // Add CSS.
+  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
+
   // Store the plan entity for use in submit.
   $form['plan'] = array(
     '#type' => 'value',
