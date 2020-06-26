@@ -190,7 +190,7 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   );
 
   // Add Planting fieldset.
-  $form['new'] = farm_crop_plan_planting_details_form($plan);
+  $form['new'] = farm_crop_plan_planting_details_form($plan, NULL, $form_state, array('new'));
 
   // Load information about plantings in this plan.
   $plantings = farm_crop_plan_plantings($plan->id);
@@ -204,7 +204,7 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     }
 
     // Add a planting details form.
-    $planting_form = farm_crop_plan_planting_details_form($plan, $planting['asset']);
+    $planting_form = farm_crop_plan_planting_details_form($plan, $planting['asset'], $form_state, array('timeline', 'plantings', $planting['asset']->id));
 
     // Add the planting to the form values, for use in form submission.
     $planting_form['planting'] = array(
@@ -242,11 +242,27 @@ function farm_crop_plan_form_timeline_ajax($form, $form_state) {
  *   The plan entity.
  * @param $planting
  *   The planting entity, if it exists. NULL for a "new planting" form.
+ * @param array &$form_state
+ *   The $form_state from the parent form. Passed by reference.
+ * @param array $parents
+ *   An array of parent keys for finding values with
+ *   drupal_array_get_nested_value().
  *
  * @return array
  *   Returns a form array for use in the larger crop plan form.
  */
-function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
+function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $parents) {
+
+  // Get submitted values from the $form_state['values'] (as well as
+  // $form_state['input'] so we can unset values for populating via Ajax).
+  $form_values = array();
+  if (!empty($form_state['values'])) {
+    $form_values = &drupal_array_get_nested_value($form_state['values'], $parents);
+  }
+  $form_input = array();
+  if (!empty($form_state['input'])) {
+    $form_input = &drupal_array_get_nested_value($form_state['input'], $parents);
+  }
 
   // Start with a fieldset.
   $form = array(
@@ -405,6 +421,10 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
     }
   }
 
+  // Get the planting asset ID, or use 0 for new plantings. This will be used
+  // for AJAX wrapper DIV IDs below.
+  $planting_id = !empty($planting->id) ? $planting->id : 0;
+
   // Crop.
   $form['crop'] = array(
     '#type' => 'textfield',
@@ -439,19 +459,23 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   );
 
   // Seeding date.
+  // If there are submitted values, convert back to timestamp. Otherwise, use
+  // the value from defaults, if available.
+  $seeding_date = NULL;
+  if (!empty($form_values['seeding']['date'])) {
+    $seeding_date = strtotime($form_values['seeding']['date']);
+  }
+  elseif (!empty($defaults['seeding']['date'])) {
+    $seeding_date = $defaults['seeding']['date'];
+  }
   $form['seeding']['date'] = array(
     '#type' => 'date_popup',
     '#title' => t('Seeding date'),
     '#date_format' => $date_format,
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
-    '#default_value' => NULL,
+    '#default_value' => !empty($seeding_date) ? date($date_format, $seeding_date) : NULL,
   );
-
-  // Only calculate default value if exists.
-  if (!empty($defaults['seeding']['date'])) {
-    $form['seeding']['date']['#default_value'] = date($date_format, $defaults['seeding']['date']);
-  }
 
   // Seeding location.
   $form['seeding']['location'] = array(
@@ -486,29 +510,66 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   );
 
   // Days to transplant.
+  // If "transplanting date" was changed in the form, calculate the days from
+  // seeding to transplanting. Otherwise, use the submitted value, or the value
+  // from defaults, if available.
+  $days_to_transplant = '';
+  if (!empty($form_values['transplanting']['date'])) {
+    if (!empty($seeding_date)) {
+      $days_to_transplant = round((strtotime($form_values['transplanting']['date']) - $seeding_date) / (60 * 60 * 24));
+      unset($form_input['transplanting']['days_to_transplant']);
+    }
+  }
+  elseif (!empty($form_values['transplanting']['days_to_transplant'])) {
+    $days_to_transplant = strtotime($form_values['transplanting']['days_to_transplant']);
+  }
+  elseif (!empty($defaults['transplanting']['days_to_transplant'])) {
+    $days_to_transplant = $defaults['transplanting']['days_to_transplant'];
+  }
   $form['transplanting']['days_to_transplant'] = array(
     '#type' => 'textfield',
     '#title' => t('Days to Transplant'),
-    '#description' => t('Calculate a transplanting date from days after seeding. This will be calculated if not provided.'),
-    '#default_value' => $defaults['transplanting']['days_to_transplant'],
+    '#default_value' => $days_to_transplant,
     '#element_validate' => array('element_validate_integer_positive'),
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_transplant_date_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-transplant-date',
+    ),
+    '#prefix' => '<div id="planting-' . $planting_id . '-transplant-days">',
+    '#suffix' => '</div>',
   );
 
   // Transplanting date.
+  // If "days to transplant" was changed in the form, calculate the date based
+  // on the seeding date. Otherwise, use the submitted value, or the value from
+  // defaults, if available.
+  $transplanting_date = NULL;
+  if (!empty($form_values['transplanting']['days_to_transplant'])) {
+    if (!empty($seeding_date)) {
+      $transplanting_date = strtotime('+' . $form_values['transplanting']['days_to_transplant'] . ' days', $seeding_date);
+      unset($form_input['transplanting']['date']);
+    }
+  }
+  elseif (!empty($form_values['transplanting']['date'])) {
+    $transplanting_date = strtotime($form_values['transplanting']['date']);
+  }
+  elseif (!empty($defaults['transplanting']['date'])) {
+    $transplanting_date = $defaults['transplanting']['date'];
+  }
   $form['transplanting']['date'] = array(
     '#type' => 'date_popup',
     '#title' => t('Transplanting date'),
-    '#description' => t('Specify a specific transplanting date. This will override the days to transplant field if changed.'),
     '#date_format' => $date_format,
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
-    '#default_value' => NULL,
+    '#default_value' => !empty($transplanting_date) ? date($date_format, $transplanting_date) : NULL,
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_days_to_transplant_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-transplant-days',
+    ),
+    '#prefix' => '<div id="planting-' . $planting_id . '-transplant-date">',
+    '#suffix' => '</div>',
   );
-
-  // Only calculate default value if exists.
-  if (!empty($defaults['transplanting']['date'])) {
-    $form['transplanting']['date']['#default_value'] = date($date_format, $defaults['transplanting']['date']);
-  }
 
   // Transplanting location.
   $form['transplanting']['location'] = array(
@@ -565,22 +626,67 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   );
 
   // Days to harvest.
+  // If "first harvest date" was changed in the form, calculate the days from
+  // seeding/transplanting to harvest. Otherwise, use the submitted value, or
+  // the value from defaults, if available.
+  $days_to_harvest = '';
+  if (!empty($form_values['harvest']['first_harvest_date'])) {
+    $start_date = !empty($seeding_date) ? $seeding_date : $transplanting_date;
+    if (!empty($start_date)) {
+      $days_to_harvest = round((strtotime($form_values['harvest']['first_harvest_date']) - $start_date) / (60 * 60 * 24));
+      unset($form_input['harvest']['days_to_harvest']);
+    }
+  }
+  elseif (!empty($form_values['harvest']['days_to_harvest'])) {
+    $days_to_harvest = $form_values['harvest']['days_to_harvest'];
+  }
+  elseif (!empty($defaults['days_to_harvest'])) {
+    $days_to_harvest = $defaults['days_to_harvest'];
+  }
   $form['harvest']['days_to_harvest'] = array(
     '#type' => 'textfield',
     '#title' => t('Days to harvest'),
-    '#default_value' => $defaults['days_to_harvest'],
+    '#default_value' => $days_to_harvest,
     '#element_validate' => array('element_validate_integer_positive'),
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_harvest_date_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-harvest-date',
+    ),
+    '#prefix' => '<div id="planting-' . $planting_id . '-harvest-days">',
+    '#suffix' => '</div>',
   );
 
   // First harvest date.
+  // If "days to harvest" was changed in the form, calculate the date based
+  // on the seeding/transplanting date. Otherwise, use the value from defaults,
+  // if available.
+  $harvest_date = NULL;
+  if (!empty($form_values['harvest']['days_to_harvest'])) {
+    $start_date = !empty($seeding_date) ? $seeding_date : $transplanting_date;
+    if (!empty($start_date)) {
+      $harvest_date = strtotime('+' . $form_values['harvest']['days_to_harvest'] . ' days', $start_date);
+      unset($form_input['harvest']['first_harvest_date']);
+    }
+  }
+  elseif (!empty($form_values['harvest']['first_harvest_date'])) {
+    $harvest_date = strtotime($form_values['harvest']['first_harvest_date']);
+  }
+  elseif (!empty($defaults['harvest']['first_harvest_date'])) {
+    $harvest_date = $defaults['harvest']['first_harvest_date'];
+  }
   $form['harvest']['first_harvest_date'] = array(
     '#type' => 'date_popup',
     '#title' => t('First harvest date'),
-    '#description' => t('Date of first harvest. Use this to plan backwards.'),
     '#date_format' => $date_format,
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
-    '#default_value' => NULL,
+    '#default_value' => !empty($harvest_date) ? date($date_format, $harvest_date) : NULL,
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_days_to_harvest_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-harvest-days',
+    ),
+    '#prefix' => '<div id="planting-' . $planting_id . '-harvest-date">',
+    '#suffix' => '</div>',
   );
 
   // Harvest window.
@@ -608,6 +714,47 @@ function farm_crop_plan_planting_details_form($plan, $planting = NULL) {
   );
 
   return $form;
+}
+
+/**
+ * Ajax callback that returns a days to transplant element.
+ */
+function farm_crop_plan_form_days_to_transplant_ajax($form, $form_state) {
+  return farm_crop_plan_ajax_helper($form, $form_state, 'days_to_transplant');
+}
+
+/**
+ * Ajax callback that returns a transplanting date element.
+ */
+function farm_crop_plan_form_transplant_date_ajax($form, $form_state) {
+  return farm_crop_plan_ajax_helper($form, $form_state, 'date');
+}
+
+/**
+ * Ajax callback that returns a days to harvest element.
+ */
+function farm_crop_plan_form_days_to_harvest_ajax($form, $form_state) {
+  return farm_crop_plan_ajax_helper($form, $form_state, 'days_to_harvest');
+}
+
+/**
+ * Ajax callback that returns a harvest date element.
+ */
+function farm_crop_plan_form_harvest_date_ajax($form, $form_state) {
+  return farm_crop_plan_ajax_helper($form, $form_state, 'first_harvest_date');
+}
+
+/**
+ * Helper function for use in Ajax callbacks above.
+ */
+function farm_crop_plan_ajax_helper($form, $form_state, $name) {
+  $key_exists = NULL;
+  $parents = $form_state['triggering_element']['#parents'];
+  array_pop($parents);
+  $value = drupal_array_get_nested_value($form, $parents, $key_exists);
+  if ($key_exists) {
+    return $value[$name];
+  }
 }
 
 /**
