@@ -1565,28 +1565,30 @@ function farm_crop_plan_plantings($plan_id) {
         $end = $planting_info['transplanting']->timestamp;
       }
 
+      $seeding_areas = farm_crop_plan_movement_log_area_ids($planting_info['seeding']);
       $planting_info['stages'][] = array(
         'start' => $planting_info['seeding']->timestamp,
         'end' => $end,
         'type' => 'seeding',
-        'areas' => farm_crop_plan_movement_log_area_ids($planting_info['seeding']),
+        'areas' => $seeding_areas,
       );
     }
 
     // Add a transplanting stage.
     if (!empty($planting_info['transplanting'])) {
+      $transplanting_areas = farm_crop_plan_movement_log_area_ids($planting_info['transplanting']);
       $planting_info['stages'][] = array(
         'start' => $planting_info['transplanting']->timestamp,
         'end' => $harvest_start,
         'type' => 'transplanting',
-        'areas' => farm_crop_plan_movement_log_area_ids($planting_info['transplanting']),
+        'areas' => $transplanting_areas,
       );
     }
 
     // Add a harvest stage.
     // The harvest will take place in the transplant area, if it exists.
     // Otherwise it will take place in the seeding area.
-    $harvest_areas = !empty($area_links) ? array_keys($area_links) : array();
+    $harvest_areas = !empty($transplanting_areas) ? $transplanting_areas : $seeding_areas;
     if (!empty($planting_record->harvest_window)) {
       $planting_info['stages'][] = array(
         'start' => $harvest_start,
