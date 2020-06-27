@@ -182,8 +182,7 @@ function farm_crop_plan_timeline_planting_rows(&$form, $plantings, $plan_start, 
       $start_day = (int) round(($stage['start'] - $plan_start) / (60 * 60 * 24));
       $end_day = (int) round(($stage['end'] - $plan_start) / (60 * 60 * 24));
 
-      // Calculate total days as the difference to prevent edge cases that
-      // display a gap between harvest and transplant.
+      // Calculate total days.
       $total_days = $end_day - $start_day;
 
       // Map stage to stage_days array by index of the start day.
@@ -271,31 +270,9 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
   foreach ($plantings as $delta => $planting) {
     foreach ($planting['stages'] as $stage) {
       foreach ($stage['areas'] as $area_id) {
-
-        // Add the planting if it isn't already.
         if (empty($areas_plantings[$area_id][$delta])) {
           $areas_plantings[$area_id][$delta] = $planting;
         }
-
-        // Add the seeding/transplanting log.
-        if ($stage['type'] == 'seeding') {
-          $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['seeding'];
-        }
-        elseif ($stage['type'] == 'transplanting') {
-          $areas_plantings[$area_id][$delta]['log'] = $areas_plantings[$area_id][$delta]['transplanting'];
-        }
-        else {
-          continue;
-        }
-
-        // If both start and end timestamps are not available, stop now.
-        if (empty($stage['start']) || empty($stage['end'])) {
-          continue;
-        }
-
-        // Set the start and end dates for this stage.
-        $areas_plantings[$area_id][$delta]['start'] = $stage['start'];
-        $areas_plantings[$area_id][$delta]['end'] = $stage['end'];
       }
     }
   }
@@ -318,10 +295,12 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
 
     // Iterate through the plantings.
     foreach ($area_plantings as $planting) {
-      $row = array();
+      $row = array(
+        'data' => array(),
+      );
 
       // Add the area link to the first column.
-      $row[] = array(
+      $row['data'][] = array(
         'data' => $area_link,
         'class' => array('left'),
       );
@@ -329,82 +308,75 @@ function farm_crop_plan_timeline_area_rows($plantings, $plan_start, $plan_end) {
       // Only show the area link for the first planting.
       $area_link = '';
 
-      // If the planting start and end timestamps are not set, skip.
-      if (empty($planting['start']) || empty($planting['end'])) {
-        continue;
-      }
-
-      // Figure out the day that this planting will start in the area, and the
-      // total number of days it will spend there.
-      $start_day = (int) round(($planting['start'] - $plan_start) / (60 * 60 * 24));
-      $total_days = (int) round(($planting['end'] - $planting['start']) / (60 * 60 * 24));
-
-      // Calculate harvest days if a harvest window was specified.
-      $harvest_window = 0;
-      $harvest_days = 0;
-      if (!empty($planting['harvest_window'])) {
-        $harvest_window = $planting['harvest_window'];
-        $harvest_days = (int) $harvest_window;
-
-        // Minimum of 1 day to ensure harvest window is displayed.
-        if ($harvest_days == 0) {
-          $harvest_days = 1;
-        }
-      }
-
-      // If a log is not available, skip it.
-      if (empty($planting['log'])) {
-        continue;
-      }
-
-      // Generate a planting row to be added to the table.
+      // Generate a link to the planting asset.
       $planting_label = htmlspecialchars(entity_label('farm_asset', $planting['asset']));
       $planting_uri = entity_uri('farm_asset', $planting['asset']);
       $planting_link = l($planting_label, $planting_uri['path']);
-      switch ($planting['log']->type) {
-        case 'farm_seeding':
-          $log_label = t('Seeding');
-          $stage_type = 'seeding';
-          break;
-        case 'farm_transplanting':
-          $log_label = t('Transplanting');
-          $stage_type = 'transplanting';
-          break;
-        default:
-          continue 2;
-      }
-      $log_label .= ': ' . date('Y-m-d', $planting['log']->timestamp);
-      $log_uri = entity_uri('log', $planting['log']);
-      $log_link = l($log_label, $log_uri['path']);
-      $planting_summary = '<strong>' . $planting_link . '</strong><br /><small>' . $log_link . '</small>';
-      $planting_row = array(
-        'data' => $planting_summary,
-        'class' => array('stage', $stage_type),
-        'colspan' => $total_days - $harvest_days,
-      );
 
-      // Define a row for the harvest window.
-      $harvest_timestamp = strtotime('+' . $planting['days_to_harvest'] . ' days', $planting['log']->timestamp);
-      $harvest_row = array(
-        'data' => '<small>Harvest ' . date('Y-m-d', $harvest_timestamp) . ' for ' . format_plural($harvest_window, '1 day', '@count days') . '</small>',
-        'class' => array('stage', 'harvest'),
-        'colspan' => $harvest_days,
-      );
+      // Array mapping stage days to start day.
+      $stage_days = array();
+
+      // Map stages to day columns.
+      foreach ($planting['stages'] as $stage) {
+
+        // If this stage does not take place in this area, skip it.
+        if (!in_array($area_id, $stage['areas'])) {
+          continue;
+        }
+
+        // Build the stage content, depending on the type.
+        $stage_content = '';
+        if ($stage['type'] == 'seeding') {
+          $log_label = t('Seeding') . ': ' . date('Y-m-d', $stage['start']);
+          $log_uri = entity_uri('log', $planting['seeding']);
+          $log_link = l($log_label, $log_uri['path']);
+          $stage_content = '<strong>' . $planting_link . '</strong><br /><small>' . $log_link . '</small>';
+        }
+        elseif ($stage['type'] == 'transplanting') {
+          $log_label = t('Transplanting') . ': ' . date('Y-m-d', $stage['start']);
+          $log_uri = entity_uri('log', $planting['transplanting']);
+          $log_link = l($log_label, $log_uri['path']);
+          $stage_content = '<strong>' . $planting_link . '</strong><br /><small>' . $log_link . '</small>';
+        }
+        elseif ($stage['type'] == 'harvest') {
+          $stage_content = '<small>'. t('Harvest') . ' ' . date('Y-m-d', $stage['start']) . ' ' . t('for') . ' ' . format_plural($planting['harvest_window'], '1 day', '@count days') . '</small>';
+        }
+
+        // If both start and end timestamps are not available, stop now.
+        if (empty($stage['start']) || empty($stage['end'])) {
+          continue;
+        }
+
+        // Figure out the day that this planting will start in the area, and the
+        // total number of days it will spend there.
+        $start_day = (int) round(($stage['start'] - $plan_start) / (60 * 60 * 24));
+        $end_day = (int) round(($stage['end'] - $plan_start) / (60 * 60 * 24));
+
+        // Calculate total days.
+        $total_days = $end_day - $start_day;
+
+        // Map stage to stage_days array by index of the start day.
+        $stage_days[$start_day] = array(
+          'data' => $stage_content,
+          'class' => array('stage', $stage['type']),
+          'colspan' => $total_days,
+        );
+      }
 
       // Generate all cells in the row.
       $num_days = farm_crop_plan_timeline_num_days($plan_start, $plan_end);
       for ($j = 0; $j < $num_days; $j++) {
-        if ($j == $start_day) {
-          $row[] = $planting_row;
-          if ($harvest_days > 0) {
-            $row[] = $harvest_row;
-          }
+        if (isset($stage_days[$j])) {
+          $row['data'][] = $stage_days[$j];
           // Update number of cells remaining.
           // Avoid rendering too many cells in each row.
-          $j += $total_days - 1;
+          $span = $stage_days[$j]['colspan'];
+          if ($span > 0) {
+            $j += $span - 1;
+          }
         }
         else {
-          $row[] = '';
+          $row['data'][] = '';
         }
       }
 
