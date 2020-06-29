@@ -773,129 +773,57 @@ function farm_crop_plan_ajax_helper($form, $form_state, $name) {
  */
 function farm_crop_plan_form_validate($form, &$form_state) {
 
-  // Start an array of plantings to validate.
-  $plantings = array();
-
-  // First validate any new plantings.
-  $plantings[] = array(
-    'form_state' => $form_state['values']['new'],
-    'form' => $form['new'],
-  );
-
-  // Add existing plantings to list for validation.
-  if (!empty($form_state['values']['timeline']['plantings'])) {
-    foreach ($form_state['values']['timeline']['plantings'] as $planting_id => $planting_values) {
-      $plantings[] = array(
-        'form_state' => $form_state['values']['timeline']['plantings'][$planting_id],
-        'form' => $form['timeline']['plantings'][$planting_id],
-      );
-    }
+  // If seeding/transplanting dates were provided for a "new" planting, but the
+  // crop/variety is empty, throw an error.
+  if ((!empty($form_state['values']['new']['seeding']['date']) || !(empty($form_state['values']['new']['transplanting']['date']))) && empty($form_state['values']['new']['crop'])) {
+    form_error($form['new']['crop'], t('The crop/variety must be specified to create a new planting.'));
   }
 
-  // Iterate through the submitted planting values.
-  foreach($plantings as $form_values) {
+  // If a "new planting" crop/variety is entered, validate the new planting.
+  if (!empty($form_state['values']['new']['crop'])) {
+    farm_crop_plan_form_validate_planting($form['new'], $form_state['values']['new']);
+  }
 
-    // Load the planting form and form_state.
-    $planting = $form_values['form_state'];
-    $element = $form_values['form'];
+  // Iterate through the existing plantings and validate each.
+  foreach ($form_state['values']['timeline']['plantings'] as $delta => $planting_values) {
+    farm_crop_plan_form_validate_planting($form['timeline']['plantings'][$delta], $planting_values);
+  }
+}
 
-    // Bail if planting has no values.
-    if (empty($planting)) {
-      return;
-    }
+/**
+ * Helper function for validating a single planting details form.
+ */
+function farm_crop_plan_form_validate_planting($form, $values) {
 
-    // Load the planting name, default to 'New Planting'
-    // if the planting hasn't been created.
-    $planting_name = 'New Planting';
-    if (!empty($planting['planting'])) {
-      $planting_name = $planting['planting']->name;
-    }
+  // Load the planting name, default to 'New Planting'
+  // if the planting hasn't been created.
+  $planting_name = 'New Planting';
+  if (!empty($values['planting'])) {
+    $planting_name = $values['planting']->name;
+  }
 
-    // Save harvest info.
-    $harvest_date = $planting['harvest']['first_harvest_date'];
-    $days_to_harvest = $planting['harvest']['days_to_harvest'];
+  // Ensure seeding/transplanting date is set if location is provided.
+  if (!empty($values['seeding']['location']) && empty($values['seeding']['date'])) {
+    form_error($form['seeding']['date'], $planting_name . ': ' . t('Seeding date must be provided with seeding location.'));
+  }
+  if (!empty($values['transplanting']['location']) && empty($values['transplanting']['date'])) {
+    form_error($form['transplanting']['date'], $planting_name . ': ' . t('Transplanting date must be provided with transplanting location.'));
+  }
 
-    // Ensure days to harvest is supplied with harvest date.
-    if (!empty($harvest_date) && empty($days_to_harvest)) {
-      form_error($element['harvest']['first_harvest_date'], $planting_name . ': ' . t('Days to harvest must be provided with harvest date.'));
-    }
+  // If "days to transplant" is provided, there must be a seeding date.
+  if (!empty($values['transplanting']['days_to_transplant']) && empty($values['seeding']['date'])) {
+    form_error($form['transplanting']['days_to_transplant'], $planting_name . ': ' . t('Seeding date is required to calculate transplanting date from days to transplant.'));
+  }
 
-    // Check if we can plan backwards.
-    $plan_backwards = !empty($harvest_date) && !empty($days_to_harvest);
+  // If both seeding and transplanting dates are provided, ensure transplanting
+  // comes after seeding.
+  if (!empty($values['seeding']['date']) && !empty($values['transplanting']['date']) && strtotime($values['seeding']['date']) >= strtotime($values['transplanting']['date'])) {
+    form_error($form['transplanting']['date'], $planting_name . ': ' . t('Transplanting date must be after seeding date.'));
+  }
 
-    // Ensure both seeding date and location are provided.
-    $seeding_date = $planting['seeding']['date'];
-    $seeding_location = $planting['seeding']['location'];
-
-    // Indicate if the user supplied seeding info.
-    $supplied_seeding = !empty($seeding_date) || !empty($seeding_location);
-
-    // Validate seeding info.
-    if ($supplied_seeding) {
-
-      // Ensure seeding date is provided if not planning backwards.
-      if (!$plan_backwards && empty($seeding_date)) {
-        form_error($element['seeding']['date'], $planting_name . ': ' . t('Seeding date must be provided with seeding location.'));
-      }
-    }
-
-    // Ensure we don't remove an existing log.
-    $seeding_log_exists = !empty($planting['seeding']['log']);
-    if ($seeding_log_exists && !$supplied_seeding) {
-      form_error($element['seeding'], $planting_name . ': ' .  t('Seeding log cannot be removed.'));
-    }
-
-    // Ensure both transplanting date and location are provided.
-    $days_to_transplant = $planting['transplanting']['days_to_transplant'];
-    $transplanting_date = $planting['transplanting']['date'];
-    $transplanting_location = $planting['transplanting']['location'];
-
-    // Indicate if the user supplied transplanting info.
-    $supplied_transplanting = !empty($days_to_transplant) || !empty($transplanting_date) || !empty($transplanting_location);
-
-    // Validate transplanting info.
-    if ($supplied_transplanting) {
-
-      // If days to transplant is provided, ensure a seeding date is provided, or planning backwards.
-      if (!empty($days_to_transplant) && (!$plan_backwards && empty($seeding_date))) {
-        form_error($element['seeding']['date'], $planting_name . ': ' . t('Seeding date is required to calculate transplanting date from days to transplant.'));
-      }
-
-      // Ensure transplanting date is provided.
-      if (empty($transplanting_date) && empty($days_to_transplant)) {
-        form_error($element['transplanting']['date'], $planting_name . ': ' .  t('Transplanting date must be provided with transplanting location.'));
-      }
-
-      // Ensure transplanting date is scheduled after seeding date.
-      if (!empty($transplanting_date) && !empty($seeding_date)) {
-        if ($transplanting_date <= $seeding_date) {
-          form_error($element['transplanting']['date'], $planting_name . ': ' . t('Transplanting date must be after seeding date.'));
-        }
-      }
-    }
-
-    // Ensure we don't remove an existing log.
-    $transplanting_log_exists = !empty($planting['transplanting']['log']);
-    if ($transplanting_log_exists && !$supplied_transplanting) {
-      form_error($element['transplanting'], $planting_name . ': ' .  t('Transplanting log cannot be removed.'));
-    }
-
-    // Validate crop.
-    $crop = $planting['crop'];
-    $crop_required = TRUE;
-    if (empty($crop)) {
-
-      // When creating a new planting, only require the crop if
-      // a seeding or transplanting log are supplied.
-      if (empty($planting['planting']) && !($supplied_seeding || $supplied_transplanting)) {
-        $crop_required = FALSE;
-      }
-
-      // Set a form error if the corp is required.
-      if ($crop_required) {
-        form_error($element['crop'], $planting_name . ': ' . t('Crop cannot be empty.'));
-      }
-    }
+  // Ensure days to harvest is supplied with harvest date.
+  if (!empty($values['harvest']['first_harvest_date']) && empty($values['harvest']['days_to_harvest'])) {
+    form_error($form['harvest']['first_harvest_date'], $planting_name . ': ' . t('Days to harvest must be provided with harvest date.'));
   }
 }
 
