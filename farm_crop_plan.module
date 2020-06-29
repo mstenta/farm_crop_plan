@@ -750,6 +750,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     '#title' => t('Planting Name'),
     '#description' => t('The planting asset name will default to "[Season] [Location] [Crop(s)]" but can be modified here. If both a seeding and a transplanting log are created, the transplanting location will be used.' ),
     '#default_value' => $planting_name,
+    '#required' => !empty($planting_id),
     '#weight' => 6,
     '#prefix' => '<div id="planting-' . $planting_id . '-name">',
     '#suffix' => '</div>',
@@ -832,6 +833,12 @@ function farm_crop_plan_form_validate($form, &$form_state) {
   // crop/variety is empty, throw an error.
   if ((!empty($form_state['values']['new']['seeding']['date']) || !(empty($form_state['values']['new']['transplanting']['date']))) && empty($form_state['values']['new']['crop'])) {
     form_error($form['new']['crop'], t('The crop/variety must be specified to create a new planting.'));
+  }
+
+  // If a "new planting" crop/variety is entered, ensure that a planting name
+  // is provided as well.
+  if (!empty($form_state['values']['new']['crop']) && empty($form_state['values']['new']['name'])) {
+    form_error($form['new']['name'], t('A new planting must have a name.'));
   }
 
   // If a "new planting" crop/variety is entered, validate the new planting.
