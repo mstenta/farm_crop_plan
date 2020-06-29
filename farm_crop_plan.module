@@ -666,12 +666,14 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   // First harvest date.
-  // If "days to harvest" was changed in the form, calculate the date based
-  // on the seeding/transplanting date. Otherwise, use the value from defaults,
-  // if available.
+  // If "days to harvest" was set in the form, calculate the date based on the
+  // seeding/transplanting date. Otherwise, if a submitted value is available,
+  // use that. Lastly, if a start date and default days to harvest is set,
+  // use them to calculate a harvest date for initial form load (before any
+  // values are submitted).
   $harvest_date = NULL;
+  $start_date = !empty($seeding_date) ? $seeding_date : $transplanting_date;
   if (!empty($form_values['harvest']['days_to_harvest'])) {
-    $start_date = !empty($seeding_date) ? $seeding_date : $transplanting_date;
     if (!empty($start_date)) {
       $harvest_date = strtotime('+' . $form_values['harvest']['days_to_harvest'] . ' days', $start_date);
       unset($form_input['harvest']['first_harvest_date']);
@@ -680,8 +682,8 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   elseif (!empty($form_values['harvest']['first_harvest_date'])) {
     $harvest_date = strtotime($form_values['harvest']['first_harvest_date']);
   }
-  elseif (!empty($defaults['harvest']['first_harvest_date'])) {
-    $harvest_date = $defaults['harvest']['first_harvest_date'];
+  elseif (!empty($start_date) && !empty($defaults['days_to_harvest'])) {
+    $harvest_date = strtotime('+' . $defaults['days_to_harvest'] . ' days', $start_date);
   }
   $form['harvest']['first_harvest_date'] = array(
     '#type' => 'date_popup',
