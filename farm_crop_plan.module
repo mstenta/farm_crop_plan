@@ -306,6 +306,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     'name' => NULL,
     'crop' => NULL,
     'seeding' => array(
+      'log' => NULL,
       'done' => FALSE,
       'date' => NULL,
       'location' => '',
@@ -316,6 +317,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
       ),
     ),
     'transplanting' => array(
+      'log' => NULL,
       'done' => FALSE,
       'days_to_transplant' => '',
       'date' => NULL,
@@ -453,12 +455,10 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   // Add seeding log to form_state.
-  if (!empty($defaults['seeding']['log'])) {
-    $form['seeding']['log'] = array(
-      '#type' => 'value',
-      '#value' => $defaults['seeding']['log'],
-    );
-  }
+  $form['seeding']['log'] = array(
+    '#type' => 'value',
+    '#value' => $defaults['seeding']['log'],
+  );
 
   // Add a checkbox for status of seeding log.
   $form['seeding']['done'] = array(
@@ -504,12 +504,10 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   // Add transplanting log to form_state.
-  if (!empty($defaults['transplanting']['log'])) {
-    $form['transplanting']['log'] = array(
-      '#type' => 'value',
-      '#value' => $defaults['transplanting']['log'],
-    );
-  }
+  $form['transplanting']['log'] = array(
+    '#type' => 'value',
+    '#value' => $defaults['transplanting']['log'],
+  );
 
   // Add a checkbox for status of transplanting log.
   $form['transplanting']['done'] = array(
