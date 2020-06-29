@@ -133,6 +133,8 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
   $content = &$entity->content;
 
   // Add the crop plan form.
+  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
+  drupal_add_js(drupal_get_path('module', 'farm_crop_plan') . '/js/farm_crop_plan_log_status.js');
   $content['form'] = drupal_get_form('farm_crop_plan_form', $entity);
   $content['form']['#access'] = farm_crop_plan_access($entity);
   $content['form']['#weight'] = 100;
@@ -143,12 +145,6 @@ function farm_crop_plan_entity_view($entity, $type, $view_mode, $langcode) {
  */
 function farm_crop_plan_form($form, &$form_state, $plan) {
   $form['#tree'] = TRUE;
-
-  // Add CSS.
-  drupal_add_css(drupal_get_path('module', 'farm_crop_plan') . '/farm_crop_plan.css');
-
-  // Add JS behavior to automatically check log status checkboxes.
-  drupal_add_js(drupal_get_path('module', 'farm_crop_plan') . '/js/farm_crop_plan_log_status.js');
 
   // Store the plan entity for use in submit.
   $form['plan'] = array(
