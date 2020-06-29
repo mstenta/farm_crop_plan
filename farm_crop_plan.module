@@ -438,6 +438,10 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_crop',
     '#default_value' => $defaults['crop'],
     '#required' => !empty($planting_id),
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_planting_name_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-name',
+    ),
     '#weight' => 1,
   );
 
@@ -484,11 +488,20 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   // Seeding location.
+  // Use the submitted value, if available, otherwise use the default value.
+  $seeding_location = $defaults['seeding']['location'];
+  if (!empty($form_values['seeding']['location'])) {
+    $seeding_location = $form_values['seeding']['location'];
+  }
   $form['seeding']['location'] = array(
     '#type' => 'textfield',
     '#title' => t( 'Seeding Location'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
-    '#default_value' => $defaults['seeding']['location'],
+    '#default_value' => $seeding_location,
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_planting_name_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-name',
+    ),
   );
 
   // Transplanting info.
@@ -577,11 +590,20 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   // Transplanting location.
+  // Use the submitted value, if available, otherwise use the default value.
+  $transplanting_location = $defaults['transplanting']['location'];
+  if (!empty($form_values['transplanting']['location'])) {
+    $transplanting_location = $form_values['transplanting']['location'];
+  }
   $form['transplanting']['location'] = array(
     '#type' => 'textfield',
     '#title' => t( 'Transplanting Location'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_area',
-    '#default_value' => $defaults['transplanting']['location'],
+    '#default_value' => $transplanting_location,
+    '#ajax' => array(
+      'callback' => 'farm_crop_plan_form_planting_name_ajax',
+      'wrapper' => 'planting-' . $planting_id . '-name',
+    ),
   );
 
   // Save quantity measure options.
@@ -705,12 +727,32 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   // Planting asset name.
+  // If the crop/varient, seeding location, or transplanting location values
+  // change, generate a new planting asset name. Otherwise, use the default
+  // value, if available.
+  $planting_name = '';
+  if (!empty($form_values['crop'])) {
+    $planting_location = '';
+    if (!empty($form_values['transplanting']['location'])) {
+      $planting_location = $form_values['transplanting']['location'];
+    }
+    elseif (!empty($form_values['seeding']['location'])) {
+      $planting_location = $form_values['seeding']['location'];
+    }
+    $planting_name = farm_crop_plan_planting_name_generate($plan, $form_values['crop'], $planting_location);
+    unset($form_input['name']);
+  }
+  elseif (!empty($defaults['name'])) {
+    $planting_name = $defaults['name'];
+  }
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Planting Name'),
     '#description' => t('The planting asset name will default to "[Season] [Location] [Crop(s)]" but can be modified here. If both a seeding and a transplanting log are created, the transplanting location will be used.' ),
-    '#default_value' => $defaults['name'],
+    '#default_value' => $planting_name,
     '#weight' => 6,
+    '#prefix' => '<div id="planting-' . $planting_id . '-name">',
+    '#suffix' => '</div>',
   );
 
   // Submit button.
@@ -721,6 +763,13 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
   );
 
   return $form;
+}
+
+/**
+ * Ajax callback that returns the planting name element.
+ */
+function farm_crop_plan_form_planting_name_ajax($form, $form_state) {
+  return farm_crop_plan_ajax_helper($form, $form_state, 'name');
 }
 
 /**
@@ -755,12 +804,22 @@ function farm_crop_plan_form_harvest_date_ajax($form, $form_state) {
  * Helper function for use in Ajax callbacks above.
  */
 function farm_crop_plan_ajax_helper($form, $form_state, $name) {
-  $key_exists = NULL;
   $parents = $form_state['triggering_element']['#parents'];
   array_pop($parents);
-  $value = drupal_array_get_nested_value($form, $parents, $key_exists);
-  if ($key_exists) {
+  $value = drupal_array_get_nested_value($form, $parents);
+  if (!empty($value[$name])) {
     return $value[$name];
+  }
+
+  // If that didn't work, try one more level up. This is used when a field
+  // within a nested fieldset needs to update a field in the parent fieldset.
+  // For example: transplanting location is used to update planting name.
+  else {
+    array_pop($parents);
+    $value = drupal_array_get_nested_value($form, $parents);
+    if (!empty($value[$name])) {
+      return $value[$name];
+    }
   }
 }
 
@@ -1390,6 +1449,50 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
     // Update the Crop Plan Planting.
     drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
   }
+}
+
+/**
+ * Generate a planting name for a given plan, crop, and location.
+ *
+ * @param $plan
+ *   The plan entity that the planting is associated with.
+ * @param string $crop
+ *   The crop/variety of the planting.
+ * @param string $location
+ *   The location of the planting. This is optional.
+ *
+ * @return string
+ *   Returns a name for the planting.
+ */
+function farm_crop_plan_planting_name_generate($plan, $crop, $location = '') {
+
+  // Start an array of name parts.
+  $parts = array();
+
+  // Get the plan wrapper.
+  $plan_wrapper = entity_metadata_wrapper('farm_plan', $plan);
+
+  // Get the season(s) from the plan.
+  foreach ($plan_wrapper->field_farm_season as $season_wrapper) {
+    $seasons[] = $season_wrapper->label();
+  }
+
+  // Concatenate the seasons together, separated by slashes.
+  $season = implode('/', $seasons);
+  if (!empty($season)) {
+    $parts[] = $season;
+  }
+
+  // Add the location, if available.
+  if (!empty($location)) {
+    $parts[] = $location;
+  }
+
+  // Add the crop/variety.
+  $parts[] = $crop;
+
+  // Assemble and return the planting name.
+  return implode(' ', $parts);
 }
 
 /**
