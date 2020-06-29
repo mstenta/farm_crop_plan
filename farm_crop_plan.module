@@ -430,8 +430,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     }
   }
 
-  // Get the planting asset ID, or use 0 for new plantings. This will be used
-  // for AJAX wrapper DIV IDs below.
+  // Get the planting asset ID, or use 0 for new plantings.
   $planting_id = !empty($planting->id) ? $planting->id : 0;
 
   // Crop.
@@ -440,6 +439,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     '#title' => t('Crop/variety'),
     '#autocomplete_path' => 'taxonomy/autocomplete/field_farm_crop',
     '#default_value' => $defaults['crop'],
+    '#required' => !empty($planting_id),
     '#weight' => 1,
   );
 
