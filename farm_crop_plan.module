@@ -484,6 +484,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
     '#default_value' => !empty($seeding_date) ? date($date_format, $seeding_date) : NULL,
+    '#required' => !empty($defaults['seeding']['log']),
   );
 
   // Seeding location.
@@ -570,6 +571,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     '#date_label_position' => 'within',
     '#date_year_range' => '-3:+10',
     '#default_value' => !empty($transplanting_date) ? date($date_format, $transplanting_date) : NULL,
+    '#required' => !empty($defaults['transplanting']['log']),
     '#ajax' => array(
       'callback' => 'farm_crop_plan_form_days_to_transplant_ajax',
       'wrapper' => 'planting-' . $planting_id . '-transplant-days',
