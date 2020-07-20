@@ -969,63 +969,6 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
       $planting_name = implode(' ', $planting_name_parts);
     }
 
-    // Check if we can calculate dates planning backwards.
-    if (!empty($planting_values['harvest']['first_harvest_date']) && !empty($planting_values['harvest']['days_to_harvest'])) {
-
-      // Save harvest info.
-      $first_harvest_date = $planting_values['harvest']['first_harvest_date'];
-      $days_to_harvest = $planting_values['harvest']['days_to_harvest'];
-
-      // Calculate "days after seeding", start with the days to harvest.
-      // If a transplanting is included this value will be changed.
-      $days_after_seeding = $days_to_harvest;
-
-      // Calculate transplanting date if days to transplant is provided.
-      if (!empty($planting_values['transplanting']['days_to_transplant'])) {
-
-        // Save days to transplant.
-        $days_to_transplant = $planting_values['transplanting']['days_to_transplant'];
-
-        // Calculate transplanting date.
-        $transplanting_timestamp = strtotime('-' . $days_to_harvest . ' days', strtotime($first_harvest_date));
-        $planting_values['transplanting']['date'] = strftime('%Y-%m-%d', $transplanting_timestamp);
-
-        // Update days after seeding variable.
-        $days_after_seeding = $days_to_transplant + $days_to_harvest;
-      }
-
-      // Calculate seeding date.
-      $seeding_timestamp = strtotime('-' . $days_after_seeding . ' days', strtotime($first_harvest_date));
-      $planting_values['seeding']['date'] = strftime('%Y-%m-%d', $seeding_timestamp);
-    }
-
-    // Calculate a transplanting date from seeding date + days to transplant.
-    // Only calculate if a seeding date is supplied.
-    else if (!empty($planting_values['seeding']['date'])) {
-
-      // Save related values.
-      $seeding_date = $planting_values['seeding']['date'];
-      $days_to_transplant = &$planting_values['transplanting']['days_to_transplant'];
-      $transplanting_date = &$planting_values['transplanting']['date'];
-
-      // Remember if a new transplanting date was specified.
-      // Don't consider a new transplanting date that is blank.
-      $updated_transplanting_date = !empty($transplanting_date) && $transplanting_date != $current_values['transplanting']['date']['#default_value'];
-
-      // If a new transplanting date was specified, use that
-      // and update days to transplant to match.
-      if ($updated_transplanting_date) {
-        $interval = date_diff(date_create($seeding_date), date_create($transplanting_date));
-        $days_to_transplant = $interval->format('%a');
-      }
-
-      // Otherwise if days to transplant was specified, calculate a new transplanting date.
-      if (!$updated_transplanting_date && !empty($days_to_transplant)) {
-        $transplanting_timestamp = strtotime('+' . $days_to_transplant . ' days', strtotime($seeding_date));
-        $transplanting_date = strftime('%Y-%m-%d', $transplanting_timestamp);
-      }
-    }
-
     // Check if the submitted planting already exists.
     if (!empty($planting_values['planting'])) {
 
