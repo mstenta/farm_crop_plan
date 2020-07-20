@@ -1017,8 +1017,13 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
       // Load values for logs that need to be created.
       foreach ($log_types as $name => $type) {
 
-        // Existing values.
+        // Current values.
+        // Save a reference to the rendered form values.
+        // These values reflect the current state of logs.
         $current_log_values = $current_values[$name];
+
+        // Save a reference to the existing log.
+        $existing_log = $planting_values[$name]['log'];
 
         // New values.
         $new_date = $planting_values[$name]['date'];
@@ -1030,7 +1035,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         }
 
         // Check for existing log.
-        if (empty($planting_values[$name]['log'])) {
+        if (empty($existing_log)) {
 
           // Add log info to create later.
           $new_logs[] = array(
@@ -1053,8 +1058,8 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         if ($updated_planting) {
 
           // Blank out the log name to auto-regenerate.
-          $planting_values[$name]['log']->name = '';
-          log_save($planting_values[$name]['log']);
+          $existing_log->name = '';
+          log_save($existing_log);
 
           // Remember that the log was updated.
           $updated_log = TRUE;
@@ -1066,8 +1071,8 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         if ($old_status != $new_status) {
 
           // Update log.
-          $planting_values[$name]['log']->done = $new_status;
-          log_save($planting_values[$name]['log']);
+          $existing_log->done = $new_status;
+          log_save($existing_log);
           $updated_log = TRUE;
         }
 
@@ -1077,9 +1082,9 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         if ($new_timestamp != $old_timestamp) {
 
           // Update the log timestamp.
-          $planting_values[$name]['log']->timestamp = $new_timestamp;
+          $existing_log->timestamp = $new_timestamp;
 
-          log_save($planting_values[$name]['log']);
+          log_save($existing_log);
 
           // Remember that the log was updated.
           $updated_log = TRUE;
@@ -1095,10 +1100,10 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
           $areas = farm_term_parse_names($new_location, 'farm_areas', TRUE);
 
           // If the log has a movement associated with it...
-          if (!empty($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
+          if (!empty($existing_log->field_farm_movement[LANGUAGE_NONE][0]['value'])) {
 
             // Load the movement information associated with the log.
-            $movement = field_collection_item_load($planting_values[$name]['log']->field_farm_movement[LANGUAGE_NONE][0]['value']);
+            $movement = field_collection_item_load($existing_log->field_farm_movement[LANGUAGE_NONE][0]['value']);
             $movement_wrapper = entity_metadata_wrapper('field_collection_item', $movement);
             $movement_wrapper->field_farm_move_to = array();
 
@@ -1115,7 +1120,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
 
             // Add a new movement to the log.
             $movement = entity_create('field_collection_item', array('field_name' => 'field_farm_movement'));
-            $movement->setHostEntity('log', $planting_values[$name]['log']);
+            $movement->setHostEntity('log', $existing_log);
 
             // Create an entity wrapper for the adjustment.
             $movement_wrapper = entity_metadata_wrapper('field_collection_item', $movement);
@@ -1147,7 +1152,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         if ($quantity_changed) {
 
           // Load the log entity metadata wrapper.
-          $log_wrapper = entity_metadata_wrapper('log', $planting_values[$name]['log']);
+          $log_wrapper = entity_metadata_wrapper('log', $existing_log);
 
           // Check if submitted quantity has a value.
           // Quantities are only saved if a value is included.
@@ -1202,7 +1207,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
             // Remove the first quantity.
             else {
               entity_delete('field_collection_item', $quantity_wrapper->item_id->value());
-              unset($planting_values[$name]['log']->field_farm_quantity[LANGUAGE_NONE][0]);
+              unset($existing_log->field_farm_quantity[LANGUAGE_NONE][0]);
             }
           }
           // No quantities exist, create a new one.
@@ -1210,19 +1215,19 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
 
             // If there are quantity measurements, add them to the log.
             if (!empty($measurements)) {
-              farm_quantity_log_add_measurements($planting_values[$name]['log'], $measurements);
+              farm_quantity_log_add_measurements($existing_log, $measurements);
             }
           }
 
           // Save the log and remember that we updated it.
-          log_save($planting_values[$name]['log']);
+          log_save($existing_log);
           $updated_log = TRUE;
         }
 
         // If the log was updated, display a message.
         if ($updated_log) {
-          $log_name = entity_label('log', $planting_values[$name]['log']);
-          $log_uri = entity_uri('log', $planting_values[$name]['log']);
+          $log_name = entity_label('log', $existing_log);
+          $log_uri = entity_uri('log', $existing_log);
           $log_url = url($log_uri['path']);
           drupal_set_message(
             t('The @log_type log <a href="!log_url">@log_name</a> was updated.',
