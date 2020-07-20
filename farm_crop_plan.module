@@ -1061,7 +1061,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         }
 
         // Check if the log status changed.
-        $old_status = $current_log_values['done']['#default_value'];
+        $old_status = $existing_log->done;
         $new_status = $planting_values[$name]['done'];
         if ($old_status != $new_status) {
 
@@ -1072,12 +1072,12 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         }
 
         // If the log date changed, update the log.
-        $default_date = !empty($current_log_values['date']['#default_value']) ? $current_log_values['date']['#default_value'] : NULL;
-        if ($new_date != $default_date) {
+        $old_timestamp = $existing_log->timestamp;
+        $new_timestamp = strtotime($new_date);
+        if ($new_timestamp != $old_timestamp) {
 
           // Update the log timestamp.
-          $timestamp = strtotime($new_date);
-          $planting_values[$name]['log']->timestamp = $timestamp;
+          $planting_values[$name]['log']->timestamp = $new_timestamp;
 
           log_save($planting_values[$name]['log']);
 
