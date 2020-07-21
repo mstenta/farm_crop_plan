@@ -1727,11 +1727,19 @@ function farm_crop_plan_add_planting($plan, $plantings) {
     $plantings = array($plantings);
   }
 
+  // Load planting ids already associated with any crop plan.
+  $plan_plantings = db_query('SELECT asset_id FROM {farm_crop_plan_planting}')->fetchCol();
+
   // Loop though assets.
   foreach($plantings as $planting) {
 
     // Bail if asset is not a planting.
     if ($planting->type != 'planting') {
+      continue;
+    }
+
+    // Bail if planting is already associated with a crop plan.
+    if (in_array($planting->id, $plan_plantings)) {
       continue;
     }
 
