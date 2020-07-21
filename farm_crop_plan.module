@@ -156,6 +156,28 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   $form['new'] = farm_crop_plan_planting_details_form($plan, NULL, $form_state, array('new'));
   $form['new']['#weight'] = 100;
 
+  // Add Existing Planting fieldset.
+  $form['existing'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Add Existing Planting'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => 101,
+  );
+
+  $form['existing']['plantings'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Planting Asset'),
+    '#default_value' => '',
+    '#autocomplete_path' => 'farm_asset/autocomplete/planting',
+  );
+
+  $form['existing']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add Planting to Plan'),
+    '#submit' => array('farm_crop_plan_form_add_planting_submit'),
+  );
+
   // Load information about plantings in this plan.
   $plantings = farm_crop_plan_plantings($plan->id);
 
@@ -1403,6 +1425,55 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
 
     // Update the Crop Plan Planting.
     drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
+  }
+}
+
+/*
+ * Submit callback to add an existing planting to a crop plan.
+ */
+function farm_crop_plan_form_add_planting_submit($form, $form_state) {
+
+  // Validate planting asset(s).
+  // Extract asset IDs and load assets.
+  $assets = array();
+  $asset_names = drupal_explode_tags($form_state['values']['existing']['plantings']);
+  foreach($asset_names as $asset_name) {
+    $id = 0;
+    $matches = array();
+    $result = preg_match('/\\[id: ([0-9]+)\\]/', $asset_name, $matches);
+    if (!empty($matches[$result])) {
+      $id = $matches[$result];
+    }
+
+    // If an ID couldn't be extracted, throw an error.
+    if (empty($id)) {
+      form_set_error('existing][plantings', t('Could not load the planting asset. Make sure the planting asset ID is included. For example: "My planting [id: 123]"'));
+    }
+
+    // Load the asset.
+    $asset = farm_asset_load($id);
+
+    // If asset was loaded add to list of assets.
+    if (!empty($asset)) {
+      $assets[$id] = $asset;
+    }
+
+    // If the asset didn't load, throw an error.
+    if (empty($asset)) {
+      form_set_error('existing][plantings', t('Could not load the planting asset. Make sure the planting name and ID are correct.'));
+    }
+  }
+
+  // If assets were found.
+  if (!empty($assets)) {
+
+    // Load the plan.
+    $plan = $form_state['values']['plan'];
+
+    // Add each planting to the plan.
+    foreach($assets as $asset) {
+      farm_crop_plan_add_planting($plan, $asset);
+    }
   }
 }
 
