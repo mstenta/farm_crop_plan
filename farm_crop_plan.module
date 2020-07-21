@@ -1471,9 +1471,7 @@ function farm_crop_plan_form_add_planting_submit($form, $form_state) {
     $plan = $form_state['values']['plan'];
 
     // Add each planting to the plan.
-    foreach($assets as $asset) {
-      farm_crop_plan_add_planting($plan, $asset);
-    }
+    farm_crop_plan_add_planting($plan, $assets);
   }
 }
 
