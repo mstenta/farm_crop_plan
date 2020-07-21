@@ -1717,6 +1717,11 @@ function farm_crop_plan_movement_log_area_links($log) {
  */
 function farm_crop_plan_add_planting($plan, $planting) {
 
+  // Bail if not a crop plan.
+  if ($plan->type != 'crop') {
+    return;
+  }
+
   // Link the asset to this crop plan.
   farm_plan_link_record('farm_crop_plan_planting', $plan->id, $planting->id);
 
