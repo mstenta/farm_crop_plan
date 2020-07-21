@@ -1738,13 +1738,29 @@ function farm_crop_plan_add_planting($plan, $plantings) {
       continue;
     }
 
+    // Save values for messages to users.
+    $planting_name = entity_label('farm_asset', $planting);
+    $planting_uri = entity_uri('farm_asset', $planting);
+    $planting_url = url($planting_uri['path']);
+
     // Bail if planting is already associated with a crop plan.
     if (in_array($planting->id, $plan_plantings)) {
+      drupal_set_message(
+        t('Planting asset <a href="@planting_url">@planting_name</a> is already associated with a crop plan.',
+          array('@planting_url' => $planting_url, '@planting_name' => $planting_name)),
+        'error'
+      );
       continue;
     }
 
     // Link the asset to this crop plan.
     farm_plan_link_record('farm_crop_plan_planting', $plan->id, $planting->id);
+
+    // Notify the planting was added.
+    drupal_set_message(
+      t('Planting <a href="@planting_url">@planting_name</a> was added to the crop plan. Set the "days to harvest" in order to see it on the timeline.',
+        array('@planting_url' => $planting_url, '@planting_name' => $planting_name))
+    );
 
     // Query for the LAST seeding log associated with the planting.
     $query = farm_log_asset_query($planting->id, 0, NULL, 'farm_seeding', TRUE);
