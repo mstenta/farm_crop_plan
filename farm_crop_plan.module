@@ -1708,78 +1708,92 @@ function farm_crop_plan_movement_log_area_links($log) {
 }
 
 /**
- * Add a planting to a crop plan.
+ * Add planting(s) to a crop plan.
  *
  * @param $plan
  *    The plan entity to associate planting with.
- * @param $planting
- *    Planting asset to add to plan.
+ * @param array|FarmAsset $plantings
+ *    Planting asset(s) to add to plan.
  */
-function farm_crop_plan_add_planting($plan, $planting) {
+function farm_crop_plan_add_planting($plan, $plantings) {
 
   // Bail if not a crop plan.
   if ($plan->type != 'crop') {
     return;
   }
 
-  // Link the asset to this crop plan.
-  farm_plan_link_record('farm_crop_plan_planting', $plan->id, $planting->id);
-
-  // Query for the LAST seeding log associated with the planting.
-  $query = farm_log_asset_query($planting->id, 0, NULL, 'farm_seeding', TRUE);
-  $query->addField('ss_log', 'id');
-  $query->orderBy('ss_log.timestamp', 'ASC');
-  $result = $query->execute();
-
-  // If seeding log was found.
-  $seeding_id = $result->fetchField();
-  if (!empty($seeding_id)) {
-
-    // Link seeding log to the plan.
-    farm_plan_link_record('farm_crop_plan_seeding', $plan->id, $seeding_id, array('asset_id' => $planting->id));
-
-    // Load seeding log for later.
-    $seeding_log = log_load($seeding_id);
+  // Convert single planting to array.
+  if (!is_array($plantings)) {
+    $plantings = array($plantings);
   }
 
-  // Query for the LAST transplanting log associated with the planting.
-  $query = farm_log_asset_query($planting->id, 0, NULL, 'farm_transplanting', TRUE);
-  $query->addField('ss_log', 'id');
-  $query->orderBy('ss_log.timestamp', 'ASC');
+  // Loop though assets.
+  foreach($plantings as $planting) {
 
-  // Only load transplanting logs occurring after the seeding.
-  if (!empty($seeding_log)) {
-    $query->where('ss_log.timestamp >= ' . $seeding_log->timestamp);
+    // Bail if asset is not a planting.
+    if ($planting->type != 'planting') {
+      continue;
+    }
+
+    // Link the asset to this crop plan.
+    farm_plan_link_record('farm_crop_plan_planting', $plan->id, $planting->id);
+
+    // Query for the LAST seeding log associated with the planting.
+    $query = farm_log_asset_query($planting->id, 0, NULL, 'farm_seeding', TRUE);
+    $query->addField('ss_log', 'id');
+    $query->orderBy('ss_log.timestamp', 'ASC');
+    $result = $query->execute();
+
+    // If seeding log was found.
+    $seeding_id = $result->fetchField();
+    if (!empty($seeding_id)) {
+
+      // Link seeding log to the plan.
+      farm_plan_link_record('farm_crop_plan_seeding', $plan->id, $seeding_id, array('asset_id' => $planting->id));
+
+      // Load seeding log for later.
+      $seeding_log = log_load($seeding_id);
+    }
+
+    // Query for the LAST transplanting log associated with the planting.
+    $query = farm_log_asset_query($planting->id, 0, NULL, 'farm_transplanting', TRUE);
+    $query->addField('ss_log', 'id');
+    $query->orderBy('ss_log.timestamp', 'ASC');
+
+    // Only load transplanting logs occurring after the seeding.
+    if (!empty($seeding_log)) {
+      $query->where('ss_log.timestamp >= ' . $seeding_log->timestamp);
+    }
+    $result = $query->execute();
+
+    // If transplanting log was found.
+    $transplanting_id = $result->fetchField();
+    if (!empty($transplanting_id)) {
+
+      // Link transplanting log to the plan.
+      farm_plan_link_record('farm_crop_plan_transplanting', $plan->id, $transplanting_id, array('asset_id' => $planting->id));
+
+      // Load transplanting log for later.
+      $transplanting_log = log_load($transplanting_id);
+    }
+
+    // Build array of crop plan planting attributes to update.
+    $record = array(
+      'plan_id' => $plan->id,
+      'asset_id' => $planting->id,
+    );
+
+    // Update days to transplant if known.
+    if (!empty($transplanting_log) && !(empty($seeding_log))) {
+
+      // Calculate difference between the log timestamps.
+      $days_to_transplant = round(($transplanting_log->timestamp - $seeding_log->timestamp) / (60 * 60 * 24));
+
+      // Add to record array.
+      $record['days_to_transplant'] = $days_to_transplant;
+    }
+
+    // Update the Crop Plan Planting.
+    drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
   }
-  $result = $query->execute();
-
-  // If transplanting log was found.
-  $transplanting_id = $result->fetchField();
-  if (!empty($transplanting_id)) {
-
-    // Link transplanting log to the plan.
-    farm_plan_link_record('farm_crop_plan_transplanting', $plan->id, $transplanting_id, array('asset_id' => $planting->id));
-
-    // Load transplanting log for later.
-    $transplanting_log = log_load($transplanting_id);
-  }
-
-  // Build array of crop plan planting attributes to update.
-  $record = array(
-    'plan_id' => $plan->id,
-    'asset_id' => $planting->id,
-  );
-
-  // Update days to transplant if known.
-  if (!empty($transplanting_log) && !(empty($seeding_log))) {
-
-    // Calculate difference between the log timestamps.
-    $days_to_transplant = round(($transplanting_log->timestamp - $seeding_log->timestamp) / (60 * 60 * 24));
-
-    // Add to record array.
-    $record['days_to_transplant'] = $days_to_transplant;
-  }
-
-  // Update the Crop Plan Planting.
-  drupal_write_record('farm_crop_plan_planting', $record, array('plan_id', 'asset_id'));
 }
