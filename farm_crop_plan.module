@@ -450,6 +450,12 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     }
   }
 
+  // Save default values for later comparison.
+  $form['defaults'] = array(
+    '#type' => 'value',
+    '#value' => $defaults
+  );
+
   // Get the planting asset ID, or use 0 for new plantings.
   $planting_id = !empty($planting->id) ? $planting->id : 0;
 
