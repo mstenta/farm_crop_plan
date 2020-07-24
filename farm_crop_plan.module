@@ -1767,6 +1767,7 @@ function farm_crop_plan_add_planting($plan, $plantings) {
     $result = $query->execute();
 
     // If seeding log was found.
+    $seeding_log = NULL;
     $seeding_id = $result->fetchField();
     if (!empty($seeding_id)) {
 
@@ -1789,6 +1790,7 @@ function farm_crop_plan_add_planting($plan, $plantings) {
     $result = $query->execute();
 
     // If transplanting log was found.
+    $transplanting_log = NULL;
     $transplanting_id = $result->fetchField();
     if (!empty($transplanting_id)) {
 
