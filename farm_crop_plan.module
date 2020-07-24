@@ -1094,7 +1094,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         }
 
         // Check if the log status changed.
-        $old_status = $existing_log->done;
+        $old_status = $planting_values['defaults'][$name]['done'];
         $new_status = $planting_values[$name]['done'];
         if ($old_status != $new_status) {
 
@@ -1105,7 +1105,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
         }
 
         // If the log date changed, update the log.
-        $old_timestamp = $existing_log->timestamp;
+        $old_timestamp = $planting_values['defaults'][$name]['date'];
         $new_timestamp = strtotime($new_date);
         if ($new_timestamp != $old_timestamp) {
 
@@ -1118,10 +1118,8 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
           $updated_log = TRUE;
         }
 
-        // Get the existing location.
-        $default_location = !empty($current_log_values['location']['#default_value']) ? $current_log_values['location']['#default_value'] : NULL;
-
         // If the location changed, update the log.
+        $default_location = $planting_values['defaults'][$name]['location'];
         if ($new_location != $default_location) {
 
           // Load new areas.
