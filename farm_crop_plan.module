@@ -40,7 +40,7 @@ function farm_crop_plan_help($path, $arg) {
     // Plan view page.
     case 'farm/plan/%':
     case 'farm/plan/%/view':
-      $help = '<p>' . t('This page summarizes the details of this crop plan. New plantings can be added to the plan via the "Add a planting" form at the bottom.') . '</p>';
+      $help = '<p>' . t('This page summarizes the details of this crop plan. New plantings can be added to the plan via the "Create a new planting" form at the bottom. Existing plantings that are not already part of another crop plan can be added via the "Add existing plantings" form at the bottom.') . '</p>';
       $help .= '<p>' . t('The timeline will display all plantings based on their seeding/transplanting/harvest dates, and can be viewed "by planting" (one row per planting) or "by area" (one row per area).') . '</p>';
       $help .= '<p>' . t('To edit the plan, click the "Settings" tab.') . '</p>';
       return $help;
@@ -167,7 +167,8 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
   // Add Existing Planting fieldset.
   $form['existing'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Add Existing Planting'),
+    '#title' => t('Add existing plantings'),
+    '#description' => t('Search for the planting(s) by name and click "Add" to add them to this plan. Separate multiple asset names with a comma.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#weight' => 101,
@@ -175,14 +176,14 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
 
   $form['existing']['plantings'] = array(
     '#type' => 'textfield',
-    '#title' => t('Planting Asset'),
+    '#title' => t('Planting name(s)'),
     '#default_value' => '',
     '#autocomplete_path' => 'farm_asset/autocomplete/planting',
   );
 
   $form['existing']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Add Planting to Plan'),
+    '#value' => t('Add'),
     '#submit' => array('farm_crop_plan_form_add_planting_submit'),
   );
 
@@ -308,7 +309,7 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     $form['#title'] = htmlspecialchars(entity_label('farm_asset', $planting));
   }
   else {
-    $form['#title'] = t('Add a planting');
+    $form['#title'] = t('Create a new planting');
   }
 
   // If a plan ID is not available, bail.
@@ -1433,7 +1434,7 @@ function farm_crop_plan_form_submit(&$form, &$form_state) {
 }
 
 /*
- * Submit callback to add an existing planting to a crop plan.
+ * Submit callback to add existing plantings to a crop plan.
  */
 function farm_crop_plan_form_add_planting_submit($form, $form_state) {
 
