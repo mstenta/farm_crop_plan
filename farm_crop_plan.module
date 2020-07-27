@@ -152,9 +152,17 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     '#value' => $plan,
   );
 
+  // Load information about plantings in this plan.
+  $plantings = farm_crop_plan_plantings($plan->id);
+
   // Add Planting fieldset.
   $form['new'] = farm_crop_plan_planting_details_form($plan, NULL, $form_state, array('new'));
   $form['new']['#weight'] = 100;
+
+  // If there are no plantings in the plan, expand the new planting fieldset.
+  if (empty($plantings)) {
+    $form['new']['#collapsed'] = FALSE;
+  }
 
   // Add Existing Planting fieldset.
   $form['existing'] = array(
@@ -177,9 +185,6 @@ function farm_crop_plan_form($form, &$form_state, $plan) {
     '#value' => t('Add Planting to Plan'),
     '#submit' => array('farm_crop_plan_form_add_planting_submit'),
   );
-
-  // Load information about plantings in this plan.
-  $plantings = farm_crop_plan_plantings($plan->id);
 
   // If there are no plantings, stop here.
   if (empty($plantings)) {
@@ -297,11 +302,6 @@ function farm_crop_plan_planting_details_form($plan, $planting, &$form_state, $p
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-
-  // If this is a new planting, expand the fieldset.
-  if (empty($planting)) {
-    $form['#collapsed'] = FALSE;
-  }
 
   // Set the fieldset title.
   if (!empty($planting)) {
