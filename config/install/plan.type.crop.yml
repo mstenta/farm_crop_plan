@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - farm_crop_plan
+id: crop
+label: 'Crop'
+description: ''
+workflow: plan_default
+new_revision: true

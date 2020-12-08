@@ -3,3 +3,6 @@ description: Crop plan type and related features for farmOS.
 type: module
 package: farmOS Contrib
 core_version_requirement: ^9
+dependencies:
+  - farm:farm_entity
+  - farm:plan
