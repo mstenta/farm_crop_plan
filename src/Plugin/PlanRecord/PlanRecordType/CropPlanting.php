@@ -29,6 +29,18 @@ class CropPlanting extends FarmPlanRecordType {
         'cardinality' => 1,
         'required' => TRUE,
       ],
+      'transplant_days' => [
+        'type' => 'integer',
+        'label' => $this->t('Days to transplant'),
+      ],
+      'maturity_days' => [
+        'type' => 'integer',
+        'label' => $this->t('Days to harvest'),
+      ],
+      'harvest_days' => [
+        'type' => 'integer',
+        'label' => $this->t('Harvest window (days)'),
+      ],
     ];
     foreach ($field_info as $name => $info) {
       $fields[$name] = $this->farmFieldFactory->bundleFieldDefinition($info);
