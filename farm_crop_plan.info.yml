@@ -2,7 +2,7 @@ name: Crop plan
 description: Crop plan type and related features for farmOS.
 type: module
 package: farmOS Contrib
-core_version_requirement: ^9
+core_version_requirement: ^10
 dependencies:
   - farm_entity
   - plan
