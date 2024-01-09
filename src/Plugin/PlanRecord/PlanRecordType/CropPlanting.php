@@ -32,14 +32,20 @@ class CropPlanting extends FarmPlanRecordType {
       'transplant_days' => [
         'type' => 'integer',
         'label' => $this->t('Days to transplant'),
+        'min' => 1,
+        'max' => 365,
       ],
       'maturity_days' => [
         'type' => 'integer',
         'label' => $this->t('Days to harvest'),
+        'min' => 1,
+        'max' => 365,
       ],
       'harvest_days' => [
         'type' => 'integer',
         'label' => $this->t('Harvest window (days)'),
+        'min' => 1,
+        'max' => 365,
       ],
     ];
     foreach ($field_info as $name => $info) {
