@@ -29,6 +29,10 @@ class CropPlanting extends FarmPlanRecordType {
         'cardinality' => 1,
         'required' => TRUE,
       ],
+      'seeding_date' => [
+        'type' => 'timestamp',
+        'label' => $this->t('Seeding date'),
+      ],
       'transplant_days' => [
         'type' => 'integer',
         'label' => $this->t('Days to transplant'),
