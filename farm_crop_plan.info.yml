@@ -7,7 +7,10 @@ dependencies:
   - farm_entity
   - farm_log
   - farm_location
+  - farm_migrate
   - farm_plant
   - farm_season
   - farm_timeline
+  - migrate_plus:migrate_plus
+  - migrate_source_csv:migrate_source_csv
   - plan
