@@ -1,0 +1,81 @@
+id: crop_plan_records
+label: farmOS Crop Plan Records CSV Importer
+source:
+  plugin: csv
+  path: tmp://
+  ids:
+    - plan_id
+    - plant_id
+destination:
+  plugin: entity:plan_record
+  validate: true
+process:
+
+  # Hard-code the type.
+  type:
+    plugin: default_value
+    default_value: crop_planting
+
+  # Plan ID.
+  plan:
+    plugin: entity_lookup
+    entity_type: plan
+    bundle: crop
+    value_key: id
+    source: plan_id
+
+  # Plant asset ID.
+  plant:
+    - plugin: skip_on_empty
+      method: process
+      source: plant_id
+    - plugin: entity_lookup
+      entity_type: asset
+      bundle: plant
+      value_key: id
+
+  # Plant type.
+  plant_type:
+    - plugin: explode
+      delimiter: ,
+      source: plant_type
+    - plugin: entity_generate
+      entity_type: taxonomy_term
+      value_key: name
+      bundle_key: vid
+      bundle: plant_type
+
+  # Seeding date.
+  seeding_date:
+    plugin: callback
+    callable: strtotime
+    source: seeding_date
+
+  # Seeding location.
+  seeding_location:
+    - plugin: explode
+      delimiter: ,
+      source: seeding_location
+    - plugin: asset_lookup
+
+  # Transplanting date.
+  transplanting_date:
+    plugin: callback
+    callable: strtotime
+    source: transplanting_date
+
+  # Transplanting location.
+  transplanting_location:
+    - plugin: explode
+      delimiter: ,
+      source: transplanting_location
+    - plugin: asset_lookup
+
+  # Days to transplant.
+  transplant_days: transplant_days
+
+  # Days to harvest.
+  maturity_days: maturity_days
+
+  # Harvest window.
+  harvest_days: harvest_days
