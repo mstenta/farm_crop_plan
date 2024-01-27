@@ -146,6 +146,38 @@ class CropPlanTest extends KernelTestBase {
         $this->assertEquals($crop_record->get('plant')->referencedEntities()[0]->id(), $log->get('asset')->referencedEntities()[0]->id());
       }
     }
+
+    // Test getting crop planting timeline stages.
+    foreach ($crop_records as $crop_record) {
+      $expected_stages = [
+        [
+          'type' => 'seeding',
+          'start' => $crop_record->get('seeding_date')->value,
+          'end' => $crop_record->get('seeding_date')->value + ($crop_record->get('transplant_days')->value * 3600 * 24),
+          'location' => [],
+        ],
+        [
+          'type' => 'transplanting',
+          'start' => $crop_record->get('seeding_date')->value + ($crop_record->get('transplant_days')->value * 3600 * 24),
+          'end' => $crop_record->get('seeding_date')->value + ($crop_record->get('maturity_days')->value * 3600 * 24),
+          'location' => [],
+        ],
+        [
+          'type' => 'harvest',
+          'start' => $crop_record->get('seeding_date')->value + ($crop_record->get('maturity_days')->value * 3600 * 24),
+          'end' => $crop_record->get('seeding_date')->value + ($crop_record->get('maturity_days')->value * 3600 * 24) + ($crop_record->get('harvest_days')->value * 3600 * 24),
+          'location' => [],
+        ],
+      ];
+      $stages = \Drupal::service('farm_crop_plan')->getCropPlantingStages($crop_record, FALSE);
+      $this->assertCount(3, $stages);
+      foreach ($stages as $i => $stage) {
+        $this->assertEquals($expected_stages[$i]['type'], $stage['type']);
+        $this->assertEquals($expected_stages[$i]['start'], $stage['start']);
+        $this->assertEquals($expected_stages[$i]['end'], $stage['end']);
+        $this->assertEmpty($stage['location']);
+      }
+    }
   }
 
   /**

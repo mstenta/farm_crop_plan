@@ -34,4 +34,15 @@ interface CropPlanInterface {
    */
   public function getLogs(PlanRecordInterface $crop_planting, bool $access_check = TRUE): array;
 
+  /**
+   * Get crop planting stages for the timeline.
+   *
+   * @param \Drupal\plan\Entity\PlanRecordInterface $crop_planting
+   *   The crop_planting plan_record entity.
+   *
+   * @return array
+   *   Returns an array of stages.
+   */
+  public function getCropPlantingStages(PlanRecordInterface $crop_planting): array;
+
 }
