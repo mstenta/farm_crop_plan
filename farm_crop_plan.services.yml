@@ -2,4 +2,4 @@ services:
   farm_crop_plan:
     class: Drupal\farm_crop_plan\CropPlan
     arguments:
-      [ '@entity_type.manager' ]
+      [ '@entity_type.manager', '@farm.log_query' ]
