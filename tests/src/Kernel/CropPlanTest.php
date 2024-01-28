@@ -138,6 +138,22 @@ class CropPlanTest extends KernelTestBase {
       $this->assertEquals(7, $crop_record->get('harvest_days')->value);
     }
 
+    // Test getting crop_planting records by plant type.
+    $crop_records_by_type = \Drupal::service('farm_crop_plan')->getCropPlantingsByType($this->plan);
+    $this->assertEquals(count($this->plantTypes), count($crop_records_by_type));
+    $plant_asset_ids = array_map(function ($asset) {
+      return $asset->id();
+    }, $this->plantAssets);
+    $crop_planting_asset_ids = [];
+    foreach ($this->plantTypes as $plant_type) {
+      $this->assertNotEmpty($crop_records_by_type[$plant_type->id()]);
+      $this->assertCount(1, $crop_records_by_type[$plant_type->id()]);
+      foreach ($crop_records_by_type[$plant_type->id()] as $crop_planting) {
+        $crop_planting_asset_ids[] = $crop_planting->get('plant')->referencedEntities()[0]->id();
+      }
+    }
+    $this->assertEquals($plant_asset_ids, $crop_planting_asset_ids);
+
     // Test getting all logs for a crop_planting plant asset.
     foreach ($crop_records as $crop_record) {
       $logs = \Drupal::service('farm_crop_plan')->getLogs($crop_record, FALSE);
