@@ -146,16 +146,7 @@ class CropPlan implements CropPlanInterface {
     $stages = [];
 
     // Load all movement logs that reference the asset.
-    // We do not check access on the logs to ensure that none are filtered out.
-    $options = [
-      'asset' => $asset,
-    ];
-    $query = $this->logQueryFactory->getQuery($options);
-    $query->condition('is_movement', TRUE);
-    $query->accessCheck(FALSE);
-    $log_ids = $query->execute();
-    /** @var \Drupal\log\Entity\LogInterface[] $logs */
-    $logs = $this->entityTypeManager->getStorage('log')->loadMultiple($log_ids);
+    $logs = $this->getAssetMovementLogs($asset);
 
     // Iterate through the logs and generate stages.
     foreach ($logs as $log) {
@@ -184,6 +175,30 @@ class CropPlan implements CropPlanInterface {
     }
 
     return $stages;
+  }
+
+  /**
+   * Get all movement logs that reference an asset.
+   *
+   * This does not check access so that must be done by downstream code.
+   *
+   * @param \Drupal\asset\Entity\AssetInterface $asset
+   *   The asset entity.
+   *
+   * @return \Drupal\log\Entity\LogInterface[]
+   *   Returns an array of movement logs.
+   */
+  protected function getAssetMovementLogs(AssetInterface $asset) {
+    $options = [
+      'asset' => $asset,
+    ];
+    $query = $this->logQueryFactory->getQuery($options);
+    $query->condition('is_movement', TRUE);
+    $query->accessCheck(FALSE);
+    $log_ids = $query->execute();
+    /** @var \Drupal\log\Entity\LogInterface[] $logs */
+    $logs = $this->entityTypeManager->getStorage('log')->loadMultiple($log_ids);
+    return $logs;
   }
 
 }
