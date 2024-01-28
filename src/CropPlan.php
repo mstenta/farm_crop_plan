@@ -2,7 +2,9 @@
 
 namespace Drupal\farm_crop_plan;
 
+use Drupal\asset\Entity\AssetInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\farm_location\LogLocationInterface;
 use Drupal\farm_log\LogQueryFactoryInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Drupal\plan\Entity\PlanRecordInterface;
@@ -27,16 +29,26 @@ class CropPlan implements CropPlanInterface {
   protected LogQueryFactoryInterface $logQueryFactory;
 
   /**
+   * Log location service.
+   *
+   * @var \Drupal\farm_location\LogLocationInterface
+   */
+  protected $logLocation;
+
+  /**
    * Class constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
    * @param \Drupal\farm_log\LogQueryFactoryInterface $log_query_factory
    *   Log query factory.
+   * @param \Drupal\farm_location\LogLocationInterface $log_location
+   *   Log location service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, LogQueryFactoryInterface $log_query_factory) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, LogQueryFactoryInterface $log_query_factory, LogLocationInterface $log_location) {
     $this->entityTypeManager = $entity_type_manager;
     $this->logQueryFactory = $log_query_factory;
+    $this->logLocation = $log_location;
   }
 
   /**
@@ -107,6 +119,53 @@ class CropPlan implements CropPlanInterface {
         'end' => $seeding_date + ($maturity_days * 3600 * 24) + ($harvest_days * 3600 * 24),
         'location' => [],
       ];
+    }
+
+    return $stages;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAssetLocationStages(AssetInterface $asset): array {
+    $stages = [];
+
+    // Load all movement logs that reference the asset.
+    // We do not check access on the logs to ensure that none are filtered out.
+    $options = [
+      'asset' => $asset,
+    ];
+    $query = $this->logQueryFactory->getQuery($options);
+    $query->condition('is_movement', TRUE);
+    $query->accessCheck(FALSE);
+    $log_ids = $query->execute();
+    /** @var \Drupal\log\Entity\LogInterface[] $logs */
+    $logs = $this->entityTypeManager->getStorage('log')->loadMultiple($log_ids);
+
+    // Iterate through the logs and generate stages.
+    foreach ($logs as $log) {
+      $stages[] = [
+        'type' => 'location',
+        'start' => $log->get('timestamp')->value,
+        'end' => NULL,
+        'location' => $this->logLocation->getLocation($log),
+      ];
+    }
+
+    // Sort stages chronologically.
+    usort($stages, function ($a, $b) {
+      if ($a['start'] == $b['end']) {
+        return 0;
+      }
+      return ($a['start'] < $b['end']) ? -1 : 1;
+    });
+
+    // Iterate through the stages and fill in end timestamps, if available.
+    // The end timestamp is assumed to be the next stage's start timestamp.
+    foreach ($stages as $i => &$stage) {
+      if (isset($stages[$i + 1]) && !empty($stages[$i + 1]['start'])) {
+        $stage['end'] = $stages[$i + 1]['start'];
+      }
     }
 
     return $stages;

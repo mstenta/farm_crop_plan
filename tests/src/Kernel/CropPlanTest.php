@@ -178,6 +178,63 @@ class CropPlanTest extends KernelTestBase {
         $this->assertEmpty($stage['location']);
       }
     }
+
+    // Test getting asset location timeline stages.
+    $expected_stages = [
+      [
+        [
+          'type' => 'location',
+          'start' => $this->seedingLogs[0]->get('timestamp')->value,
+          'end' => $this->transplantingLogs[0]->get('timestamp')->value,
+          'location' => [$this->landAsset],
+        ],
+        [
+          'type' => 'location',
+          'start' => $this->transplantingLogs[0]->get('timestamp')->value,
+          'end' => NULL,
+          'location' => [$this->landAsset],
+        ],
+      ],
+      [
+        [
+          'type' => 'location',
+          'start' => $this->seedingLogs[1]->get('timestamp')->value,
+          'end' => $this->transplantingLogs[1]->get('timestamp')->value,
+          'location' => [$this->landAsset],
+        ],
+        [
+          'type' => 'location',
+          'start' => $this->transplantingLogs[1]->get('timestamp')->value,
+          'end' => NULL,
+          'location' => [$this->landAsset],
+        ],
+      ],
+      [
+        [
+          'type' => 'location',
+          'start' => $this->seedingLogs[2]->get('timestamp')->value,
+          'end' => $this->transplantingLogs[2]->get('timestamp')->value,
+          'location' => [$this->landAsset],
+        ],
+        [
+          'type' => 'location',
+          'start' => $this->transplantingLogs[2]->get('timestamp')->value,
+          'end' => NULL,
+          'location' => [$this->landAsset],
+        ],
+      ],
+    ];
+    foreach ($crop_records as $i => $crop_record) {
+      $asset = $crop_record->get('plant')->referencedEntities()[0];
+      $stages = \Drupal::service('farm_crop_plan')->getAssetLocationStages($asset);
+      $this->assertEquals(count($expected_stages[$i]), count($stages));
+      foreach ($stages as $j => $stage) {
+        $this->assertEquals($expected_stages[$i][$j]['type'], $stage['type']);
+        $this->assertEquals($expected_stages[$i][$j]['start'], $stage['start']);
+        $this->assertEquals($expected_stages[$i][$j]['end'], $stage['end']);
+        $this->assertEquals($expected_stages[$i][$j]['location'][0]->id(), $stage['location'][0]->id());
+      }
+    }
   }
 
   /**

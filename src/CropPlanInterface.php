@@ -2,6 +2,7 @@
 
 namespace Drupal\farm_crop_plan;
 
+use Drupal\asset\Entity\AssetInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Drupal\plan\Entity\PlanRecordInterface;
 
@@ -44,5 +45,18 @@ interface CropPlanInterface {
    *   Returns an array of stages.
    */
   public function getCropPlantingStages(PlanRecordInterface $crop_planting): array;
+
+  /**
+   * Get asset location stages for the timeline.
+   *
+   * @param \Drupal\asset\Entity\AssetInterface $asset
+   *   The asset entity.
+   *
+   * @return array
+   *   Returns an array of stages.
+   *
+   * @todo Move this to farmOS core?
+   */
+  public function getAssetLocationStages(AssetInterface $asset): array;
 
 }
