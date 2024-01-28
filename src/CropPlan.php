@@ -76,6 +76,24 @@ class CropPlan implements CropPlanInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCropPlantingsByLocation(PlanInterface $plan): array {
+    $crop_plantings_by_location = [];
+    $crop_plantings = $this->getCropPlantings($plan);
+    foreach ($crop_plantings as $crop_planting) {
+      $logs = $this->getAssetMovementLogs($crop_planting->get('plant')->referencedEntities()[0]);
+      foreach ($logs as $log) {
+        $locations = $this->logLocation->getLocation($log);
+        foreach ($locations as $location) {
+          $crop_plantings_by_location[$location->id()][$crop_planting->id()] = $crop_planting;
+        }
+      }
+    }
+    return $crop_plantings_by_location;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getLogs(PlanRecordInterface $crop_planting, bool $access_check = TRUE): array {
     $plant_assets = $crop_planting->get('plant')->referencedEntities();
     if (empty($plant_assets)) {

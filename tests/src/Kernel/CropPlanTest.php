@@ -154,6 +154,16 @@ class CropPlanTest extends KernelTestBase {
     }
     $this->assertEquals($plant_asset_ids, $crop_planting_asset_ids);
 
+    // Test getting crop_planting records by location.
+    $crop_records_by_location = \Drupal::service('farm_crop_plan')->getCropPlantingsByLocation($this->plan);
+    $this->assertEquals(1, count($crop_records_by_location));
+    $this->assertNotEmpty($crop_records_by_location[$this->landAsset->id()]);
+    $this->assertCount(3, $crop_records_by_location[$this->landAsset->id()]);
+    $crop_planting_asset_ids = array_map(function ($crop_planting) {
+      return $crop_planting->get('plant')->referencedEntities()[0]->id();
+    }, array_values($crop_records_by_location[$this->landAsset->id()]));
+    $this->assertEquals($plant_asset_ids, $crop_planting_asset_ids);
+
     // Test getting all logs for a crop_planting plant asset.
     foreach ($crop_records as $crop_record) {
       $logs = \Drupal::service('farm_crop_plan')->getLogs($crop_record, FALSE);
