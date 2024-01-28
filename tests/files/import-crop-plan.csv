@@ -1,0 +1,4 @@
+plan_id,plant_id,plant_type,seeding_date,seeding_location,transplanting_date,transplanting_location,transplant_days,maturity_days,harvest_days
+1,,Corn,2024-06-01T00:00:00+10:00,"Field A",2024-07-01T00:00:00+10:00,"Field A",30,60,7
+1,,Beans,2024-07-01T00:00:00+10:00,"Field A",2024-08-01T00:00:00+10:00,"Field A",30,60,7
+1,,Squash,2024-08-01T00:00:00+10:00,"Field A",2024-09-01T00:00:00+10:00,"Field A",30,60,7

@@ -2,15 +2,16 @@
 
 namespace Drupal\Tests\farm_crop_plan\Kernel;
 
-use Drupal\KernelTests\KernelTestBase;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\farm_crop_plan\Traits\MockCropPlanEntitiesTrait;
+use Drupal\Tests\migrate\Kernel\MigrateTestBase;
 
 /**
  * Tests for farmOS crop plan.
  *
  * @group farm_crop_plan
  */
-class CropPlanTest extends KernelTestBase {
+class CropPlanTest extends MigrateTestBase {
 
   use MockCropPlanEntitiesTrait;
 
@@ -29,6 +30,7 @@ class CropPlanTest extends KernelTestBase {
     'farm_log',
     'farm_log_asset',
     'farm_map',
+    'farm_migrate',
     'farm_plant',
     'farm_plant_type',
     'farm_seeding',
@@ -38,6 +40,8 @@ class CropPlanTest extends KernelTestBase {
     'geofield',
     'image',
     'log',
+    'migrate_plus',
+    'migrate_source_csv',
     'options',
     'plan',
     'state_machine',
@@ -65,6 +69,21 @@ class CropPlanTest extends KernelTestBase {
       'farm_seeding',
       'farm_transplanting',
     ]);
+
+    // Set the private:// filesystem to use the tests/files directory of the
+    // farm_crop_plan module.
+    $this->setSetting('file_private_path', \Drupal::service('extension.list.module')->getPath('farm_crop_plan') . '/tests/files');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function register(ContainerBuilder $container) {
+    parent::register($container);
+
+    // Register the private:// stream wrapper.
+    $container->register('stream_wrapper.private', 'Drupal\Core\StreamWrapper\PrivateStream')
+      ->addTag('stream_wrapper', ['scheme' => 'private']);
   }
 
   /**
@@ -218,6 +237,32 @@ class CropPlanTest extends KernelTestBase {
         $this->assertEquals($expected_stages[$i][$j]['location'][0]->id(), $stage['location'][0]->id());
       }
     }
+  }
+
+  /**
+   * Test crop plan import.
+   */
+  public function testCropPlanImport() {
+
+    // Set the source file path configuration.
+    $configuration['source']['path'] = 'private://import-crop-plan.csv';
+
+    // Initialize and run the migration.
+    $migration = $this->container->get('plugin.manager.migration')->createInstance('crop_plan_records', $configuration);
+    $this->executeMigration($migration);
+  }
+
+  /**
+   * Test crop plan update.
+   */
+  public function testCropPlanUpdate() {
+
+    // Set the source file path configuration.
+    $configuration['source']['path'] = 'private://update-crop-plan.csv';
+
+    // Initialize and run the migration.
+    $migration = $this->container->get('plugin.manager.migration')->createInstance('crop_plan_records', $configuration);
+    $this->executeMigration($migration);
   }
 
 }
