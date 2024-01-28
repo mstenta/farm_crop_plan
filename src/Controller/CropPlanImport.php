@@ -20,6 +20,9 @@ class CropPlanImport extends CsvImportController {
       unset($build['columns']['template']);
     }
 
+    // Allow updating.
+    $build['form']['update_existing_records']['#value'] = TRUE;
+
     return $build;
   }
 
