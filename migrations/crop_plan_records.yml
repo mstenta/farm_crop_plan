@@ -79,3 +79,28 @@ process:
 
   # Harvest window.
   harvest_days: harvest_days
+
+# Describe the CSV columns.
+third_party_settings:
+  farm_import_csv:
+    columns:
+      - name: plan_id
+        description: The crop plan ID. Required.
+      - name: plant_id
+        description: The plant asset ID. If specified, the plant asset will be updated. Otherwise, a new one will be created.
+      - name: plant_type
+        description: The plant type (crop/variety). Multiple terms can be separated by commas with the whole cell wrapped in quotes.
+      - name: seeding_date
+        description: The seeding date. Accepts most date/time formats.
+      - name: seeding_location
+        description: Location of the seeding. Accepts asset names, ID tags, UUIDs, and IDs. Multiple assets can be separated by commas with the whole cell wrapped in quotes.
+      - name: transplanting_date
+        description: The transplanting date. Accepts most date/time formats.
+      - name: transplanting_location
+        description: Location of the transplanting. Accepts asset names, ID tags, UUIDs, and IDs. Multiple assets can be separated by commas with the whole cell wrapped in quotes.
+      - name: transplant_days
+        description: Planned days to transplant from the seeding date.
+      - name: maturity_days
+        description: Planned days to maturity from the seeding date.
+      - name: harvest_days
+        description: Planned days of harvest after reaching maturity.
