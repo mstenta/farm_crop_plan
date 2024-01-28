@@ -4,6 +4,7 @@ type: module
 package: farmOS Contrib
 core_version_requirement: ^10
 dependencies:
+  - csv_serialization:csv_serialization
   - farm_entity
   - farm_import_csv
   - farm_log

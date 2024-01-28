@@ -53,3 +53,16 @@ farm_crop_plan.import:
         type: entity:plan
         bundle:
           - crop
+farm_crop_plan.export:
+  path: /plan/{plan}/export
+  defaults:
+    _controller: \Drupal\farm_crop_plan\Controller\CropPlanImport::exporter
+    migration_id: crop_plan_records
+  requirements:
+    _entity_access: plan.view
+  options:
+    parameters:
+      plan:
+        type: entity:plan
+        bundle:
+          - crop

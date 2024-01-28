@@ -5,6 +5,6 @@ farm_crop_plan.add_planting:
     - entity.plan.canonical
 farm_crop_plan.import:
   route_name: farm_crop_plan.import
-  title: Import
+  title: Import/export
   appears_on:
     - entity.plan.canonical
