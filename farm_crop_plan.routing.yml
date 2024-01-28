@@ -39,3 +39,17 @@ farm_crop_plan.add_planting:
         type: entity:plan
         bundle:
           - crop
+farm_crop_plan.import:
+  path: /plan/{plan}/import
+  defaults:
+    _title: Import crop plan
+    _controller: \Drupal\farm_import_csv\Controller\CsvImportController::importer
+    migration_id: crop_plan_records
+  requirements:
+    _entity_access: plan.update
+  options:
+    parameters:
+      plan:
+        type: entity:plan
+        bundle:
+          - crop

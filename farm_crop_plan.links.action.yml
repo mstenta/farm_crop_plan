@@ -3,3 +3,8 @@ farm_crop_plan.add_planting:
   route_name: farm_crop_plan.add_planting
   appears_on:
     - entity.plan.canonical
+farm_crop_plan.import:
+  route_name: farm_crop_plan.import
+  title: Import
+  appears_on:
+    - entity.plan.canonical
