@@ -25,6 +25,11 @@ function farm_crop_plan_help($route_name, RouteMatchInterface $route_match) {
     $output .= '<p>' . t('Tip: Use the <a href=":url">Planting quick form</a> to create a plant asset. You will be redirected back here to fill in more details for the plan.', [':url' => $quick_planting_url]) . '</p>';
   }
 
+  // Explain how to use the crop plan importer.
+  if ($route_name == 'farm_crop_plan.import') {
+    $output .= '<p>' . t('This form provides the ability to add/update plantings within this crop plan.') . '</p>';
+  }
+
   return $output;
 }
 

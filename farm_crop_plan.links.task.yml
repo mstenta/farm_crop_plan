@@ -1,0 +1,4 @@
+farm_crop_plan.import:
+  base_route: entity.plan.canonical
+  route_name: farm_crop_plan.import
+  title: Import
