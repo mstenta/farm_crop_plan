@@ -1,8 +1,8 @@
 {
-  "name": "mstenta/farm_crop_plan",
+  "name": "drupal/farm_crop_plan",
   "description": "Crop plan type and related features for farmOS.",
   "type": "drupal-module",
-  "homepage": "https://github.com/mstenta/farm_crop_plan",
+  "homepage": "https://drupal.org/project/farm_crop_plan",
   "license": "GPL-2.0-or-later",
   "authors": [
       {
