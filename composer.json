@@ -5,10 +5,14 @@
   "homepage": "https://drupal.org/project/farm_crop_plan",
   "license": "GPL-2.0-or-later",
   "authors": [
-      {
-          "name": "Michael Stenta",
-          "email": "mike@farmier.com"
-      }
+    {
+      "name": "Michael Stenta",
+      "email": "mike@farmier.com"
+    },
+    {
+      "name": "Paul Weidner",
+      "email": "paul.weidner@gmail.com"
+    }
   ],
   "require": {
     "farmos/farmos": "^3"
