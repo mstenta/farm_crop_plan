@@ -71,6 +71,21 @@ interface CropPlanInterface {
   public function getLogs(AssetInterface $asset, bool $access_check = TRUE): array;
 
   /**
+   * Get the first log of an asset.
+   *
+   * @param \Drupal\asset\Entity\AssetInterface $asset
+   *   The asset entity.
+   * @param string|null $log_type
+   *   Optionally filter by log type.
+   * @param bool $access_check
+   *   Whether to check log entity access.
+   *
+   * @return \Drupal\log\Entity\LogInterface|null
+   *   Returns a log entity or NULL if no logs were found.
+   */
+  public function getFirstLog(AssetInterface $asset, string $log_type = NULL, bool $access_check = TRUE);
+
+  /**
    * Get crop planting stages for the timeline.
    *
    * @param \Drupal\farm_crop_plan\Bundle\CropPlantingInterface $crop_planting

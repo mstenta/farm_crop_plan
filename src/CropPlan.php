@@ -107,6 +107,28 @@ class CropPlan implements CropPlanInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFirstLog(AssetInterface $asset, string $log_type = NULL, bool $access_check = TRUE) {
+    if (empty($asset)) {
+      return [];
+    }
+    $options = [
+      'asset' => $asset,
+      'limit' => 1,
+    ];
+    $query = $this->logQueryFactory->getQuery($options);
+    if (!empty($log_type)) {
+      $query->condition('type', $log_type);
+    }
+    $query->sort('timestamp', 'ASC');
+    $query->sort('id', 'ASC');
+    $query->accessCheck($access_check);
+    $log_ids = $query->execute();
+    return $this->entityTypeManager->getStorage('log')->load(reset($log_ids));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCropPlantingStages(PlanRecordInterface $crop_planting): array {
     $stages = [];
 
