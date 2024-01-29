@@ -1,0 +1,32 @@
+.sg-task .sg-task-content {
+  color: var(--gin-color-text-light);
+}
+
+.sg-task.stage--seeding {
+  background: lightblue;
+}
+
+.sg-task.stage--transplanting {
+  background: lightgreen;
+}
+
+.sg-task.stage--harvest {
+  background: indianred;
+}
+
+.sg-task.log {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 30px !important;
+}
+
+.sg-task.log--seeding {
+  background: darkblue;
+}
+
+.sg-task.log--transplanting {
+  background: darkgreen;
+}
+.sg-task.log--harvest {
+  background: darkred;
+}

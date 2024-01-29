@@ -41,6 +41,32 @@ class CropPlanTimeline extends ControllerBase {
   }
 
   /**
+   * Crop plan timeline page.
+   *
+   * @param \Drupal\plan\Entity\PlanInterface $plan
+   *   The crop plan.
+   *
+   * @return array
+   *   Render array.
+   */
+  public function timeline(PlanInterface $plan) {
+
+    $render = [];
+    $render['timeline'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'id' => 'timeline',
+      ],
+      '#attached' => [
+        'library' => ['farm_crop_plan/timeline_gantt'],
+      ],
+    ];
+
+    return $render;
+  }
+
+  /**
    * API endpoint for crop plan timeline by plant type.
    *
    * @param \Drupal\plan\Entity\PlanInterface $plan
