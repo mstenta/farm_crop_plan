@@ -15,9 +15,11 @@
 }
 
 .sg-task.log {
-  width: 30px !important;
-  height: 30px !important;
-  border-radius: 30px !important;
+  margin-top: 5px;
+  margin-left: -6px;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 12px !important;
 }
 
 .sg-task.log--seeding {
