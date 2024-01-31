@@ -113,7 +113,7 @@ class CropPlanTimelineForm extends FormBase {
           '#title' => $this->t('Plant type: @plant_type', ['@plant_type' => $plant_type->label()]),
           '#open' => TRUE,
         ];
-        $form['timeline'][$plant_type_id]['timeline'] = $this->renderCropPlantingsTimeline($crop_plantings);
+        $form['timeline'][$plant_type_id]['timeline'] = $this->renderCropPlantingsTimeline($plan, $crop_plantings);
       }
     }
 
@@ -128,7 +128,7 @@ class CropPlanTimelineForm extends FormBase {
           '#title' => $this->t('Location: @location', ['@location' => $location_asset->label()]),
           '#open' => TRUE,
         ];
-        $form['timeline'][$location_id]['timeline'] = $this->renderCropPlantingsTimeline($crop_plantings);
+        $form['timeline'][$location_id]['timeline'] = $this->renderCropPlantingsTimeline($plan, $crop_plantings);
       }
     }
 
@@ -138,13 +138,15 @@ class CropPlanTimelineForm extends FormBase {
   /**
    * Helper function for rendering crop plantings timeline.
    *
+   * @param \Drupal\plan\Entity\PlanInterface $plan
+   *   The plan entity.
    * @param \Drupal\plan\Entity\PlanRecordInterface[] $crop_plantings
    *   An array of crop plantings.
    *
    * @return array
    *   Returns a rendered timeline of the provided crop plantings.
    */
-  protected function renderCropPlantingsTimeline(array $crop_plantings) {
+  protected function renderCropPlantingsTimeline(PlanInterface $plan, array $crop_plantings) {
 
     // Render a simple table of crop_planting record data.
     $header = [
@@ -156,6 +158,7 @@ class CropPlanTimelineForm extends FormBase {
       'logs' => $this->t('Logs'),
       'crop_planting_stages' => $this->t('Crop planting stages'),
       'asset_location_stages' => $this->t('Asset location stages'),
+      'edit' => $this->t('Edit'),
     ];
     $rows = [];
     if (!empty($crop_plantings)) {
@@ -173,6 +176,7 @@ class CropPlanTimelineForm extends FormBase {
           Link::fromTextAndUrl(count($logs), Url::fromRoute('view.farm_log.page_asset', ['asset' => $asset->id()])),
           count($crop_planting_stages),
           count($asset_location_stages),
+          $crop_planting->toLink($this->t('Edit'), 'edit-form', ['query' => ['destination' => $plan->toUrl()->toString()], 'attributes' => ['class' => 'use-ajax', 'data-dialog-type' => 'dialog', 'data-dialog-renderer' => 'off_canvas']])->toString(),
         ];
       }
     }
