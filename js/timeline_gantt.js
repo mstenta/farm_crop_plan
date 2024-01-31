@@ -108,7 +108,11 @@
               from: from,
               to: to,
               enableDragging: false,
-              classes: ['log', `log--${log.type}`],
+              classes: [
+                'log',
+                `log--${log.type}`,
+                `log-status--${log.status}`
+              ],
             });
           };
         }

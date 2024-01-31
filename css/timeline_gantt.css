@@ -3,32 +3,42 @@
 }
 
 .sg-task.stage--seeding {
-  background: lightblue;
+  background-color: lightblue;
 }
 
 .sg-task.stage--transplanting {
-  background: lightgreen;
+  background-color: lightgreen;
 }
 
 .sg-task.stage--harvest {
-  background: indianred;
+  background-color: indianred;
 }
 
 .sg-task.log {
-  margin-top: 5px;
+  margin-top: 6px;
   margin-left: -6px;
   width: 12px !important;
   height: 12px !important;
-  border-radius: 12px !important;
+  background-color: black;
+  border: 2px solid black;
+  border-radius: 50% !important;
+}
+
+.sg-task.log-status--pending {
+  background-color: transparent !important;
 }
 
 .sg-task.log--seeding {
-  background: darkblue;
+  background-color: darkblue;
+  border-color: darkblue;
+
 }
 
 .sg-task.log--transplanting {
-  background: darkgreen;
+  background-color: darkgreen;
+  border-color: darkgreen;
 }
 .sg-task.log--harvest {
-  background: darkred;
+  background-color: darkred;
+  border-color: darkred;
 }
