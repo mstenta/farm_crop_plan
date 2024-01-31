@@ -42,3 +42,13 @@
   background-color: darkred;
   border-color: darkred;
 }
+
+.sg-popup {
+  z-index: 1000;
+  background-color: var(--gin-bg-layer);
+  border: 1px solid var(--gin-border-color-layer);
+  box-shadow: var(--gin-shadow-l1);
+  border-radius: var(--gin-border-s);
+  padding: var(--gin-spacing-xs);
+  font-size: var(--gin-font-size-s);
+}

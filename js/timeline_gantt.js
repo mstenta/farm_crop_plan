@@ -24,9 +24,74 @@
       rows: [
         {id: 'first', label: 'Loading...'}
       ],
+      taskElementHook: (node, task) => {
+        let popup;
+        function onHover() {
+          popup = createPopup(task, node);
+        }
+        function onLeave() {
+          if(popup) {
+            popup.remove();
+          }
+        }
+        node.addEventListener('mouseenter', onHover);
+        node.addEventListener('mouseleave', onLeave);
+        return {
+          destroy() {
+            node.removeEventListener('mouseenter', onHover);
+            node.removeEventListener('mouseleave', onLeave);
+          }
+        }
+      },
     }
   });
 
+  function createPopup(task, node) {
+    const rect = node.getBoundingClientRect();
+    const div = document.createElement('div');
+    div.className = 'sg-popup';
+    div.innerHTML = `
+            <div class="sg-popup-title">${task.label}</div>
+            <div>Test</div>
+            <div class="sg-popup-item">
+                <div class="sg-popup-item-label">From:</div>
+                <div class="sg-popup-item-value">${new Date(task.from).toLocaleTimeString()}</div>
+            </div>
+            <div class="sg-popup-item">
+                <div class="sg-popup-item-label">To:</div>
+                <div class="sg-popup-item-value">${new Date(task.to).toLocaleTimeString()}</div>
+            </div>
+        `;
+    div.style.position = 'absolute';
+    div.style.top = `${rect.bottom + 5}px`;
+    div.style.left = `${rect.left + rect.width / 2}px`;
+
+    if (task?.entityType == 'log') {
+      div.innerHTML = `
+            <div class="sg-popup-title">${task.label}</div>
+            <div>${task.entityBundle} ${task.entityType}: ${task.entityId}</div>
+            <div>Timestamp: ${new Date(task.from).toLocaleDateString()}</div>
+        `;
+    }
+
+    if (task?.stage) {
+      div.innerHTML = `
+            <div class="sg-popup-title">${task.label}</div>
+            <div>Stage: ${task.stage}</div>
+            <div class="sg-popup-item">
+                <div class="sg-popup-item-label">From:</div>
+                <div class="sg-popup-item-value">${new Date(task.from).toLocaleDateString()}</div>
+            </div>
+            <div class="sg-popup-item">
+                <div class="sg-popup-item-label">To:</div>
+                <div class="sg-popup-item-value">${new Date(task.to).toLocaleDateString()}</div>
+            </div>
+        `;
+    }
+
+    document.body.appendChild(div);
+    return div;
+  }
 
   // Build a url to the plan timeline API.
   const url = new URL('plan/2/timeline/plant-type', window.location.origin + drupalSettings.path.baseUrl);
@@ -76,8 +141,11 @@
             }
 
             tasks.push({
-              type: 'task',
               id: `${plantId}-${stage.type}`,
+              entityType: 'asset',
+              entityId: plantId,
+              entityBundle: 'plant',
+              stage: stage.type,
               label: ' ',
               resourceId: assetRowId,
               from: from,
@@ -101,8 +169,10 @@
             }
 
             tasks.push({
-              type: 'task',
               id: `${plantId}-log-${log.id}`,
+              entityType: 'log',
+              entityId: log.id,
+              entityBundle: log.type,
               label: ' ',
               resourceId: assetRowId,
               from: from,
