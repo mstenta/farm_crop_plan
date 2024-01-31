@@ -45,10 +45,18 @@
       // Build.
       for (let rowId in data.plant_type) {
         let plantType = data.plant_type[rowId];
-        rows.push({id: rowId, label: plantType.label, enableDragging: true});
+        let row= {
+          id: rowId,
+          label: plantType.label,
+          children: [],
+          expanded: true,
+          classes: ['row-plant-type'],
+        };
 
         for (let plantId in plantType.plants) {
           let plant = plantType.plants[plantId];
+          let assetRowId = `asset-${plantId}`;
+          row.children.push({id: assetRowId, label: plant.label, classes: ['row-asset']})
           plant.stages.forEach((stage) => {
 
             // Skip locations.
@@ -70,7 +78,7 @@
               type: 'task',
               id: `${plantId}-${stage.type}`,
               label: ' ',
-              resourceId: rowId,
+              resourceId: assetRowId,
               from: from,
               to: to,
               enableDragging: false,
@@ -95,7 +103,7 @@
               type: 'task',
               id: `${plantId}-log-${log.id}`,
               label: ' ',
-              resourceId: rowId,
+              resourceId: assetRowId,
               from: from,
               to: to,
               enableDragging: false,
@@ -103,6 +111,9 @@
             });
           };
         }
+
+        // Finally, create the rows.
+        rows.push(row);
       }
 
       // Update gantt with new data.
