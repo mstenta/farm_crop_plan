@@ -98,7 +98,7 @@
               resourceId: rowId,
               from: from,
               to: to,
-              enableDragging: true,
+              enableDragging: false,
               classes: ['log', `log--${log.type}`],
             });
           };
