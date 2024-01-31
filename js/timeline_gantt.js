@@ -14,6 +14,7 @@
       columnOffset: 1,
       rowHeight: 35,
       rowPadding: 4,
+      reflectOnParentRows: false,
       tableHeaders: [{ title: 'Label', property: 'label', width: 140, type: 'tree' }],
       tableWidth: 240,
       ganttTableModules: [SvelteGanttTable],
