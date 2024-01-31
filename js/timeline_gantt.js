@@ -69,7 +69,7 @@
             tasks.push({
               type: 'task',
               id: `${plantId}-${stage.type}`,
-              label: `${plant.label} - ${stage.type}`,
+              label: ' ',
               resourceId: rowId,
               from: from,
               to: to,
@@ -94,7 +94,7 @@
             tasks.push({
               type: 'task',
               id: `${plantId}-log-${log.id}`,
-              label: log.label,
+              label: ' ',
               resourceId: rowId,
               from: from,
               to: to,
