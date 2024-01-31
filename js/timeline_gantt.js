@@ -48,6 +48,7 @@
         let row= {
           id: rowId,
           label: plantType.label,
+          headerHtml: plantType.link,
           children: [],
           expanded: true,
           classes: ['row-plant-type'],
@@ -56,7 +57,7 @@
         for (let plantId in plantType.plants) {
           let plant = plantType.plants[plantId];
           let assetRowId = `asset-${plantId}`;
-          row.children.push({id: assetRowId, label: plant.label, classes: ['row-asset']})
+          row.children.push({id: assetRowId, label: plant.label, headerHtml: plant.link, classes: ['row-asset']})
           plant.stages.forEach((stage) => {
 
             // Skip locations.

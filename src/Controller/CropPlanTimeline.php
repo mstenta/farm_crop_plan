@@ -83,6 +83,7 @@ class CropPlanTimeline extends ControllerBase {
       $plant_type = $this->entityTypeManager()->getStorage('taxonomy_term')->load($plant_type_id);
       $data['plant_type'][$plant_type_id] = [
         'label' => $plant_type->label(),
+        'link' => $plant_type->toLink($plant_type->label(), 'canonical', ['absolute' => TRUE])->toString(),
         'plants' => [],
       ];
 
@@ -94,6 +95,7 @@ class CropPlanTimeline extends ControllerBase {
         $asset = $crop_planting->get('plant')->referencedEntities()[0];
         $data['plant_type'][$plant_type_id]['plants'][$asset->id()] = [
           'label' => $asset->label(),
+          'link' => $asset->toLink($asset->label(), 'canonical', ['absolute' => TRUE])->toString(),
           'seeding_date' => $crop_planting->get('seeding_date')->value,
           'transplant_days' => $crop_planting->get('transplant_days')->value,
           'maturity_days' => $crop_planting->get('maturity_days')->value,
