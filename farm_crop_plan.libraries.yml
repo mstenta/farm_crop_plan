@@ -5,6 +5,8 @@ timeline_gantt:
     theme:
       css/timeline_gantt.css: { }
   dependencies:
+    - core/drupal.dialog
+    - core/drupal.dialog.ajax
     - farm_crop_plan/svelte_gantt
 svelte_gantt:
   remote: https://github.com/ANovokmet/svelte-gantt

@@ -93,6 +93,44 @@
     return div;
   }
 
+  // Open entity page on click.
+  gantt.api.tasks.on.select((task) => {
+    task = task[0];
+    if (task.model?.entityType) {
+      var ajaxSettings = {
+        url: `/${task.model.entityType}/${task.model.entityId}`,
+        dialogType: 'dialog',
+        dialogRenderer: 'off_canvas',
+      };
+      var myAjaxObject = Drupal.ajax(ajaxSettings);
+      myAjaxObject.execute();
+    } else {
+      let dialog = document.getElementById('drupal-off-canvas');
+      if (dialog) {
+        Drupal.dialog(dialog, {}).close();
+      }
+    }
+  });
+
+  // Open edit form on double click.
+  gantt.api.tasks.on.dblclicked((task) => {
+    task = task[0];
+    if (task.model?.entityType) {
+      var ajaxSettings = {
+        url: `/${task.model.entityType}/${task.model.entityId}/edit?redirect=${window.location.href}`,
+        dialogType: 'dialog',
+        dialogRenderer: 'off_canvas',
+      };
+      var myAjaxObject = Drupal.ajax(ajaxSettings);
+      myAjaxObject.execute();
+    } else {
+      let dialog = document.getElementById('drupal-off-canvas');
+      if (dialog) {
+        Drupal.dialog(dialog, {}).close();
+      }
+    }
+  });
+
   // Build a url to the plan timeline API.
   const url = new URL('plan/2/timeline/plant-type', window.location.origin + drupalSettings.path.baseUrl);
   const response = fetch(url)
