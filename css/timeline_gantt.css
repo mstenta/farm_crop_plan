@@ -52,3 +52,20 @@
   padding: var(--gin-spacing-xs);
   font-size: var(--gin-font-size-s);
 }
+
+.sg-tree-expander {
+  /*@TODO do this properly.*/
+  mask-image: url('/themes/gin/dist/media/sprite.svg#handle-view');
+  -webkit-mask-image: url('/themes/gin/dist/media/sprite.svg#handle-view');
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center center;
+  -webkit-mask-position: center center;
+  margin-right: 0.5em;
+  background-color: var(--gin-color-text);
+  transform: rotate(90deg);
+  transition: transform var(--details-transform-transition-duration) ease-in 0s;
+}
+.sg-row-expanded .sg-tree-expander {
+  transform: rotate(270deg);
+}
