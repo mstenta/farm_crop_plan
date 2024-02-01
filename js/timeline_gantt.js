@@ -218,8 +218,8 @@
       gantt.$set({
         rows: [...rows],
         tasks: [...tasks],
-        from: first,
-        to: last,
+        from: first - (86400 * 7 * 1000),
+        to: last + (86400 * 7 * 1000),
       });
     });
 
