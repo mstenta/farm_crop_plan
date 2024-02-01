@@ -3,6 +3,7 @@
 namespace Drupal\farm_crop_plan\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\log\Entity\LogInterface;
@@ -84,9 +85,11 @@ class CropPlanTimeline extends ControllerBase {
     $crop_plantings_by_type = $this->cropPlan->getCropPlantingsByType($plan);
     foreach ($crop_plantings_by_type as $plant_type_id => $crop_plantings) {
       $plant_type = $this->entityTypeManager()->getStorage('taxonomy_term')->load($plant_type_id);
+      $plant_type_url = new Url('view.farm_asset.page_term', ['taxonomy_term' => $plant_type->id()]);
+      $plant_type_link = (new Link($plant_type->label(), $plant_type_url))->toString();
       $data['plant_type'][$plant_type_id] = [
         'label' => $plant_type->label(),
-        'link' => $plant_type->toLink($plant_type->label(), 'canonical', ['absolute' => TRUE])->toString(),
+        'link' => $plant_type_link,
         'plants' => [],
       ];
 
