@@ -1,9 +1,10 @@
 (async function (drupalSettings) {
 
   // Instantiate gantt chart.
+  const target = document.getElementById('timeline');
   var gantt = new SvelteGantt({
     // target a DOM element
-    target: document.getElementById('timeline'),
+    target,
     // svelte-gantt options
     props: {
       target: document.getElementById('timeline'),
@@ -115,7 +116,8 @@
   });
 
   // Build a url to the plan timeline API.
-  const url = new URL('plan/1/timeline/plant-type', window.location.origin + drupalSettings.path.baseUrl);
+  const planId = target.dataset.planId;
+  const url = new URL(`plan/${planId}/timeline/plant-type`, window.location.origin + drupalSettings.path.baseUrl);
   const response = fetch(url)
     .then(res => res.json())
     .then(data => {
