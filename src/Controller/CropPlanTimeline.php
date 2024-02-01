@@ -3,6 +3,7 @@
 namespace Drupal\farm_crop_plan\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Url;
 use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\log\Entity\LogInterface;
 use Drupal\plan\Entity\PlanInterface;
@@ -78,6 +79,8 @@ class CropPlanTimeline extends ControllerBase {
   public function byPlantType(PlanInterface $plan) {
 
     $data = [];
+    $destination_url = Url::fromRoute('farm_crop_plan.timeline', ['plan' => $plan->id()])->toString();
+    /** @var \Drupal\farm_crop_plan\Bundle\CropPlanting[] $crop_plantings_by_type */
     $crop_plantings_by_type = $this->cropPlan->getCropPlantingsByType($plan);
     foreach ($crop_plantings_by_type as $plant_type_id => $crop_plantings) {
       $plant_type = $this->entityTypeManager()->getStorage('taxonomy_term')->load($plant_type_id);
@@ -89,13 +92,17 @@ class CropPlanTimeline extends ControllerBase {
 
       // Include each crop planting record.
       // @todo Move duplicated logic to generalized method in this class.
+      /** @var \Drupal\farm_crop_plan\Bundle\CropPlanting $crop_planting */
       foreach ($crop_plantings as $crop_planting) {
 
         // Include basic crop planting data.
+        $edit_url = $crop_planting->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
         $asset = $crop_planting->get('plant')->referencedEntities()[0];
         $data['plant_type'][$plant_type_id]['plants'][$asset->id()] = [
           'label' => $asset->label(),
+          'plan_record' => $crop_planting->id(),
           'link' => $asset->toLink($asset->label(), 'canonical', ['absolute' => TRUE])->toString(),
+          'edit_url' => $edit_url,
           'seeding_date' => $crop_planting->get('seeding_date')->value,
           'transplant_days' => $crop_planting->get('transplant_days')->value,
           'maturity_days' => $crop_planting->get('maturity_days')->value,
@@ -107,17 +114,19 @@ class CropPlanTimeline extends ControllerBase {
         $crop_planting_stages = $this->cropPlan->getCropPlantingStages($crop_planting);
         $data['plant_type'][$plant_type_id]['plants'][$asset->id()]['stages'] = [
           ...$crop_planting_stages,
-          ...$asset_location_stages
+          ...$asset_location_stages,
         ];
 
         // Include logs.
-        $data['plant_type'][$plant_type_id]['plants'][$asset->id()]['logs'] = array_map(function (LogInterface $log) {
+        $data['plant_type'][$plant_type_id]['plants'][$asset->id()]['logs'] = array_map(function (LogInterface $log) use ($destination_url) {
+          $edit_url = $log->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
           return [
             'id' => $log->id(),
             'timestamp' => $log->get('timestamp')->value,
             'status' => $log->get('status')->value,
             'label' => $log->label(),
             'type' => $log->bundle(),
+            'edit_url' => $edit_url,
           ];
         }, $this->cropPlan->getLogs($crop_planting));
       }

@@ -97,28 +97,10 @@
   // Open entity page on click.
   gantt.api.tasks.on.select((task) => {
     task = task[0];
-    if (task.model?.entityType) {
+    if (task.model?.editUrl) {
       var ajaxSettings = {
-        url: `/${task.model.entityType}/${task.model.entityId}`,
-        dialogType: 'dialog',
-        dialogRenderer: 'off_canvas',
-      };
-      var myAjaxObject = Drupal.ajax(ajaxSettings);
-      myAjaxObject.execute();
-    } else {
-      let dialog = document.getElementById('drupal-off-canvas');
-      if (dialog) {
-        Drupal.dialog(dialog, {}).close();
-      }
-    }
-  });
-
-  // Open edit form on double click.
-  gantt.api.tasks.on.dblclicked((task) => {
-    task = task[0];
-    if (task.model?.entityType) {
-      var ajaxSettings = {
-        url: `/${task.model.entityType}/${task.model.entityId}/edit?redirect=${window.location.href}`,
+        //url: `/${task.model.entityType}/${task.model.entityId}/edit?destination=/plan/1/timeline`,
+        url: task.model.editUrl,
         dialogType: 'dialog',
         dialogRenderer: 'off_canvas',
       };
@@ -133,7 +115,7 @@
   });
 
   // Build a url to the plan timeline API.
-  const url = new URL('plan/2/timeline/plant-type', window.location.origin + drupalSettings.path.baseUrl);
+  const url = new URL('plan/1/timeline/plant-type', window.location.origin + drupalSettings.path.baseUrl);
   const response = fetch(url)
     .then(res => res.json())
     .then(data => {
@@ -184,6 +166,7 @@
               entityType: 'asset',
               entityId: plantId,
               entityBundle: 'plant',
+              editUrl: plant.edit_url,
               stage: stage.type,
               label: ' ',
               resourceId: assetRowId,
@@ -212,6 +195,7 @@
               entityType: 'log',
               entityId: log.id,
               entityBundle: log.type,
+              editUrl: log.edit_url,
               label: ' ',
               resourceId: assetRowId,
               from: from,
