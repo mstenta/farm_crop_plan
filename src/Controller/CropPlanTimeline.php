@@ -59,6 +59,7 @@ class CropPlanTimeline extends ControllerBase {
       '#tag' => 'div',
       '#attributes' => [
         'id' => 'timeline',
+        'class' => ['gin-layer-wrapper'],
       ],
       '#attached' => [
         'library' => ['farm_crop_plan/timeline_gantt'],

@@ -1,3 +1,17 @@
+.sg-table-header-cell,
+.column-header-cell {
+  font: var(--gin-font) !important;
+}
+.sg-table-header-cell {
+  font-size: var(--gin-font-size-m) !important;
+  font-weight: var(--gin-font-weight-bold) !important;
+}
+.column-header-cell {
+  font-size: var(--gin-font-size-s) !important;
+  font-weight: var(--gin-font-weight-normal) !important;
+}
+
+
 .sg-task {
   --task-bg-color: black;
   box-shadow: var(--gin-shadow-l1);
@@ -62,7 +76,7 @@
   z-index: 1000;
   background-color: var(--gin-bg-layer);
   border: 1px solid var(--gin-border-color-layer);
-  box-shadow: var(--gin-shadow-l1);
+  box-shadow: var(--gin-shadow-l2);
   border-radius: var(--gin-border-s);
   padding: var(--gin-spacing-xs);
   font-size: var(--gin-font-size-s);
