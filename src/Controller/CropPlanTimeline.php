@@ -53,7 +53,9 @@ class CropPlanTimeline extends ControllerBase {
    */
   public function timeline(PlanInterface $plan) {
 
-    $render = [];
+    $render = [
+      '#title' => $this->t('Timeline: @plan', ['@plan' => $plan->label()]),
+    ];
     $render['timeline'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
