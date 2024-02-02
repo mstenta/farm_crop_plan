@@ -69,7 +69,7 @@ trait MockCropPlanEntitiesTrait {
 
     // Create a season term.
     $this->seasonTerm = Term::create([
-      'name' => date('Y'),
+      'name' => '2024',
       'vid' => 'season',
     ]);
     $this->seasonTerm->save();
@@ -112,14 +112,15 @@ trait MockCropPlanEntitiesTrait {
     ]);
     $this->landAsset->save();
 
+    // Start the plan on May 1, 2024.
+    $timestamp = strtotime('May 1, 2024');
+
     // Create seeding logs for each plant asset.
-    $timestamp = strtotime('-6 month');
-    foreach ($this->plantAssets as $plant_asset) {
-      $timestamp = strtotime('+1 month', $timestamp);
+    foreach ($this->plantAssets as $i => $plant_asset) {
       $log = Log::create([
         'name' => 'Seed ' . $plant_asset->label() . ' in ' . $this->landAsset->label(),
         'type' => 'seeding',
-        'timestamp' => $timestamp,
+        'timestamp' => strtotime('+' . ($i + 1) . ' month', $timestamp),
         'asset' => [
           ['target_id' => $plant_asset->id()],
         ],
@@ -134,13 +135,11 @@ trait MockCropPlanEntitiesTrait {
     }
 
     // Create transplanting logs for each plant asset.
-    $timestamp = strtotime('-5 month');
-    foreach ($this->plantAssets as $plant_asset) {
-      $timestamp = strtotime('+1 month', $timestamp);
+    foreach ($this->plantAssets as $i => $plant_asset) {
       $log = Log::create([
         'name' => 'Transplant ' . $plant_asset->label() . ' in ' . $this->landAsset->label(),
         'type' => 'transplanting',
-        'timestamp' => $timestamp,
+        'timestamp' => strtotime('+' . ($i + 2) . ' month', $timestamp),
         'asset' => [
           ['target_id' => $plant_asset->id()],
         ],
