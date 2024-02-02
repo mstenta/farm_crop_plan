@@ -1,0 +1,50 @@
+name: Run tests
+on:
+  push:
+    branches:
+      - '3.x'
+      - '3.x-**'
+
+jobs:
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    env:
+      MODULE_NAME: farm_crop_plan
+      PACKAGE_NAME: drupal/farm_crop_plan
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.MODULE_NAME }}
+      - name: Run farmOS development environment containers.
+        run: |
+          curl -O https://raw.githubusercontent.com/farmOS/farmOS/3.x/docker/docker-compose.testing.common.yml
+          curl -O https://raw.githubusercontent.com/farmOS/farmOS/3.x/docker/docker-compose.testing.pgsql.yml
+          docker compose -f docker-compose.testing.common.yml -f docker-compose.testing.pgsql.yml config > docker-compose.yml
+          docker compose up -d
+        env:
+          DB_URL: pgsql://farm:farm@db/farm
+      - name: Wait until www container is ready
+        # The www-container-fs-ready file is only created once we expect the
+        # containers to be online so waiting for that lets us know it is safe to
+        # start the tests.
+        run: until [ -f ./www/www-container-fs-ready ]; do sleep 0.1; done
+      - name: Install the module via Composer
+        run: |
+          sudo mv ${MODULE_NAME} www/${MODULE_NAME}
+          docker compose exec -u www-data -T www composer config repositories.${MODULE_NAME} path ./${MODULE_NAME}
+          docker compose exec -u www-data -T www composer update
+          docker compose exec -u www-data -T www composer require ${PACKAGE_NAME}:*
+      - name: Run PHP CodeSniffer
+        run: docker compose exec -u www-data -T www phpcs /opt/drupal/web/modules/${MODULE_NAME} --exclude=DrupalPractice.InfoFiles.NamespacedDependency
+      - name: Run PHPStan
+        run: |
+          sudo sed -i '/level: 1/a \  reportUnmatchedIgnoredErrors: false' www/phpstan.neon
+          docker compose exec -u www-data -T www phpstan analyze /opt/drupal/web/modules/${MODULE_NAME}
+      - name: Run PHPUnit tests
+        run: docker compose exec -u www-data -T www phpunit --verbose --debug /opt/drupal/web/modules/${MODULE_NAME}
+      - name: Test installing farmOS and the module
+        run: |
+          docker compose exec -u www-data -T www drush site-install --db-url=pgsql://farm:farm@db/farm farm farm.modules='base'
+          docker compose exec -u www-data -T www drush en -y ${MODULE_NAME} -y
