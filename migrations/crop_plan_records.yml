@@ -51,25 +51,25 @@ process:
     callable: strtotime
     source: seeding_date
 
-  # Seeding location.
-  seeding_location:
-    - plugin: explode
-      delimiter: ,
-      source: seeding_location
-    - plugin: asset_lookup
-
-  # Transplanting date.
-  transplanting_date:
-    plugin: callback
-    callable: strtotime
-    source: transplanting_date
-
-  # Transplanting location.
-  transplanting_location:
-    - plugin: explode
-      delimiter: ,
-      source: transplanting_location
-    - plugin: asset_lookup
+#  # Seeding location.
+#  _seeding_location:
+#    - plugin: explode
+#      delimiter: ,
+#      source: seeding_location
+#    - plugin: asset_lookup
+#
+#  # Transplanting date.
+#  _transplanting_date:
+#    plugin: callback
+#    callable: strtotime
+#    source: transplanting_date
+#
+#  # Transplanting location.
+#  _transplanting_location:
+#    - plugin: explode
+#      delimiter: ,
+#      source: transplanting_location
+#    - plugin: asset_lookup
 
   # Days to transplant.
   transplant_days: transplant_days
