@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - farm_crop_plan
+id: crop_planting
+label: Crop planting
+description: 'Relationship between a Crop plan and Plant asset with metadata.'
