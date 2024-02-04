@@ -54,7 +54,6 @@
     div.className = 'sg-popup';
     div.innerHTML = `
             <div class="sg-popup-title">${task.label}</div>
-            <div>Test</div>
             <div class="sg-popup-item">
                 <div class="sg-popup-item-label">From:</div>
                 <div class="sg-popup-item-value">${new Date(task.from).toLocaleTimeString()}</div>
@@ -68,18 +67,18 @@
     div.style.top = `${rect.bottom + 5}px`;
     div.style.left = `${rect.left + rect.width / 2}px`;
 
-    if (task?.entityType == 'log') {
+    if (task?.meta?.entity_type == 'log') {
       div.innerHTML = `
             <div class="sg-popup-title">${task.label}</div>
-            <div>${task.entityBundle} ${task.entityType}: ${task.entityId}</div>
+            <div>${task.meta.entity_bundle} ${task.meta.entity_type}: ${task.entity_id}</div>
             <div>Timestamp: ${new Date(task.from).toLocaleDateString()}</div>
         `;
     }
 
-    if (task?.stage) {
+    if (task?.meta?.stage) {
       div.innerHTML = `
             <div class="sg-popup-title">${task.label}</div>
-            <div>Stage: ${task.stage}</div>
+            <div>Stage: ${task.meta.stage}</div>
             <div class="sg-popup-item">
                 <div class="sg-popup-item-label">From:</div>
                 <div class="sg-popup-item-value">${new Date(task.from).toLocaleDateString()}</div>
@@ -115,6 +114,55 @@
     }
   });
 
+  // Helper function to map row properties.
+  const mapRow = function(row) {
+    return {
+      id: row.id,
+      label: row.label,
+      headerHtml: row.link,
+      expanded: row.expanded,
+    };
+  }
+
+  // Helper function to map task properties.
+  const mapTask = function(task) {
+    return {
+      id: task.id,
+      resourceId: task.resource_id,
+      from: new Date(task.start),
+      to: new Date(task.end),
+      label: ' ', //task.label,
+      editUrl: task.edit_url,
+      enableDragging: task.enable_dragging,
+      meta: task?.meta,
+      classes: task.classes,
+    };
+  }
+
+  // Helper function to process a row.
+  // Collect tasks and child rows and child tasks.
+  const processRow = function(row) {
+
+    // Map to a row object.
+    let mappedRow = mapRow(row);
+
+    // Collect all tasks for the row.
+    let tasks = row?.tasks?.map(mapTask) ?? [];
+
+    // Process children rows.
+    // Only create the children array if there are child rows.
+    let processedChildren = row?.children?.map(processRow) ?? [];
+    if (processedChildren.length) {
+      mappedRow.children = [];
+      processedChildren.forEach((child) => {
+        mappedRow.children.push(child.row);
+        tasks.push(...child.tasks)
+      });
+    }
+
+    return {row: mappedRow, tasks};
+  }
+
   // Build a url to the plan timeline API.
   const planId = target.dataset.planId;
   const url = new URL(`plan/${planId}/timeline/plant-type`, window.location.origin + drupalSettings.path.baseUrl);
@@ -122,106 +170,37 @@
     .then(res => res.json())
     .then(data => {
 
-      // Keep track of first/last timestamps.
-      let first = null;
-      let last = null;
-
       // Build new list of rows/tasks.
       const rows = [];
       const tasks = [];
 
-      // Build.
-      for (let rowId in data.plant_type) {
-        let plantType = data.plant_type[rowId];
-        let row= {
-          id: rowId,
-          label: plantType.label,
-          headerHtml: plantType.link,
-          children: [],
-          expanded: true,
-          classes: ['row-plant-type'],
-        };
-
-        for (let plantId in plantType.plants) {
-          let plant = plantType.plants[plantId];
-          let assetRowId = `asset-${plantId}`;
-          row.children.push({id: assetRowId, label: plant.label, headerHtml: plant.link, classes: ['row-asset']})
-          plant.stages.forEach((stage) => {
-
-            // Skip locations.
-            if (stage.type == 'location') {
-              return;
-            }
-
-            // Update start/end.
-            let from = stage.start * 1000;
-            let to = stage.end * 1000;
-            if (!first || from < first) {
-              first = from;
-            }
-            if (!last || to > last) {
-              last = to;
-            }
-
-            tasks.push({
-              id: `${plantId}-${stage.type}`,
-              entityType: 'asset',
-              entityId: plantId,
-              entityBundle: 'plant',
-              editUrl: plant.edit_url,
-              stage: stage.type,
-              label: ' ',
-              resourceId: assetRowId,
-              from: from,
-              to: to,
-              enableDragging: false,
-              classes: [`stage--${stage.type}`],
-            });
-          });
-
-          for (let logId in plant.logs) {
-            let log = plant.logs[logId];
-
-            // Update start/end.
-            let from = log.timestamp * 1000;
-            let to = from + (86400 * 1000);
-            if (!first || from < first) {
-              first = from;
-            }
-            if (!last || to > last) {
-              last = to;
-            }
-
-            tasks.push({
-              id: `${plantId}-log-${log.id}`,
-              entityType: 'log',
-              entityId: log.id,
-              entityBundle: log.type,
-              editUrl: log.edit_url,
-              label: ' ',
-              resourceId: assetRowId,
-              from: from,
-              to: to,
-              enableDragging: false,
-              classes: [
-                'log',
-                `log--${log.type}`,
-                `log-status--${log.status}`
-              ],
-            });
-          };
-        }
-
-        // Finally, create the rows.
-        rows.push(row);
+      // Process each row.
+      for (let i in data.rows) {
+         let row = processRow(data.rows[i]);
+         rows.push(row.row);
+         tasks.push(...row.tasks)
       }
 
-      // Update gantt with new data.
+      // Keep track of first/last timestamps.
+      let first = null;
+      let last = null;
+
+      // Update the first and last from each task.
+      for (let i in tasks) {
+        if (!first || tasks[i].from < first) {
+          first = tasks[i].from;
+        }
+        if (!last || tasks[i].to > last) {
+          last = tasks[i].to;
+        }
+      }
+
+      // Update gantt.
       gantt.$set({
-        rows: [...rows],
-        tasks: [...tasks],
-        from: first - (86400 * 7 * 1000),
-        to: last + (86400 * 7 * 1000),
+        rows: rows,
+        tasks: tasks,
+        from: first - (86400 * 7 *1000),
+        to: last - (8400 * 7 * 1000),
       });
     });
 
