@@ -18,13 +18,10 @@
   background-color: var(--task-bg-color) !important;
 }
 .sg-task:hover {
-  box-shadow: var(--gin-shadow-l2);
   background-color: var(--task-bg-color) !important;
-  filter: brightness(70%) saturate(120%);
 }
 .sg-task-selected {
-  box-shadow: var(--gin-shadow-l2);
-  filter: brightness(70%) saturate(120%);
+  box-shadow: inset 0 0 0 1px var(--gin-color-focus-border), inset 0 0 0 4px var(--gin-color-focus), var(--gin-shadow-l2);
 }
 
 .sg-task .sg-task-content {
@@ -55,10 +52,12 @@
 }
 .sg-task.log.sg-task-selected {
   --task-bg-color: var(--gin-color-focus);
+  background-color: var(--task-bg-color);
+  border: none;
 }
 
 .sg-task.log-status--pending {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
 .sg-task.log--seeding {
