@@ -2,13 +2,14 @@
 
 namespace Drupal\farm_crop_plan\Bundle;
 
+use Drupal\asset\Entity\AssetInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\plan\Entity\PlanRecord;
 
 /**
  * Bundle logic for Crop Planting.
  */
-class CropPlanting extends PlanRecord {
+class CropPlanting extends PlanRecord implements CropPlantingInterface {
 
   use StringTranslationTrait;
 
@@ -29,6 +30,13 @@ class CropPlanting extends PlanRecord {
 
     // Fallback to default.
     return parent::label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlant(): ?AssetInterface {
+    return $this->get('plant')->first()?->entity;
   }
 
 }
