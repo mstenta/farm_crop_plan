@@ -75,23 +75,31 @@ interface CropPlanInterface {
    *
    * @param \Drupal\farm_crop_plan\Bundle\CropPlantingInterface $crop_planting
    *   The crop_planting plan_record entity.
+   * @param int|null $start
+   *   Optionally specify a start timestamp.
+   * @param int|null $end
+   *   Optionally specify an end timestamp.
    *
    * @return array
    *   Returns an array of stages.
    */
-  public function getCropPlantingStages(CropPlantingInterface $crop_planting): array;
+  public function getCropPlantingStages(CropPlantingInterface $crop_planting, int|null $start = NULL, int|null $end = NULL): array;
 
   /**
    * Get asset location stages for the timeline.
    *
    * @param \Drupal\asset\Entity\AssetInterface $asset
    *   The asset entity.
+   * @param int|null $start
+   *   Optionally specify a start timestamp.
+   * @param int|null $end
+   *   Optionally specify an end timestamp.
    *
    * @return array
    *   Returns an array of stages.
    *
    * @todo Move this to farmOS core?
    */
-  public function getAssetLocationStages(AssetInterface $asset): array;
+  public function getAssetLocationStages(AssetInterface $asset, int|null $start = NULL, int|null $end = NULL): array;
 
 }

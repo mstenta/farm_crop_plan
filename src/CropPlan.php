@@ -108,7 +108,7 @@ class CropPlan implements CropPlanInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCropPlantingStages(PlanRecordInterface $crop_planting): array {
+  public function getCropPlantingStages(PlanRecordInterface $crop_planting, int|null $start = NULL, int|null $end = NULL): array {
     $stages = [];
 
     // Load variables.
@@ -157,7 +157,7 @@ class CropPlan implements CropPlanInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAssetLocationStages(AssetInterface $asset): array {
+  public function getAssetLocationStages(AssetInterface $asset, int|null $start = NULL, int|null $end = NULL): array {
     $stages = [];
 
     // Load all movement logs that reference the asset.
