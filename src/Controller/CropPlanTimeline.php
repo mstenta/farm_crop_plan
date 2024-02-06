@@ -155,7 +155,7 @@ class CropPlanTimeline extends ControllerBase {
 
           // Include logs.
           $log_tasks = array_map(function (LogInterface $log) use ($destination_url) {
-            $edit_url = $log->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->setAbsolute()->toString();
+            $edit_url = $log->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
             $log_id = $log->id();
             $bundle = $log->bundle();
             $status = $log->get('status')->value;
@@ -184,7 +184,7 @@ class CropPlanTimeline extends ControllerBase {
           $row_values['children'][] = [
             'id' => "asset--plant--{$plant->id()}",
             'label' => $plant->label(),
-            'link' => $plant->toLink($plant->label(), 'canonical', ['absolute' => TRUE])->toString(),
+            'link' => $plant->toLink($plant->label(), 'canonical')->toString(),
             'tasks' => $tasks,
           ];
         }
