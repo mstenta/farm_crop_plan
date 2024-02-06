@@ -110,7 +110,7 @@ class CropPlanTimeline extends ControllerBase {
   public function byPlantType(PlanInterface $plan) {
 
     $data = [];
-    $destination_url = Url::fromRoute('farm_crop_plan.timeline', ['plan' => $plan->id()])->toString();
+    $destination_url = $plan->toUrl()->toString();
     /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings_by_type */
     $crop_plantings_by_type = $this->cropPlan->getCropPlantingsByType($plan);
     foreach ($crop_plantings_by_type as $plant_type_id => $crop_plantings) {
