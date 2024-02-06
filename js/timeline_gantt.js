@@ -52,14 +52,8 @@
           div.className = 'sg-popup';
           div.innerHTML = `
             <div class="sg-popup-title">${task.label}</div>
-            <div class="sg-popup-item">
-                <div class="sg-popup-item-label">From:</div>
-                <div class="sg-popup-item-value">${new Date(task.from).toLocaleTimeString()}</div>
-            </div>
-            <div class="sg-popup-item">
-                <div class="sg-popup-item-label">To:</div>
-                <div class="sg-popup-item-value">${new Date(task.to).toLocaleTimeString()}</div>
-            </div>
+            <div class="sg-popup-item">From: ${new Date(task.from).toLocaleDateString()}</div>
+            <div class="sg-popup-item">To: ${new Date(task.to).toLocaleDateString()}</div>
         `;
           div.style.position = 'absolute';
           div.style.top = `${rect.bottom + 5}px`;
@@ -67,24 +61,17 @@
 
           if (task?.meta?.entity_type === 'log') {
             div.innerHTML = `
-            <div class="sg-popup-title">${task.meta.label}</div>
-            <div>${task.meta.entity_bundle} ${task.meta.entity_type}: ${task.meta.entity_id}</div>
-            <div>Timestamp: ${new Date(task.from).toLocaleDateString()}</div>
+            <div class="sg-popup-title">Log: ${task.meta.label}</div>
+            <div class="sg-popup-item">Type: ${task.meta.entity_bundle}</div>
+            <div class="sg-popup-item">Timestamp: ${new Date(task.from).toLocaleDateString()}</div>
         `;
           }
 
           if (task?.meta?.stage) {
             div.innerHTML = `
-            <div class="sg-popup-title">${task.label}</div>
-            <div>Stage: ${task.meta.stage}</div>
-            <div class="sg-popup-item">
-                <div class="sg-popup-item-label">From:</div>
-                <div class="sg-popup-item-value">${new Date(task.from).toLocaleDateString()}</div>
-            </div>
-            <div class="sg-popup-item">
-                <div class="sg-popup-item-label">To:</div>
-                <div class="sg-popup-item-value">${new Date(task.to).toLocaleDateString()}</div>
-            </div>
+            <div class="sg-popup-title">Stage: ${task.meta.stage}</div>
+            <div class="sg-popup-item">From: ${new Date(task.from).toLocaleDateString()}</div>
+            <div class="sg-popup-item">To: ${new Date(task.to).toLocaleDateString()}</div>
         `;
           }
 
