@@ -99,7 +99,6 @@
     task = task[0];
     if (task.model?.editUrl) {
       var ajaxSettings = {
-        //url: `/${task.model.entityType}/${task.model.entityId}/edit?destination=/plan/1/timeline`,
         url: task.model.editUrl,
         dialogType: 'dialog',
         dialogRenderer: 'off_canvas',
