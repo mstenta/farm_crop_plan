@@ -67,7 +67,7 @@
 
           if (task?.meta?.entity_type === 'log') {
             div.innerHTML = `
-            <div class="sg-popup-title">${task.label}</div>
+            <div class="sg-popup-title">${task.meta.label}</div>
             <div>${task.meta.entity_bundle} ${task.meta.entity_type}: ${task.meta.entity_id}</div>
             <div>Timestamp: ${new Date(task.from).toLocaleDateString()}</div>
         `;

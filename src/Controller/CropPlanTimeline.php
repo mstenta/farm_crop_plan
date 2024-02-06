@@ -136,6 +136,7 @@ class CropPlanTimeline extends ControllerBase {
               'start' => $log->get('timestamp')->value,
               'end' => $log->get('timestamp')->value + 86400,
               'meta' => [
+                'label' => $log->label(),
                 'entity_id' => $log_id,
                 'entity_type' => 'log',
                 'entity_bundle' => $bundle,
@@ -238,6 +239,7 @@ class CropPlanTimeline extends ControllerBase {
               'start' => $log->get('timestamp')->value,
               'end' => $log->get('timestamp')->value + 86400,
               'meta' => [
+                'label' => $log->label(),
                 'entity_id' => $log_id,
                 'entity_type' => 'log',
                 'entity_bundle' => $bundle,
