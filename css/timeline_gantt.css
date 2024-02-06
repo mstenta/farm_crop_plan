@@ -61,15 +61,23 @@
   background-color: transparent !important;
 }
 
-.sg-task.log--seeding {
-  --task-bg-color: darkblue;
-}
-
-.sg-task.log--transplanting {
-  --task-bg-color: darkgreen;
+.sg-task.log--activity {
+  --task-bg-color: #f1c40f;
 }
 .sg-task.log--harvest {
-  --task-bg-color: darkred;
+  --task-bg-color: #e67e22;
+}
+.sg-task.log--input {
+  --task-bg-color: #9b59b6;
+}
+.sg-task.log--observation {
+  --task-bg-color: #2980b9;
+}
+.sg-task.log--seeding {
+  --task-bg-color: #2ecc71;
+}
+.sg-task.log--transplanting {
+  --task-bg-color: #2ecc71;
 }
 
 .sg-popup {
