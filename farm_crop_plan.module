@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\farm_crop_plan\Bundle\CropPlanting;
 
 /**
@@ -48,4 +49,18 @@ function farm_crop_plan_farm_ui_theme_region_items(string $entity_type) {
     ];
   }
   return [];
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function farm_crop_plan_form_plan_record_crop_planting_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  // Hide plan and plant fields in crop_planting edit forms.
+  if (!empty($form['plan'])) {
+    $form['plan']['#access'] = FALSE;
+  }
+  if (!empty($form['plant'])) {
+    $form['plant']['#access'] = FALSE;
+  }
 }
