@@ -1,17 +1,3 @@
-farm_crop_plan.timeline:
-  path: /plan/{plan}/timeline
-  defaults:
-    _controller: Drupal\farm_crop_plan\Controller\CropPlanTimeline::timeline
-  requirements:
-    _entity_access: plan.view
-  options:
-    parameters:
-      plan:
-        type: entity:plan
-        bundle:
-          - crop
-      delta:
-        type: integer
 farm_crop_plan.timeline_by_planting:
   path: /plan/{plan}/timeline/plant-type
   defaults:
