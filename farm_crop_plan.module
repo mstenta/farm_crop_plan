@@ -24,15 +24,18 @@ function farm_crop_plan_entity_bundle_info_alter(array &$bundles): void {
  */
 function farm_crop_plan_plan_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
 
-  // If this is not a crop plan, bail.
-  if ($entity->bundle() != 'crop') {
+  // If this is not a crop plan in full view mode, bail.
+  if (!($entity->bundle() == 'crop' && $view_mode == 'full')) {
     return;
   }
 
-  // If this is the full view mode, render the crop plan timeline.
-  if ($view_mode == 'full') {
-    $build['crop_plan_timeline'] = \Drupal::formBuilder()->getForm('Drupal\farm_crop_plan\Form\CropPlanTimelineForm', $entity);
+  // If there are no crop plantings, bail.
+  if (empty(\Drupal::service('farm_crop_plan')->getCropPlantings($entity))) {
+    return;
   }
+
+  // Render the crop plan timeline.
+  $build['crop_plan_timeline'] = \Drupal::formBuilder()->getForm('Drupal\farm_crop_plan\Form\CropPlanTimelineForm', $entity);
 }
 
 /**
