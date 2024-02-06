@@ -16,7 +16,7 @@
       rowHeight: 25,
       rowPadding: 4,
       reflectOnParentRows: false,
-      tableHeaders: [{ title: 'By Plant Type', property: 'label', type: 'tree' }],
+      tableHeaders: [{ title: target.dataset.tableHeader, property: 'label', type: 'tree' }],
       tableWidth: 240,
       ganttTableModules: [SvelteGanttTable],
       headers: [
@@ -163,8 +163,7 @@
   }
 
   // Build a url to the plan timeline API.
-  const planId = target.dataset.planId;
-  const url = new URL(`plan/${planId}/timeline/plant-type`, window.location.origin + drupalSettings.path.baseUrl);
+  const url = new URL(target.dataset.timelineUrl, window.location.origin + drupalSettings.path.baseUrl);
   const response = fetch(url)
     .then(res => res.json())
     .then(data => {

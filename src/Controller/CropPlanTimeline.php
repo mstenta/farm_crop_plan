@@ -87,7 +87,8 @@ class CropPlanTimeline extends ControllerBase {
       '#attributes' => [
         'id' => 'timeline',
         'class' => ['gin-layer-wrapper'],
-        'data-plan-id' => $plan->id(),
+        'data-table-header' => $this->t('Plant type'),
+        'data-timeline-url' => 'plan/' . $plan->id() . '/timeline/plant-type',
       ],
       '#attached' => [
         'library' => ['farm_crop_plan/timeline_gantt'],
