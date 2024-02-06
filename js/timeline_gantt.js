@@ -195,12 +195,32 @@
         }
       }
 
+      // Define the start, end, and now timestamps.
+      // Start and end are padded by a week.
+      const start = first.getTime() - (86400 * 7 * 1000);
+      const end = last.getTime() + (86400 * 7 * 1000);
+      const now = new Date().getTime();
+
+      // If the start of this timeline is in the past, build a time range to
+      // represent "the past".
+      let timeRanges = [];
+      if (start < now) {
+        timeRanges.push({
+          id: 'past',
+          from: start,
+          to: now,
+          label: 'Past',
+          resizable: false,
+        });
+      }
+
       // Update gantt.
       gantt.$set({
         rows: rows,
         tasks: tasks,
-        from: first - (86400 * 7 *1000),
-        to: last - (8400 * 7 * 1000),
+        timeRanges: timeRanges,
+        from: start,
+        to: end,
       });
     });
 
