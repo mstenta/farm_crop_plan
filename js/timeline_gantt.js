@@ -7,7 +7,7 @@
     target,
     // svelte-gantt options
     props: {
-      target: document.getElementById('timeline'),
+      target: target,
       from: Date.now()-86400,
       to: Date.now(),
       fitWidth: true,
