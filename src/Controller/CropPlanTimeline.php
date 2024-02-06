@@ -111,7 +111,7 @@ class CropPlanTimeline extends ControllerBase {
 
     $data = [];
     $destination_url = Url::fromRoute('farm_crop_plan.timeline', ['plan' => $plan->id()])->toString();
-    /** @var \Drupal\farm_crop_plan\Bundle\CropPlanting[] $crop_plantings_by_type */
+    /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings_by_type */
     $crop_plantings_by_type = $this->cropPlan->getCropPlantingsByType($plan);
     foreach ($crop_plantings_by_type as $plant_type_id => $crop_plantings) {
       $plant_type = $this->entityTypeManager()->getStorage('taxonomy_term')->load($plant_type_id);
@@ -126,7 +126,7 @@ class CropPlanTimeline extends ControllerBase {
       ];
 
       // Include each crop planting record.
-      /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface $crop_planting */
+      /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings */
       foreach ($crop_plantings as $crop_planting) {
         if ($plant = $crop_planting->getPlant()) {
 
@@ -214,34 +214,94 @@ class CropPlanTimeline extends ControllerBase {
   public function byLocation(PlanInterface $plan) {
 
     $data = [];
+    $destination_url = $plan->toUrl()->toString();
+    /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings_by_location */
     $crop_plantings_by_location = $this->cropPlan->getCropPlantingsByLocation($plan);
     foreach ($crop_plantings_by_location as $location_id => $crop_plantings) {
       $location_asset = $this->entityTypeManager()->getStorage('asset')->load($location_id);
-      $data['location'][$location_id] = [
+      $row_values = [
+        'id' => "asset--location--$location_id",
         'label' => $location_asset->label(),
-        'plants' => [],
+        'link' => $location_asset->toLink()->toString(),
+        'expanded' => TRUE,
+        'children' => [],
       ];
 
+      // Include each crop planting record.
+      /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings */
       foreach ($crop_plantings as $crop_planting) {
-        $asset = $crop_planting->get('plant')->referencedEntities()[0];
-        $crop_planting_stages = $this->cropPlan->getCropPlantingStages($crop_planting);
-        $asset_location_stages = $this->cropPlan->getAssetLocationStages($asset);
-        $data['location'][$location_id]['plants'][$asset->id()] = [
-          'label' => $asset->label(),
-          'seeding_date' => $crop_planting->get('seeding_date')->value,
-          'transplant_days' => $crop_planting->get('transplant_days')->value,
-          'maturity_days' => $crop_planting->get('maturity_days')->value,
-          'harvest_days' => $crop_planting->get('harvest_days')->value,
-        ];
-        $data['location'][$location_id]['plants'][$asset->id()]['stages'] = [
-          ...$crop_planting_stages,
-          ...$asset_location_stages,
-        ];
-        // @todo Include logs.
+        if ($plant = $crop_planting->getPlant()) {
+
+          // Build tasks from the crop planting.
+          $tasks = [];
+
+          // Include planting stages.
+          $edit_url = $crop_planting->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
+          $stage_tasks = array_map(function (array $stage) use ($plant, $edit_url) {
+            $stage_type = $stage['type'];
+            return [
+              'id' => "plant--{$plant->id()}--{$stage_type}",
+              'label' => ' ',
+              'edit_url' => $edit_url,
+              'start' => $stage['start'],
+              'end' => $stage['end'],
+              'meta' => [
+                'stage' => $stage_type,
+              ],
+              'classes' => [
+                'stage',
+                "stage--$stage_type",
+              ],
+            ];
+          }, $this->cropPlan->getCropPlantingStages($crop_planting));
+          array_push($tasks, ...$stage_tasks);
+
+          // Include logs.
+          $log_tasks = array_map(function (LogInterface $log) use ($destination_url) {
+            $edit_url = $log->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
+            $log_id = $log->id();
+            $bundle = $log->bundle();
+            $status = $log->get('status')->value;
+            return [
+              'id' => "log--$bundle--$log_id",
+              'label' => $log->label(),
+              'edit_url' => $edit_url,
+              'start' => $log->get('timestamp')->value,
+              'end' => $log->get('timestamp')->value + 86400,
+              'meta' => [
+                'entity_id' => $log_id,
+                'entity_type' => 'log',
+                'entity_bundle' => $bundle,
+                'log_status' => $status,
+              ],
+              'classes' => [
+                'log',
+                "log--$bundle",
+                "log--status-$status",
+              ],
+            ];
+          }, $this->cropPlan->getLogs($crop_planting));
+          array_push($tasks, ...$log_tasks);
+
+          // Add the child row with tasks.
+          $row_values['children'][] = [
+            'id' => "asset--plant--{$plant->id()}",
+            'label' => $plant->label(),
+            'link' => $plant->toLink($plant->label(), 'canonical')->toString(),
+            'tasks' => $tasks,
+          ];
+        }
       }
+
+      // Add the row object.
+      // @todo Create and instantiate a wrapper data type instead of rows.
+      $row_definition = TimelineRowDefinition::create('farm_timeline_row');
+      $data['rows'][] = $this->typedDataManager->create($row_definition, $row_values);
     }
 
-    return new JsonResponse($data);
+    // Serialize to JSON and return response.
+    $serialized = $this->serializer->serialize($data, 'json');
+    return new JsonResponse($serialized, 200, [], TRUE);
   }
 
 }
