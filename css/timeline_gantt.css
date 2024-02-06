@@ -33,15 +33,13 @@
 
 
 .sg-task.stage--seeding {
-  --task-bg-color: lightblue;
+  --task-bg-color: #d3fd9d;
 }
-
 .sg-task.stage--transplanting {
-  --task-bg-color: lightgreen;
+  --task-bg-color: #b6eb73;
 }
-
 .sg-task.stage--harvest {
-  --task-bg-color: indianred;
+  --task-bg-color: #a2df54;
 }
 
 .sg-task.log {
