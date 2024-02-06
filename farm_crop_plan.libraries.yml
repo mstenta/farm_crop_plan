@@ -7,6 +7,7 @@ timeline_gantt:
   dependencies:
     - core/drupal.dialog
     - core/drupal.dialog.ajax
+    - core/once
     - farm_crop_plan/svelte_gantt
 svelte_gantt:
   remote: https://github.com/ANovokmet/svelte-gantt
