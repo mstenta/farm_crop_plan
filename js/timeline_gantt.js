@@ -13,7 +13,7 @@
       fitWidth: true,
       columnUnit: 'day',
       columnOffset: 7,
-      rowHeight: 35,
+      rowHeight: 25,
       rowPadding: 4,
       reflectOnParentRows: false,
       tableHeaders: [{ title: 'By Plant Type', property: 'label', type: 'tree' }],
