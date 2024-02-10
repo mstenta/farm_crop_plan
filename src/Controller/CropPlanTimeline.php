@@ -2,6 +2,7 @@
 
 namespace Drupal\farm_crop_plan\Controller;
 
+use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
@@ -27,6 +28,13 @@ class CropPlanTimeline extends ControllerBase {
   protected $cropPlan;
 
   /**
+   * The UUID service.
+   *
+   * @var \Drupal\Component\Uuid\UuidInterface
+   */
+  protected $uuidService;
+
+  /**
    * The typed data manager interface.
    *
    * @var \Drupal\Core\TypedData\TypedDataManagerInterface
@@ -45,13 +53,16 @@ class CropPlanTimeline extends ControllerBase {
    *
    * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
    *   The crop plan service.
+   * @param \Drupal\Component\Uuid\UuidInterface $uuid_service
+   *   The UUID service.
    * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
    *   The typed data manager interface.
    * @param \Symfony\Component\Serializer\SerializerInterface $serializer
    *   The serializer service.
    */
-  public function __construct(CropPlanInterface $crop_plan, TypedDataManagerInterface $typed_data_manager, SerializerInterface $serializer) {
+  public function __construct(CropPlanInterface $crop_plan, UuidInterface $uuid_service, TypedDataManagerInterface $typed_data_manager, SerializerInterface $serializer) {
     $this->cropPlan = $crop_plan;
+    $this->uuidService = $uuid_service;
     $this->typedDataManager = $typed_data_manager;
     $this->serializer = $serializer;
   }
@@ -62,6 +73,7 @@ class CropPlanTimeline extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('farm_crop_plan'),
+      $container->get('uuid'),
       $container->get('typed_data_manager'),
       $container->get('serializer'),
     );
@@ -104,10 +116,10 @@ class CropPlanTimeline extends ControllerBase {
 
           // Include planting stages.
           $edit_url = $crop_planting->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
-          $stage_tasks = array_map(function (array $stage) use ($plant, $edit_url) {
+          $stage_tasks = array_map(function (array $stage) use ($edit_url) {
             $stage_type = $stage['type'];
             return [
-              'id' => "plant--{$plant->id()}--{$stage_type}",
+              'id' => $this->uuidService->generate(),
               'label' => ' ',
               'edit_url' => $edit_url,
               'start' => $stage['start'],
@@ -130,7 +142,7 @@ class CropPlanTimeline extends ControllerBase {
             $bundle = $log->bundle();
             $status = $log->get('status')->value;
             return [
-              'id' => "log--$bundle--$log_id",
+              'id' => $this->uuidService->generate(),
               'label' => $log->label(),
               'edit_url' => $edit_url,
               'start' => $log->get('timestamp')->value,
@@ -153,7 +165,7 @@ class CropPlanTimeline extends ControllerBase {
 
           // Add the child row with tasks.
           $row_values['children'][] = [
-            'id' => "asset--plant--{$plant->id()}",
+            'id' => $this->uuidService->generate(),
             'label' => $plant->label(),
             'link' => $plant->toLink($plant->label(), 'canonical')->toString(),
             'tasks' => $tasks,
@@ -207,10 +219,10 @@ class CropPlanTimeline extends ControllerBase {
 
           // Include planting stages.
           $edit_url = $crop_planting->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
-          $stage_tasks = array_map(function (array $stage) use ($plant, $edit_url) {
+          $stage_tasks = array_map(function (array $stage) use ($edit_url) {
             $stage_type = $stage['type'];
             return [
-              'id' => "plant--{$plant->id()}--{$stage_type}",
+              'id' => $this->uuidService->generate(),
               'label' => ' ',
               'edit_url' => $edit_url,
               'start' => $stage['start'],
@@ -233,7 +245,7 @@ class CropPlanTimeline extends ControllerBase {
             $bundle = $log->bundle();
             $status = $log->get('status')->value;
             return [
-              'id' => "log--$bundle--$log_id",
+              'id' => $this->uuidService->generate(),
               'label' => $log->label(),
               'edit_url' => $edit_url,
               'start' => $log->get('timestamp')->value,
@@ -256,7 +268,7 @@ class CropPlanTimeline extends ControllerBase {
 
           // Add the child row with tasks.
           $row_values['children'][] = [
-            'id' => "asset--plant--{$plant->id()}",
+            'id' => $this->uuidService->generate(),
             'label' => $plant->label(),
             'link' => $plant->toLink($plant->label(), 'canonical')->toString(),
             'tasks' => $tasks,
