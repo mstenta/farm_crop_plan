@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\farm_crop_plan\Bundle\CropPlanting;
 
 /**
@@ -66,4 +67,23 @@ function farm_crop_plan_form_plan_record_crop_planting_edit_form_alter(&$form, F
   if (!empty($form['plant'])) {
     $form['plant']['#access'] = FALSE;
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function farm_crop_plan_form_quick_form_planting_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  // Alter the planting quick form, if a crop plan was specified.
+  /** @var \Drupal\plan\Entity\PlanInterface $plan */
+  $plan = \Drupal::entityTypeManager()->getStorage('plan')->load(\Drupal::request()->query->get('plan'));
+  if (is_null($plan) || $plan->bundle() !== 'crop') {
+    return;
+  }
+
+  // Save the plan ID.
+  $form['plan_id'] = [
+    '#type' => 'value',
+    '#value' => $plan->id(),
+  ];
 }
