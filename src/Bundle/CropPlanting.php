@@ -20,7 +20,7 @@ class CropPlanting extends PlanRecord implements CropPlantingInterface {
 
     // Build label with the referenced plan and plant.
     if ($plan = $this->getPlan()) {
-      if ($plant = $this->get('plant')->first()?->entity) {
+      if ($plant = $this->getPlant()) {
         return $this->t('Crop planting: %plant - %plan', ['%plant' => $plant->label(), '%plan' => $plan->label()]);
       }
 
