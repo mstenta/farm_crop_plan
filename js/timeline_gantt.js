@@ -56,7 +56,7 @@
             <div class="sg-popup-item">To: ${new Date(task.to).toLocaleDateString()}</div>
         `;
           div.style.position = 'absolute';
-          div.style.top = `${rect.bottom + 5}px`;
+          div.style.top = `${rect.bottom + window.scrollY + 5}px`;
           div.style.left = `${rect.left + rect.width / 2}px`;
 
           if (task?.meta?.entity_type === 'log') {
