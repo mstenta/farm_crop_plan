@@ -11,10 +11,6 @@
   font-weight: var(--gin-font-weight-normal) !important;
 }
 
-.sg-timeline-body .content {
-  padding-bottom: 25px;
-}
-
 .sg-task {
   --task-bg-color: black;
   box-shadow: var(--gin-shadow-l1);
