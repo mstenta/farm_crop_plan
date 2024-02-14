@@ -15,6 +15,7 @@
   --task-bg-color: #74bfff;
   box-shadow: var(--gin-shadow-l1);
   background-color: var(--task-bg-color) !important;
+  border-left: 2px solid #666666;
 }
 .sg-task:hover {
   background-color: var(--task-bg-color) !important;
