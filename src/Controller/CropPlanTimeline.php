@@ -214,17 +214,23 @@ class CropPlanTimeline extends ControllerBase {
       foreach ($crop_plantings as $crop_planting) {
         if ($plant = $crop_planting->getPlant()) {
 
-          // Build tasks from the crop planting.
-          $tasks = [];
-
-          // Include planting stages.
-          $edit_url = $crop_planting->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
-          $stage_tasks = array_map(function (array $stage) use ($edit_url) {
+          // Include actual asset location stages, filtered by location ID.
+          $location_stages = array_filter($this->cropPlan->getAssetLocationStages($crop_planting->getPlant()), function ($stage) use ($location_id) {
+            if (!is_null($stage['location'])) {
+              foreach ($stage['location'] as $location) {
+                if ($location->id() == $location_id) {
+                  return TRUE;
+                }
+              }
+            }
+            return FALSE;
+          });
+          $location_tasks = array_map(function (array $stage) {
             $stage_type = $stage['type'];
-            return [
+            $task = [
               'id' => $this->uuidService->generate(),
               'label' => ' ',
-              'edit_url' => $edit_url,
+              'edit_url' => '',
               'start' => $stage['start'],
               'end' => $stage['end'],
               'meta' => [
@@ -235,43 +241,23 @@ class CropPlanTimeline extends ControllerBase {
                 "stage--$stage_type",
               ],
             ];
-          }, $this->cropPlan->getCropPlantingStages($crop_planting));
-          array_push($tasks, ...$stage_tasks);
 
-          // Include logs.
-          $log_tasks = array_map(function (LogInterface $log) use ($destination_url) {
-            $edit_url = $log->toUrl('edit-form', ['query' => ['destination' => $destination_url]])->toString();
-            $log_id = $log->id();
-            $bundle = $log->bundle();
-            $status = $log->get('status')->value;
-            return [
-              'id' => $this->uuidService->generate(),
-              'label' => $log->label(),
-              'edit_url' => $edit_url,
-              'start' => $log->get('timestamp')->value,
-              'end' => $log->get('timestamp')->value + 86400,
-              'meta' => [
-                'label' => $log->label(),
-                'entity_id' => $log_id,
-                'entity_type' => 'log',
-                'entity_bundle' => $bundle,
-                'log_status' => $status,
-              ],
-              'classes' => [
-                'log',
-                "log--$bundle",
-                "log--status-$status",
-              ],
-            ];
-          }, $this->cropPlan->getLogs($crop_planting));
-          array_push($tasks, ...$log_tasks);
+            // If the end timestamp is NULL, set it to end 8 weeks from the
+            // start, and add a "last-location" class.
+            if (is_null($task['end'])) {
+              $task['end'] = $task['start'] + 86400 * 7 * 8;
+              $task['classes'][] = 'last-location';
+            }
+
+            return $task;
+          }, $location_stages);
 
           // Add the child row with tasks.
           $row_values['children'][] = [
             'id' => $this->uuidService->generate(),
             'label' => $plant->label(),
             'link' => $plant->toLink($plant->label(), 'canonical')->toString(),
-            'tasks' => $tasks,
+            'tasks' => $location_tasks,
           ];
         }
       }
