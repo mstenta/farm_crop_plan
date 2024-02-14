@@ -39,6 +39,12 @@
   --task-bg-color: #a2df54;
 }
 
+.sg-task.last-location,
+.sg-task.last-location:hover {
+  background-color: unset !important;
+  background: linear-gradient(90deg, var(--task-bg-color), rgba(255,255,255,0));
+}
+
 .sg-task.log {
   margin-top: 4px;
   margin-left: -5px;
