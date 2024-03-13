@@ -26,3 +26,16 @@ farm_crop_plan.timeline_by_location:
           - crop
       delta:
         type: integer
+farm_crop_plan.add_planting:
+  path: /plan/{plan}/planting
+  defaults:
+    _form: Drupal\farm_crop_plan\Form\CropPlanAddPlantingForm
+    _title_callback: Drupal\farm_crop_plan\Form\CropPlanAddPlantingForm::title
+  requirements:
+    _entity_access: plan.update
+  options:
+    parameters:
+      plan:
+        type: entity:plan
+        bundle:
+          - crop

@@ -1,0 +1,5 @@
+farm_crop_plan.add_planting:
+  title: 'Add planting'
+  route_name: farm_crop_plan.add_planting
+  appears_on:
+    - entity.plan.canonical
