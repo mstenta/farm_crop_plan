@@ -7,21 +7,35 @@
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\farm_crop_plan\Bundle\CropPlanting;
+
+/**
+ * Implements hook_entity_bundle_info_alter().
+ */
+function farm_crop_plan_entity_bundle_info_alter(array &$bundles): void {
+  if (isset($bundles['plan_record']['crop_planting'])) {
+    $bundles['plan_record']['crop_planting']['class'] = CropPlanting::class;
+  }
+}
 
 /**
  * Implements hook_ENTITY_TYPE_view().
  */
 function farm_crop_plan_plan_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
 
-  // If this is not a crop plan, bail.
-  if ($entity->bundle() != 'crop') {
+  // If this is not a crop plan in full view mode, bail.
+  if (!($entity->bundle() == 'crop' && $view_mode == 'full')) {
     return;
   }
 
-  // If this is the full view mode, render the crop plan timeline.
-  if ($view_mode == 'full') {
-    $build['crop_plan_timeline'] = \Drupal::formBuilder()->getForm('Drupal\farm_crop_plan\Form\CropPlanTimelineForm', $entity);
+  // If there are no crop plantings, bail.
+  if (empty(\Drupal::service('farm_crop_plan')->getCropPlantings($entity))) {
+    return;
   }
+
+  // Render the crop plan timeline.
+  $build['crop_plan_timeline'] = \Drupal::formBuilder()->getForm('Drupal\farm_crop_plan\Form\CropPlanTimelineForm', $entity);
 }
 
 /**
@@ -38,4 +52,18 @@ function farm_crop_plan_farm_ui_theme_region_items(string $entity_type) {
     ];
   }
   return [];
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function farm_crop_plan_form_plan_record_crop_planting_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  // Hide plan and plant fields in crop_planting edit forms.
+  if (!empty($form['plan'])) {
+    $form['plan']['#access'] = FALSE;
+  }
+  if (!empty($form['plant'])) {
+    $form['plant']['#access'] = FALSE;
+  }
 }

@@ -131,7 +131,7 @@ class CropPlanTest extends KernelTestBase {
       return ($a->id() < $b->id()) ? -1 : 1;
     });
     foreach ($crop_records as $delta => $crop_record) {
-      $this->assertEquals($this->plantAssets[$delta]->id(), $crop_record->get('plant')->referencedEntities()[0]->id());
+      $this->assertEquals($this->plantAssets[$delta]->id(), $crop_record->getPlant()->id());
       $this->assertEquals($this->seedingLogs[$delta]->get('timestamp')->value, $crop_record->get('seeding_date')->value);
       $this->assertEquals(30, $crop_record->get('transplant_days')->value);
       $this->assertEquals(60, $crop_record->get('maturity_days')->value);
@@ -149,7 +149,7 @@ class CropPlanTest extends KernelTestBase {
       $this->assertNotEmpty($crop_records_by_type[$plant_type->id()]);
       $this->assertCount(1, $crop_records_by_type[$plant_type->id()]);
       foreach ($crop_records_by_type[$plant_type->id()] as $crop_planting) {
-        $crop_planting_asset_ids[] = $crop_planting->get('plant')->referencedEntities()[0]->id();
+        $crop_planting_asset_ids[] = $crop_planting->getPlant()->id();
       }
     }
     $this->assertEquals($plant_asset_ids, $crop_planting_asset_ids);
@@ -160,7 +160,7 @@ class CropPlanTest extends KernelTestBase {
     $this->assertNotEmpty($crop_records_by_location[$this->landAsset->id()]);
     $this->assertCount(3, $crop_records_by_location[$this->landAsset->id()]);
     $crop_planting_asset_ids = array_map(function ($crop_planting) {
-      return $crop_planting->get('plant')->referencedEntities()[0]->id();
+      return $crop_planting->getPlant()->id();
     }, array_values($crop_records_by_location[$this->landAsset->id()]));
     $this->assertEquals($plant_asset_ids, $crop_planting_asset_ids);
 
@@ -169,7 +169,7 @@ class CropPlanTest extends KernelTestBase {
       $logs = \Drupal::service('farm_crop_plan')->getLogs($crop_record, FALSE);
       $this->assertCount(2, $logs);
       foreach ($logs as $log) {
-        $this->assertEquals($crop_record->get('plant')->referencedEntities()[0]->id(), $log->get('asset')->referencedEntities()[0]->id());
+        $this->assertEquals($crop_record->getPlant()->id(), $log->get('asset')->referencedEntities()[0]->id());
       }
     }
 
@@ -251,7 +251,7 @@ class CropPlanTest extends KernelTestBase {
       ],
     ];
     foreach ($crop_records as $i => $crop_record) {
-      $asset = $crop_record->get('plant')->referencedEntities()[0];
+      $asset = $crop_record->getPlant();
       $stages = \Drupal::service('farm_crop_plan')->getAssetLocationStages($asset);
       $this->assertEquals(count($expected_stages[$i]), count($stages));
       foreach ($stages as $j => $stage) {

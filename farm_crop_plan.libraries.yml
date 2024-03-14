@@ -1,0 +1,20 @@
+timeline_gantt:
+  js:
+    js/timeline_gantt.js: {}
+  css:
+    theme:
+      css/timeline_gantt.css: { }
+  dependencies:
+    - core/drupal.dialog
+    - core/drupal.dialog.ajax
+    - core/once
+    - farm_crop_plan/svelte_gantt
+svelte_gantt:
+  remote: https://github.com/ANovokmet/svelte-gantt
+  version: 4.2.4
+  license:
+    name: MIT
+  js:
+    https://cdn.jsdelivr.net/npm/svelte-gantt@4.2.4/index.iife.min.js:
+      type: external
+      minified: true

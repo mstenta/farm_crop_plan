@@ -65,7 +65,7 @@ class CropPlan implements CropPlanInterface {
     $crop_plantings_by_type = [];
     $crop_plantings = $this->getCropPlantings($plan);
     foreach ($crop_plantings as $crop_planting) {
-      $plant_types = $crop_planting->get('plant')->referencedEntities()[0]->get('plant_type')->referencedEntities();
+      $plant_types = $crop_planting->getPlant()->get('plant_type')->referencedEntities();
       foreach ($plant_types as $plant_type) {
         $crop_plantings_by_type[$plant_type->id()][$crop_planting->id()] = $crop_planting;
       }
@@ -80,7 +80,7 @@ class CropPlan implements CropPlanInterface {
     $crop_plantings_by_location = [];
     $crop_plantings = $this->getCropPlantings($plan);
     foreach ($crop_plantings as $crop_planting) {
-      $logs = $this->getAssetMovementLogs($crop_planting->get('plant')->referencedEntities()[0]);
+      $logs = $this->getAssetMovementLogs($crop_planting->getPlant());
       foreach ($logs as $log) {
         $locations = $this->logLocation->getLocation($log);
         foreach ($locations as $location) {
@@ -95,14 +95,11 @@ class CropPlan implements CropPlanInterface {
    * {@inheritdoc}
    */
   public function getLogs(PlanRecordInterface $crop_planting, bool $access_check = TRUE): array {
-    $plant_assets = $crop_planting->get('plant')->referencedEntities();
-    if (empty($plant_assets)) {
+    $plant_asset = $crop_planting->getPlant();
+    if (empty($plant_asset)) {
       return [];
     }
-    $options = [
-      'asset' => reset($plant_assets),
-    ];
-    $query = $this->logQueryFactory->getQuery($options);
+    $query = $this->logQueryFactory->getQuery(['asset' => $plant_asset]);
     $query->accessCheck($access_check);
     $log_ids = $query->execute();
     return $this->entityTypeManager->getStorage('log')->loadMultiple($log_ids);

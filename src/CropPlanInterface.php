@@ -3,8 +3,8 @@
 namespace Drupal\farm_crop_plan;
 
 use Drupal\asset\Entity\AssetInterface;
+use Drupal\farm_crop_plan\Bundle\CropPlantingInterface;
 use Drupal\plan\Entity\PlanInterface;
-use Drupal\plan\Entity\PlanRecordInterface;
 
 /**
  * Crop plan logic.
@@ -17,8 +17,8 @@ interface CropPlanInterface {
    * @param \Drupal\plan\Entity\PlanInterface $plan
    *   The plan entity.
    *
-   * @return \Drupal\plan\Entity\PlanRecordInterface[]
-   *   Returns an array of plan_record entities.
+   * @return \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[]
+   *   Returns an array of plan_record entities of type crop_planting.
    */
   public function getCropPlantings(PlanInterface $plan): array;
 
@@ -60,7 +60,7 @@ interface CropPlanInterface {
   /**
    * Get all logs for the plant asset.
    *
-   * @param \Drupal\plan\Entity\PlanRecordInterface $crop_planting
+   * @param \Drupal\farm_crop_plan\Bundle\CropPlantingInterface $crop_planting
    *   The crop_planting plan_record entity.
    * @param bool $access_check
    *   Whether to check log entity access.
@@ -68,18 +68,18 @@ interface CropPlanInterface {
    * @return \Drupal\log\Entity\LogInterface[]
    *   Returns an array of Log entities.
    */
-  public function getLogs(PlanRecordInterface $crop_planting, bool $access_check = TRUE): array;
+  public function getLogs(CropPlantingInterface $crop_planting, bool $access_check = TRUE): array;
 
   /**
    * Get crop planting stages for the timeline.
    *
-   * @param \Drupal\plan\Entity\PlanRecordInterface $crop_planting
+   * @param \Drupal\farm_crop_plan\Bundle\CropPlantingInterface $crop_planting
    *   The crop_planting plan_record entity.
    *
    * @return array
    *   Returns an array of stages.
    */
-  public function getCropPlantingStages(PlanRecordInterface $crop_planting): array;
+  public function getCropPlantingStages(CropPlantingInterface $crop_planting): array;
 
   /**
    * Get asset location stages for the timeline.

@@ -1,0 +1,28 @@
+farm_crop_plan.timeline_by_planting:
+  path: /plan/{plan}/timeline/plant-type
+  defaults:
+    _controller: Drupal\farm_crop_plan\Controller\CropPlanTimeline::byPlantType
+  requirements:
+    _entity_access: plan.view
+  options:
+    parameters:
+      plan:
+        type: entity:plan
+        bundle:
+          - crop
+      delta:
+        type: integer
+farm_crop_plan.timeline_by_location:
+  path: /plan/{plan}/timeline/location
+  defaults:
+    _controller: Drupal\farm_crop_plan\Controller\CropPlanTimeline::byLocation
+  requirements:
+    _entity_access: plan.view
+  options:
+    parameters:
+      plan:
+        type: entity:plan
+        bundle:
+          - crop
+      delta:
+        type: integer
