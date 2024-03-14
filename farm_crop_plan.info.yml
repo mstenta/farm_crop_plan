@@ -5,6 +5,8 @@ package: farmOS Contrib
 core_version_requirement: ^10
 dependencies:
   - farm_entity
+  - farm_log
+  - farm_location
   - farm_plant
   - farm_season
   - plan

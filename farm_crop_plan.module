@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * The farmOS Crop Plan module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function farm_crop_plan_plan_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+
+  // If this is not a crop plan, bail.
+  if ($entity->bundle() != 'crop') {
+    return;
+  }
+
+  // If this is the full view mode, render the crop plan timeline.
+  if ($view_mode == 'full') {
+    $build['crop_plan_timeline'] = \Drupal::formBuilder()->getForm('Drupal\farm_crop_plan\Form\CropPlanTimelineForm', $entity);
+  }
+}
+
+/**
+ * Implements hook_farm_ui_theme_region_items().
+ */
+function farm_crop_plan_farm_ui_theme_region_items(string $entity_type) {
+
+  // Position the crop plan timeline in the top region.
+  if ($entity_type == 'plan') {
+    return [
+      'top' => [
+        'crop_plan_timeline',
+      ],
+    ];
+  }
+  return [];
+}
