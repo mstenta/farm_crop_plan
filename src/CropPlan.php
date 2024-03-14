@@ -151,6 +151,11 @@ class CropPlan implements CropPlanInterface {
       ];
     }
 
+    // If start/end bounds are specified, filter and trim stages to fit.
+    if (!is_null($start) || !is_null($end)) {
+      $stages = $this->boundTimelineStages($stages, $start, $end);
+    }
+
     return $stages;
   }
 
@@ -174,6 +179,7 @@ class CropPlan implements CropPlanInterface {
     }
 
     // Sort stages chronologically.
+    // @todo end is always null here
     usort($stages, function ($a, $b) {
       if ($a['start'] == $b['end']) {
         return 0;
@@ -187,6 +193,11 @@ class CropPlan implements CropPlanInterface {
       if (isset($stages[$i + 1]) && !empty($stages[$i + 1]['start'])) {
         $stage['end'] = $stages[$i + 1]['start'];
       }
+    }
+
+    // If start/end bounds are specified, filter and trim stages to fit.
+    if (!is_null($start) || !is_null($end)) {
+      $stages = $this->boundTimelineStages($stages, $start, $end);
     }
 
     return $stages;
@@ -214,6 +225,48 @@ class CropPlan implements CropPlanInterface {
     /** @var \Drupal\log\Entity\LogInterface[] $logs */
     $logs = $this->entityTypeManager->getStorage('log')->loadMultiple($log_ids);
     return $logs;
+  }
+
+  /**
+   * Filter and trim timeline stages to fit within start/end bounds.
+   *
+   * @param array $stages
+   *   Array of timeline stages.
+   * @param int|null $start
+   *   Optionally specify a start timestamp.
+   * @param int|null $end
+   *   Optionally specify an end timestamp.
+   *
+   * @return array
+   *   Returns an array of filtered and trimmed stages.
+   */
+  protected function boundTimelineStages(array $stages, int|null $start = NULL, int|null $end = NULL) {
+
+    // Filter out stages that end before the start bound, or start after the
+    // end bound.
+    $stages = array_filter($stages, function ($stage) use ($start, $end) {
+      if (!is_null($start) && !is_null($stage['end']) && $stage['end'] <= $start) {
+        return FALSE;
+      }
+      if (!is_null($end) && !is_null($stage['start']) && $stage['start'] >= $end) {
+        return FALSE;
+      }
+      return TRUE;
+    });
+
+
+    // Trim stages to fit within the start and end bounds.
+    array_map(function ($stage) use ($start, $end) {
+      if (!is_null($start) && !is_null($stage['start']) && $stage['start'] < $start) {
+        $stage['start'] = $start;
+      }
+      if (!is_null($end) && !is_null($stage['end']) && $stage['end'] > $end) {
+        $stage['end'] = $end;
+      }
+      return $stage;
+    }, $stages);
+
+    return $stages;
   }
 
 }
