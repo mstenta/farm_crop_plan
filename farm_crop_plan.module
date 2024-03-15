@@ -8,8 +8,25 @@
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\farm_crop_plan\Bundle\CropPlanting;
+
+/**
+ * Implements hook_help().
+ */
+function farm_crop_plan_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+
+  // Add a link to the Planting quick form on the "Add planting" form, if the
+  // module is installed.
+  if ($route_name == 'farm_crop_plan.add_planting' && \Drupal::moduleHandler()->moduleExists('farm_quick_planting')) {
+    $quick_planting_url = Url::fromRoute('farm.quick.planting', ['plan' => $route_match->getParameter('plan')->id()])->toString();
+    $output .= '<p>' . t('Tip: Use the <a href=":url">Planting quick form</a> to create a plant asset. You will be redirected back here to fill in more details for the plan.', [':url' => $quick_planting_url]) . '</p>';
+  }
+
+  return $output;
+}
 
 /**
  * Implements hook_entity_bundle_info_alter().
