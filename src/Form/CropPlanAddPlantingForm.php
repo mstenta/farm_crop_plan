@@ -60,7 +60,7 @@ class CropPlanAddPlantingForm extends FormBase {
     if (empty($plan)) {
       return $this->t('Add planting');
     }
-    return $this->t('@plan: Add planting', ['@plan' => $plan->label()]);
+    return $this->t('Add planting to @plan', ['@plan' => $plan->label()]);
   }
 
   /**
