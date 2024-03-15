@@ -41,7 +41,7 @@ class CropPlanting extends FarmPlanRecordType {
       ],
       'maturity_days' => [
         'type' => 'integer',
-        'label' => $this->t('Days to harvest'),
+        'label' => $this->t('Days to maturity'),
         'min' => 1,
         'max' => 365,
       ],

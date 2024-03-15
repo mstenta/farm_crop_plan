@@ -148,7 +148,7 @@ class CropPlanAddPlantingForm extends FormBase {
 
     $form['details']['maturity_days'] = [
       '#type' => 'number',
-      '#title' => $this->t('Days to harvest'),
+      '#title' => $this->t('Days to maturity'),
       '#step' => 1,
       '#min' => 1,
       '#max' => 365,
