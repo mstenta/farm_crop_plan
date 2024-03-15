@@ -1,6 +1,6 @@
 /* Set the width to 100% instead of using flex. This prevents auto-expanding width of timeline. */
 .layout__region--top {
-  width: 100%
+  width: 100%;
 }
 
 .sg-table-header-cell,
