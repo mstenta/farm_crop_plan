@@ -94,12 +94,11 @@ class CropPlan implements CropPlanInterface {
   /**
    * {@inheritdoc}
    */
-  public function getLogs(PlanRecordInterface $crop_planting, bool $access_check = TRUE): array {
-    $plant_asset = $crop_planting->getPlant();
-    if (empty($plant_asset)) {
+  public function getLogs(AssetInterface $asset, bool $access_check = TRUE): array {
+    if (empty($asset)) {
       return [];
     }
-    $query = $this->logQueryFactory->getQuery(['asset' => $plant_asset]);
+    $query = $this->logQueryFactory->getQuery(['asset' => $asset]);
     $query->accessCheck($access_check);
     $log_ids = $query->execute();
     return $this->entityTypeManager->getStorage('log')->loadMultiple($log_ids);

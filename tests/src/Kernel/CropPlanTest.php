@@ -166,7 +166,7 @@ class CropPlanTest extends KernelTestBase {
 
     // Test getting all logs for a crop_planting plant asset.
     foreach ($crop_records as $crop_record) {
-      $logs = \Drupal::service('farm_crop_plan')->getLogs($crop_record, FALSE);
+      $logs = \Drupal::service('farm_crop_plan')->getLogs($crop_record->getPlant(), FALSE);
       $this->assertCount(2, $logs);
       foreach ($logs as $log) {
         $this->assertEquals($crop_record->getPlant()->id(), $log->get('asset')->referencedEntities()[0]->id());

@@ -60,7 +60,7 @@ interface CropPlanInterface {
   /**
    * Get all logs for the plant asset.
    *
-   * @param \Drupal\farm_crop_plan\Bundle\CropPlantingInterface $crop_planting
+   * @param \Drupal\asset\Entity\AssetInterface $asset
    *   The crop_planting plan_record entity.
    * @param bool $access_check
    *   Whether to check log entity access.
@@ -68,7 +68,7 @@ interface CropPlanInterface {
    * @return \Drupal\log\Entity\LogInterface[]
    *   Returns an array of Log entities.
    */
-  public function getLogs(CropPlantingInterface $crop_planting, bool $access_check = TRUE): array;
+  public function getLogs(AssetInterface $asset, bool $access_check = TRUE): array;
 
   /**
    * Get crop planting stages for the timeline.

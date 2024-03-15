@@ -160,7 +160,7 @@ class CropPlanTimeline extends ControllerBase {
                 "log--status-$status",
               ],
             ];
-          }, $this->cropPlan->getLogs($crop_planting));
+          }, $this->cropPlan->getLogs($crop_planting->getPlant()));
           array_push($tasks, ...$log_tasks);
 
           // Add the child row with tasks.
