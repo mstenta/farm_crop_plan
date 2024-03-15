@@ -224,6 +224,9 @@ class CropPlanAddPlantingForm extends FormBase {
     // If a plant asset was provided, attempt to load more details from it.
     if (!is_null($plant) && $plant instanceof AssetInterface) {
 
+      // Load the plant_type term.
+      $plant_type = $plant->get('plant_type')->first()?->entity;
+
       // Load seeding date from the first seeding log.
       $seeding_log = $this->cropPlan->getFirstLog($plant, 'seeding');
       if (!empty($seeding_log)) {
@@ -239,12 +242,27 @@ class CropPlanAddPlantingForm extends FormBase {
         if (!empty($seeding_log) && !empty($transplanting_log)) {
           $values['transplant_days'] = round(($transplanting_log->get('timestamp')->value - $seeding_log->get('timestamp')->value) / (60 * 60 * 24));
         }
+
+        // Or, if a transplanting log does not exist, pull from the plant_type.
+        elseif ($plant_type->get('transplant_days')->value) {
+          $values['transplant_days'] = $plant_type->get('transplant_days')->value;
+        }
       }
 
       // Calculate maturity_days from the first harvest log.
       $harvest_log = $this->cropPlan->getFirstLog($plant, 'harvest');
       if (!empty($seeding_log) && !empty($harvest_log)) {
         $values['maturity_days'] = round(($harvest_log->get('timestamp')->value - $seeding_log->get('timestamp')->value) / (60 * 60 * 24));
+      }
+
+      // Or, if a harvest log does not exist, pull from the plant_type.
+      elseif ($plant_type->get('maturity_days')->value) {
+        $values['maturity_days'] = $plant_type->get('maturity_days')->value;
+      }
+
+      // Populate harvest_days from the plant_type.
+      if ($plant_type->get('harvest_days')->value) {
+        $values['harvest_days'] = $plant_type->get('harvest_days')->value;
       }
     }
 
