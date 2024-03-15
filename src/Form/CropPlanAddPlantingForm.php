@@ -12,6 +12,7 @@ use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Drupal\plan\Entity\PlanRecord;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Crop plan add planting form.
@@ -33,6 +34,13 @@ class CropPlanAddPlantingForm extends FormBase {
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
+   * The current Request object.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected Request $request;
+
+  /**
    * The crop plan service.
    *
    * @var \Drupal\farm_crop_plan\CropPlanInterface
@@ -46,12 +54,15 @@ class CropPlanAddPlantingForm extends FormBase {
    *   Entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current Request object.
    * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
    *   The crop plan service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, CropPlanInterface $crop_plan) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Request $request, CropPlanInterface $crop_plan) {
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
+    $this->request = $request;
     $this->cropPlan = $crop_plan;
   }
 
@@ -62,6 +73,7 @@ class CropPlanAddPlantingForm extends FormBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
+      $container->get('request_stack')->getCurrentRequest(),
       $container->get('farm_crop_plan'),
     );
   }
@@ -111,6 +123,17 @@ class CropPlanAddPlantingForm extends FormBase {
       ],
       '#required' => TRUE,
     ];
+
+    // If a plant ID was provided via query parameter, load it and set the
+    // form value.
+    $plant_id = $this->request->get('plant');
+    if ($plant_id) {
+      $plant = $this->entityTypeManager->getStorage('asset')->load($this->request->get('plant'));
+      if (!empty($plant) && $plant->bundle() == 'plant') {
+        $form['plant']['#default_value'] = $plant;
+        $form_state->setValue('plant', $plant_id);
+      }
+    }
 
     $form['details'] = [
       '#type' => 'container',
