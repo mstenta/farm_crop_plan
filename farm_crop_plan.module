@@ -86,4 +86,9 @@ function farm_crop_plan_form_quick_form_planting_alter(&$form, FormStateInterfac
     '#type' => 'value',
     '#value' => $plan->id(),
   ];
+
+  // If the crop plan has a season, set the plant season default value.
+  if (!empty($plan->get('season')->referencedEntities())) {
+    $form['seasons']['#default_value'] = $plan->get('season')->referencedEntities();
+  }
 }
