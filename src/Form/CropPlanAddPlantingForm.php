@@ -92,6 +92,7 @@ class CropPlanAddPlantingForm extends FormBase {
    *   The plan entity.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   Returns the title.
    */
   public function title(PlanInterface $plan = NULL) {
     if (empty($plan)) {
