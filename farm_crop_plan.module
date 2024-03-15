@@ -91,4 +91,20 @@ function farm_crop_plan_form_quick_form_planting_alter(&$form, FormStateInterfac
   if (!empty($plan->get('season')->referencedEntities())) {
     $form['seasons']['#default_value'] = $plan->get('season')->referencedEntities();
   }
+
+  // Add a submit function that will redirect to the "Add planting" form with
+  // the new plant asset pre-populated.
+  $form['#submit'][] = 'farm_crop_plan_planting_quick_form_submit';
+}
+
+/**
+ * Planting quick form submit function.
+ */
+function farm_crop_plan_planting_quick_form_submit(array $form, FormStateInterface $form_state) {
+
+  // Find the asset that was just created.
+  $asset_id = \Drupal::database()->query("SELECT entity_id FROM {asset__quick} WHERE quick_value = 'planting' ORDER BY entity_id DESC LIMIT 1")->fetchField();
+
+  // Redirect to the "Add planting" form with the asset ID pre-populated.
+  $form_state->setRedirect('farm_crop_plan.add_planting', ['plan' => $form_state->getValue('plan_id')], ['query' => ['plant' => $asset_id]]);
 }
