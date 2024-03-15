@@ -2,11 +2,13 @@
 
 namespace Drupal\farm_crop_plan\Form;
 
+use Drupal\asset\Entity\AssetInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Drupal\plan\Entity\PlanRecord;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,16 +33,26 @@ class CropPlanAddPlantingForm extends FormBase {
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
+   * The crop plan service.
+   *
+   * @var \Drupal\farm_crop_plan\CropPlanInterface
+   */
+  protected CropPlanInterface $cropPlan;
+
+  /**
    * CropPlanAddPlantingForm constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
+   *   The crop plan service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, CropPlanInterface $crop_plan) {
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
+    $this->cropPlan = $crop_plan;
   }
 
   /**
@@ -50,6 +62,7 @@ class CropPlanAddPlantingForm extends FormBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
+      $container->get('farm_crop_plan'),
     );
   }
 
@@ -91,40 +104,64 @@ class CropPlanAddPlantingForm extends FormBase {
       '#selection_settings' => [
         'target_bundles' => ['plant'],
       ],
+      '#ajax' => [
+        'wrapper' => 'planting-details',
+        'callback' => [$this, 'plantingDetailsCallback'],
+        'event' => 'autocompleteclose change',
+      ],
       '#required' => TRUE,
     ];
 
-    $form['seeding_date'] = [
+    $form['details'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'id' => 'planting-details',
+      ],
+    ];
+
+    // If the form is being built with a plant asset selected, reset planting
+    // details and populate their default values.
+    $plant = NULL;
+    if ($form_state->getValue('plant')) {
+      $this->resetPlantingDetails($form_state);
+      $plant = $this->entityTypeManager->getStorage('asset')->load($form_state->getValue('plant'));
+    }
+    $default_values = $this->plantingDefaultValues($plant);
+
+    $form['details']['seeding_date'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Seeding date'),
-      '#default_value' => new DrupalDateTime('midnight', $this->currentUser()->getTimeZone()),
+      '#default_value' => $default_values['seeding_date'],
       '#required' => TRUE,
     ];
 
     if ($this->moduleHandler->moduleExists('farm_transplanting')) {
-      $form['transplant_days'] = [
+      $form['details']['transplant_days'] = [
         '#type' => 'number',
         '#title' => $this->t('Days to transplant'),
         '#step' => 1,
         '#min' => 1,
         '#max' => 365,
+        '#default_value' => $default_values['transplant_days'],
       ];
     }
 
-    $form['maturity_days'] = [
+    $form['details']['maturity_days'] = [
       '#type' => 'number',
       '#title' => $this->t('Days to harvest'),
       '#step' => 1,
       '#min' => 1,
       '#max' => 365,
+      '#default_value' => $default_values['maturity_days'],
     ];
 
-    $form['harvest_days'] = [
+    $form['details']['harvest_days'] = [
       '#type' => 'number',
       '#title' => $this->t('Harvest window (days)'),
       '#step' => 1,
       '#min' => 1,
       '#max' => 365,
+      '#default_value' => $default_values['harvest_days'],
     ];
 
     $form['submit'] = [
@@ -133,6 +170,84 @@ class CropPlanAddPlantingForm extends FormBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * Ajax callback for planting details.
+   */
+  public function plantingDetailsCallback(array $form, FormStateInterface $form_state) {
+    return $form['details'];
+  }
+
+  /**
+   * Reset planting details.
+   */
+  public function resetPlantingDetails(FormStateInterface $form_state) {
+    $details_fields = [
+      'seeding_date',
+      'transplant_days',
+      'maturity_days',
+      'harvest_days',
+    ];
+    $user_input = $form_state->getUserInput();
+    foreach ($details_fields as $field_name) {
+      unset($user_input[$field_name]);
+    }
+    $form_state->setUserInput($user_input);
+    $form_state->setRebuild();
+  }
+
+  /**
+   * Get default values for planting details.
+   *
+   * @param \Drupal\asset\Entity\AssetInterface|null $plant
+   *   A plant asset (optional).
+   *
+   * @return array
+   *   Returns a keyed array of planting default values, including:
+   *   - seeding_date
+   *   - transplant_days
+   *   - maturity_days
+   *   - harvest_days
+   */
+  public function plantingDefaultValues($plant = NULL) {
+
+    // Start with defaults.
+    $values = [
+      'seeding_date' => new DrupalDateTime('midnight', $this->currentUser()->getTimeZone()),
+      'transplant_days' => NULL,
+      'maturity_days' => NULL,
+      'harvest_days' => NULL,
+    ];
+
+    // If a plant asset was provided, attempt to load more details from it.
+    if (!is_null($plant) && $plant instanceof AssetInterface) {
+
+      // Load seeding date from the first seeding log.
+      $seeding_log = $this->cropPlan->getFirstLog($plant, 'seeding');
+      if (!empty($seeding_log)) {
+        $values['seeding_date'] = DrupalDateTime::createFromTimestamp($seeding_log->get('timestamp')->value);
+      }
+
+      // If the farm_transplanting module is enabled attempt to populate the
+      // transplant_days value.
+      if ($this->moduleHandler->moduleExists('farm_transplanting')) {
+
+        // Calculate transplant_days from the first transplanting log.
+        $transplanting_log = $this->cropPlan->getFirstLog($plant, 'transplanting');
+        if (!empty($seeding_log) && !empty($transplanting_log)) {
+          $values['transplant_days'] = round(($transplanting_log->get('timestamp')->value - $seeding_log->get('timestamp')->value) / (60 * 60 * 24));
+        }
+      }
+
+      // Calculate maturity_days from the first harvest log.
+      $harvest_log = $this->cropPlan->getFirstLog($plant, 'harvest');
+      if (!empty($seeding_log) && !empty($harvest_log)) {
+        $values['maturity_days'] = round(($harvest_log->get('timestamp')->value - $seeding_log->get('timestamp')->value) / (60 * 60 * 24));
+      }
+    }
+
+    return $values;
   }
 
   /**
