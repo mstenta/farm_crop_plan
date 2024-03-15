@@ -275,6 +275,14 @@ class CropPlanAddPlantingForm extends FormBase {
       $form_state->setErrorByName('plant', $this->t('This plant asset is already added to the plan.'));
     }
 
+    // Days to maturity must be greater than days to transplant.
+    if ($form_state->getValue('transplant_days')) {
+      $maturity_days = (int) $form_state->getValue('maturity_days');
+      $transplant_days = (int) $form_state->getValue('transplant_days');
+      if ($maturity_days <= $transplant_days) {
+        $form_state->setErrorByName('maturity_days', $this->t('Days to maturity must be greater than days to transplant.'));
+      }
+    }
   }
 
   /**
