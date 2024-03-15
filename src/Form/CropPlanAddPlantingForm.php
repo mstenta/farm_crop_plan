@@ -153,6 +153,7 @@ class CropPlanAddPlantingForm extends FormBase {
       '#min' => 1,
       '#max' => 365,
       '#default_value' => $default_values['maturity_days'],
+      '#required' => TRUE,
     ];
 
     $form['details']['harvest_days'] = [
