@@ -80,7 +80,7 @@ class CropPlanAddPlantingForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, PlanInterface $plan = NULL) {
     if (empty($plan)) {
-      return;
+      return $form;
     }
     $form_state->set('plan_id', $plan->id());
 
