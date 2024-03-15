@@ -4,6 +4,7 @@ namespace Drupal\farm_crop_plan\Form;
 
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\plan\Entity\PlanInterface;
@@ -23,13 +24,23 @@ class CropPlanAddPlantingForm extends FormBase {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
    * CropPlanAddPlantingForm constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -38,6 +49,7 @@ class CropPlanAddPlantingForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
+      $container->get('module_handler'),
     );
   }
 
@@ -89,13 +101,15 @@ class CropPlanAddPlantingForm extends FormBase {
       '#required' => TRUE,
     ];
 
-    $form['transplant_days'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Days to transplant'),
-      '#step' => 1,
-      '#min' => 1,
-      '#max' => 365,
-    ];
+    if ($this->moduleHandler->moduleExists('farm_transplanting')) {
+      $form['transplant_days'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Days to transplant'),
+        '#step' => 1,
+        '#min' => 1,
+        '#max' => 365,
+      ];
+    }
 
     $form['maturity_days'] = [
       '#type' => 'number',
