@@ -196,7 +196,6 @@ class CropPlanTimeline extends ControllerBase {
   public function byLocation(PlanInterface $plan) {
 
     $data = [];
-    $destination_url = $plan->toUrl()->toString();
     /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings_by_location */
     $crop_plantings_by_location = $this->cropPlan->getCropPlantingsByLocation($plan);
     foreach ($crop_plantings_by_location as $location_id => $crop_plantings) {
