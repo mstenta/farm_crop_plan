@@ -95,9 +95,6 @@ class CropPlan implements CropPlanInterface {
    * {@inheritdoc}
    */
   public function getLogs(AssetInterface $asset, bool $access_check = TRUE): array {
-    if (empty($asset)) {
-      return [];
-    }
     $query = $this->logQueryFactory->getQuery(['asset' => $asset]);
     $query->accessCheck($access_check);
     $log_ids = $query->execute();
@@ -108,9 +105,6 @@ class CropPlan implements CropPlanInterface {
    * {@inheritdoc}
    */
   public function getFirstLog(AssetInterface $asset, string $log_type = NULL, bool $access_check = TRUE) {
-    if (empty($asset)) {
-      return [];
-    }
     $options = [
       'asset' => $asset,
       'limit' => 1,
