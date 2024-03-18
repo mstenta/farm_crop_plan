@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- ["Can only flip string and integer values" via farm_crop_plan_form_quick_form_planting_alter #32](https://github.com/mstenta/farm_crop_plan/issues/32)
+
 ## [3.0.0-alpha1] 2024-03-15
 
 This is the first official alpha release of the farmOS Crop Plan module.
