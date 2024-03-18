@@ -92,8 +92,12 @@ function farm_crop_plan_form_plan_record_crop_planting_edit_form_alter(&$form, F
 function farm_crop_plan_form_quick_form_planting_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   // Alter the planting quick form, if a crop plan was specified.
+  $plan_id = \Drupal::request()->query->get('plan');
+  if (empty($plan_id)) {
+    return;
+  }
   /** @var \Drupal\plan\Entity\PlanInterface $plan */
-  $plan = \Drupal::entityTypeManager()->getStorage('plan')->load(\Drupal::request()->query->get('plan'));
+  $plan = \Drupal::entityTypeManager()->getStorage('plan')->load($plan_id);
   if (is_null($plan) || $plan->bundle() !== 'crop') {
     return;
   }
