@@ -285,7 +285,7 @@ class CropPlanAddPlantingForm extends FormBase {
       }
 
       // Populate harvest_days from the plant_type.
-      if ($plant_type->get('harvest_days')->value) {
+      if ($plant_type->hasField('harvest_days') && $plant_type->get('harvest_days')->value) {
         $values['harvest_days'] = $plant_type->get('harvest_days')->value;
       }
     }
