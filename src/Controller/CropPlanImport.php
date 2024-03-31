@@ -103,6 +103,28 @@ class CropPlanImport extends CsvImportController implements ContainerInjectionIn
       unset($build['columns']['template']);
     }
 
+    // Add a "How it works" overview.
+    $build['overview'] = [
+      '#type' => 'details',
+      '#title' => $this->t('How it works'),
+      '#weight' => -10,
+    ];
+    $build['overview']['list'] = [
+      '#theme' => 'item_list',
+      '#items' => [
+        t('A crop plan consists of a set of plant assets, each with their own logs.'),
+        t('Alongside each plant asset, some additional information is maintained for planning purposes. This includes the planned seeding date, days to maturity, days of harvest, etc.'),
+        t('The "Download CSV" link will export the current state of the plan as a CSV file. If this is a new plan, the CSV will only include the header row. If the plan has plant assets associated with it, they will each be included as a separate row.'),
+        t('Adding rows to the CSV will create new plant assets and add them to the plan.'),
+        t('If ...'),
+        t('If ...'),
+        t('If ...'),
+        t('If ...'),
+        t('Editing existing rows of the CSV will update the existing plant assets and their corresponding planning information. This requires the plant_id column to look up the plant by its asset ID.'),
+        t('Refer to "CSV Columns" for more information about what each column expects.'),
+      ],
+    ];
+
     // Add a link to download a CSV of the plan.
     $build['form']['download'] = [
       '#type' => 'link',
