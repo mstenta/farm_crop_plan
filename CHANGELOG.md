@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Make seeding_date and maturity_days required at the plan_record entity level.
+
 ## [3.0.0-alpha2] 2024-03-27
 
 ### Fixed

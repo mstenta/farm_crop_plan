@@ -32,6 +32,7 @@ class CropPlanting extends FarmPlanRecordType {
       'seeding_date' => [
         'type' => 'timestamp',
         'label' => $this->t('Seeding date'),
+        'required' => TRUE,
       ],
       'transplant_days' => [
         'type' => 'integer',
@@ -44,6 +45,7 @@ class CropPlanting extends FarmPlanRecordType {
         'label' => $this->t('Days to maturity'),
         'min' => 1,
         'max' => 365,
+        'required' => TRUE,
       ],
       'harvest_days' => [
         'type' => 'integer',
