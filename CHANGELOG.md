@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha2] 2024-03-27
+
 ### Fixed
 
-- ["Can only flip string and integer values" via farm_crop_plan_form_quick_form_planting_alter #32](https://github.com/mstenta/farm_crop_plan/issues/32)
+- [Fix Exception thrown on farmOS 3.1 due to harvest_days field not being available on plant types #33](https://github.com/mstenta/farm_crop_plan/issues/33)
+- [Fix "Can only flip string and integer values" via farm_crop_plan_form_quick_form_planting_alter #32](https://github.com/mstenta/farm_crop_plan/issues/32)
 
 ## [3.0.0-alpha1] 2024-03-15
 
@@ -40,5 +43,6 @@ Here is a summary of the major features this release provides:
   [svelte-gantt](https://github.com/ANovokmet/svelte-gantt), with the ability to
   view by plant type or by location.
 
-[Unreleased]: https://github.com/mstenta/farm_grazing_plan/compare/3.0.0-alpha1...HEAD
+[Unreleased]: https://github.com/mstenta/farm_grazing_plan/compare/3.0.0-alpha2...HEAD
+[3.0.0-alpha2]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha2
 [3.0.0-alpha1]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha1
