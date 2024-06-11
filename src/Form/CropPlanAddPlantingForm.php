@@ -129,7 +129,7 @@ class CropPlanAddPlantingForm extends FormBase {
     // form value.
     $plant_id = $this->request->get('plant');
     if ($plant_id) {
-      $plant = $this->entityTypeManager->getStorage('asset')->load($this->request->get('plant'));
+      $plant = $this->entityTypeManager->getStorage('asset')->load($plant_id);
       if (!empty($plant) && $plant->bundle() == 'plant') {
         $form['plant']['#default_value'] = $plant;
         $form_state->setValue('plant', $plant_id);
