@@ -8,7 +8,7 @@ use Drupal\Core\Link;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Core\Url;
 use Drupal\farm_crop_plan\CropPlanInterface;
-use Drupal\farm_crop_plan\TypedData\TimelineRowDefinition;
+use Drupal\farm_timeline\TypedData\TimelineRowDefinition;
 use Drupal\log\Entity\LogInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;

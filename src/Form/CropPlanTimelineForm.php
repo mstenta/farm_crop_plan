@@ -117,7 +117,7 @@ class CropPlanTimelineForm extends FormBase {
         'data-timeline-instantiator' => 'farm_crop_plan',
       ],
       '#attached' => [
-        'library' => ['farm_crop_plan/timeline_gantt'],
+        'library' => ['farm_crop_plan/timeline'],
       ],
     ];
 
