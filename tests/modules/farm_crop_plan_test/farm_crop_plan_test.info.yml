@@ -1,0 +1,7 @@
+name: farmOS Crop Plan Test
+description: Support module for CSV Crop Plan testing.
+type: module
+package: Testing
+core_version_requirement: ^10
+dependencies:
+  - farm:farm_crop_plan

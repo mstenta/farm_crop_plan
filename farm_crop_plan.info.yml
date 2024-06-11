@@ -12,5 +12,6 @@ dependencies:
   - farm_migrate
   - farm_plant
   - farm_season
+  - farm_seeding
   - farm_timeline
   - plan

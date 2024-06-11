@@ -41,7 +41,7 @@ class CropPlanTest extends FarmBrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->responseHeaderContains('Content-Type', 'application/csv');
     $this->assertSession()->responseHeaderContains('Content-Disposition', 'attachment; filename="crop-plan-1.csv');
-    $expected = file_get_contents(__DIR__ . '/../../files/export-crop-plan.csv');
+    $expected = file_get_contents(__DIR__ . '/../../artifacts/export-crop-plan.csv');
     $this->assertEquals($expected, $output);
   }
 
