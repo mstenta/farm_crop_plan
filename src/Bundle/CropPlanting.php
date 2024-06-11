@@ -25,7 +25,7 @@ class CropPlanting extends PlanRecord implements CropPlantingInterface {
       }
 
       // Use the plan if no plant reference.
-      return $this->t('Crop Planting - %plan', ['@plan' => $plan->label()]);
+      return $this->t('Crop Planting - %plan', ['%plan' => $plan->label()]);
     }
 
     // Fallback to default.
