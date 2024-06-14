@@ -9,6 +9,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\farm_crop_plan\CropPlanInterface;
+use Drupal\farm_log\AssetLogsInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Drupal\plan\Entity\PlanRecord;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -48,6 +49,13 @@ class CropPlanAddPlantingForm extends FormBase {
   protected CropPlanInterface $cropPlan;
 
   /**
+   * The asset logs service.
+   *
+   * @var \Drupal\farm_log\AssetLogsInterface
+   */
+  protected $assetLogs;
+
+  /**
    * CropPlanAddPlantingForm constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -58,12 +66,15 @@ class CropPlanAddPlantingForm extends FormBase {
    *   The current Request object.
    * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
    *   The crop plan service.
+   * @param \Drupal\farm_log\AssetLogsInterface $asset_logs
+   *   The asset logs service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Request $request, CropPlanInterface $crop_plan) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Request $request, CropPlanInterface $crop_plan, AssetLogsInterface $asset_logs) {
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->request = $request;
     $this->cropPlan = $crop_plan;
+    $this->assetLogs = $asset_logs;
   }
 
   /**
@@ -75,6 +86,7 @@ class CropPlanAddPlantingForm extends FormBase {
       $container->get('module_handler'),
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('farm_crop_plan'),
+      $container->get('asset.logs'),
     );
   }
 
@@ -252,7 +264,7 @@ class CropPlanAddPlantingForm extends FormBase {
       $plant_type = $plant->get('plant_type')->first()?->entity;
 
       // Load seeding date from the first seeding log.
-      $seeding_log = $this->cropPlan->getFirstLog($plant, 'seeding');
+      $seeding_log = $this->assetLogs->getFirstLog($plant, 'seeding');
       if (!empty($seeding_log)) {
         $values['seeding_date'] = DrupalDateTime::createFromTimestamp($seeding_log->get('timestamp')->value);
       }
@@ -262,7 +274,7 @@ class CropPlanAddPlantingForm extends FormBase {
       if ($this->moduleHandler->moduleExists('farm_transplanting')) {
 
         // Calculate transplant_days from the first transplanting log.
-        $transplanting_log = $this->cropPlan->getFirstLog($plant, 'transplanting');
+        $transplanting_log = $this->assetLogs->getFirstLog($plant, 'transplanting');
         if (!empty($seeding_log) && !empty($transplanting_log)) {
           $values['transplant_days'] = round(($transplanting_log->get('timestamp')->value - $seeding_log->get('timestamp')->value) / (60 * 60 * 24));
         }
@@ -274,7 +286,7 @@ class CropPlanAddPlantingForm extends FormBase {
       }
 
       // Calculate maturity_days from the first harvest log.
-      $harvest_log = $this->cropPlan->getFirstLog($plant, 'harvest');
+      $harvest_log = $this->assetLogs->getFirstLog($plant, 'harvest');
       if (!empty($seeding_log) && !empty($harvest_log)) {
         $values['maturity_days'] = round(($harvest_log->get('timestamp')->value - $seeding_log->get('timestamp')->value) / (60 * 60 * 24));
       }
