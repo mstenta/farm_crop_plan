@@ -1,5 +1,5 @@
-farm_crop_plan.timeline_by_planting:
-  path: /plan/{plan}/timeline/plant-type
+farm_crop_plan.timeline_by_plant_type:
+  path: /plan/{plan}/timeline/plant_type
   defaults:
     _controller: Drupal\farm_crop_plan\Controller\CropPlanTimeline::byPlantType
   requirements:
