@@ -155,7 +155,6 @@ class CropPlanTimeline extends ControllerBase {
             $status = $log->get('status')->value;
             return [
               'id' => $this->uuidService->generate(),
-              'label' => $log->label(),
               'edit_url' => $edit_url,
               'start' => $log->get('timestamp')->value,
               'end' => $log->get('timestamp')->value + 86400,
