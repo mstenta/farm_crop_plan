@@ -2,8 +2,8 @@
 
 namespace Drupal\farm_crop_plan\Bundle;
 
-use Drupal\asset\Entity\AssetInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\asset\Entity\AssetInterface;
 use Drupal\plan\Entity\PlanRecord;
 
 /**
