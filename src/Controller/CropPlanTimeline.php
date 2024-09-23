@@ -8,7 +8,8 @@ use Drupal\Core\Link;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Core\Url;
 use Drupal\farm_crop_plan\CropPlanInterface;
-use Drupal\farm_crop_plan\TypedData\TimelineRowDefinition;
+use Drupal\farm_log\AssetLogsInterface;
+use Drupal\farm_timeline\TypedData\TimelineRowDefinition;
 use Drupal\log\Entity\LogInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,6 +27,13 @@ class CropPlanTimeline extends ControllerBase {
    * @var \Drupal\farm_crop_plan\CropPlanInterface
    */
   protected $cropPlan;
+
+  /**
+   * The asset logs service.
+   *
+   * @var \Drupal\farm_log\AssetLogsInterface
+   */
+  protected $assetLogs;
 
   /**
    * The UUID service.
@@ -53,6 +61,8 @@ class CropPlanTimeline extends ControllerBase {
    *
    * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
    *   The crop plan service.
+   * @param \Drupal\farm_log\AssetLogsInterface $asset_logs
+   *   The asset logs service.
    * @param \Drupal\Component\Uuid\UuidInterface $uuid_service
    *   The UUID service.
    * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
@@ -60,8 +70,9 @@ class CropPlanTimeline extends ControllerBase {
    * @param \Symfony\Component\Serializer\SerializerInterface $serializer
    *   The serializer service.
    */
-  public function __construct(CropPlanInterface $crop_plan, UuidInterface $uuid_service, TypedDataManagerInterface $typed_data_manager, SerializerInterface $serializer) {
+  public function __construct(CropPlanInterface $crop_plan, AssetLogsInterface $asset_logs, UuidInterface $uuid_service, TypedDataManagerInterface $typed_data_manager, SerializerInterface $serializer) {
     $this->cropPlan = $crop_plan;
+    $this->assetLogs = $asset_logs;
     $this->uuidService = $uuid_service;
     $this->typedDataManager = $typed_data_manager;
     $this->serializer = $serializer;
@@ -73,6 +84,7 @@ class CropPlanTimeline extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('farm_crop_plan'),
+      $container->get('asset.logs'),
       $container->get('uuid'),
       $container->get('typed_data_manager'),
       $container->get('serializer'),
@@ -143,7 +155,6 @@ class CropPlanTimeline extends ControllerBase {
             $status = $log->get('status')->value;
             return [
               'id' => $this->uuidService->generate(),
-              'label' => $log->label(),
               'edit_url' => $edit_url,
               'start' => $log->get('timestamp')->value,
               'end' => $log->get('timestamp')->value + 86400,
@@ -160,7 +171,7 @@ class CropPlanTimeline extends ControllerBase {
                 "log--status-$status",
               ],
             ];
-          }, $this->cropPlan->getLogs($crop_planting->getPlant()));
+          }, $this->assetLogs->getLogs($crop_planting->getPlant()));
           array_push($tasks, ...$log_tasks);
 
           // Add the child row with tasks.
