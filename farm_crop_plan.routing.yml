@@ -1,5 +1,5 @@
 farm_crop_plan.timeline_by_plant_type:
-  path: /plan/{plan}/timeline/plant_type
+  path: /plan/{plan}/timeline/crop/plant_type
   defaults:
     _controller: Drupal\farm_crop_plan\Controller\CropPlanTimeline::byPlantType
   requirements:
@@ -13,7 +13,7 @@ farm_crop_plan.timeline_by_plant_type:
       delta:
         type: integer
 farm_crop_plan.timeline_by_location:
-  path: /plan/{plan}/timeline/location
+  path: /plan/{plan}/timeline/crop/location
   defaults:
     _controller: Drupal\farm_crop_plan\Controller\CropPlanTimeline::byLocation
   requirements:
@@ -27,7 +27,7 @@ farm_crop_plan.timeline_by_location:
       delta:
         type: integer
 farm_crop_plan.add_planting:
-  path: /plan/{plan}/planting
+  path: /plan/{plan}/crop/planting
   defaults:
     _form: Drupal\farm_crop_plan\Form\CropPlanAddPlantingForm
     _title_callback: Drupal\farm_crop_plan\Form\CropPlanAddPlantingForm::title
