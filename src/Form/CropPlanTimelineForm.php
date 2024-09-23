@@ -113,7 +113,7 @@ class CropPlanTimelineForm extends FormBase {
       '#type' => 'farm_timeline',
       '#rows' => [$row_url->setAbsolute()->toString()],
       '#attributes' => [
-        'data-table-header' => $mode_options[$display_mode],
+        'data-table-header' => $this->t('Plant assets (by @type)', ['@type' => $mode_options[$display_mode]]),
       ],
       '#attached' => [
         'library' => ['farm_crop_plan/timeline'],
