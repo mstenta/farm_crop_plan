@@ -106,7 +106,7 @@ class CropPlanAddPlantingForm extends FormBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Returns the title.
    */
-  public function title(PlanInterface $plan = NULL) {
+  public function title(?PlanInterface $plan = NULL) {
     if (empty($plan)) {
       return $this->t('Add planting');
     }
@@ -116,7 +116,7 @@ class CropPlanAddPlantingForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, PlanInterface $plan = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?PlanInterface $plan = NULL) {
     if (empty($plan)) {
       return $form;
     }
