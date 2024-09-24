@@ -52,7 +52,7 @@ Here is a summary of the major features this release provides:
   [svelte-gantt](https://github.com/ANovokmet/svelte-gantt), with the ability to
   view by plant type or by location.
 
-[Unreleased]: https://github.com/mstenta/farm_grazing_plan/compare/3.0.0-alpha3...HEAD
-[3.0.0-alpha3]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha2
-[3.0.0-alpha2]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha2
-[3.0.0-alpha1]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha1
+[Unreleased]: https://github.com/mstenta/farm_crop_plan/compare/3.0.0-alpha3...HEAD
+[3.0.0-alpha3]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha2
+[3.0.0-alpha2]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha2
+[3.0.0-alpha1]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha1
