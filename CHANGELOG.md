@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha3] 2024-09-24
+
 ### Changed
 
 - Make seeding_date and maturity_days required at the plan_record entity level.
+- Require farmOS ^3.3
+- Leverage farmOS core timeline module.
+- Change color of harvest periods.
 
 ## [3.0.0-alpha2] 2024-03-27
 
@@ -47,6 +52,7 @@ Here is a summary of the major features this release provides:
   [svelte-gantt](https://github.com/ANovokmet/svelte-gantt), with the ability to
   view by plant type or by location.
 
-[Unreleased]: https://github.com/mstenta/farm_grazing_plan/compare/3.0.0-alpha2...HEAD
+[Unreleased]: https://github.com/mstenta/farm_grazing_plan/compare/3.0.0-alpha3...HEAD
+[3.0.0-alpha3]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha2
 [3.0.0-alpha2]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha2
 [3.0.0-alpha1]: https://github.com/mstenta/farm_grazing_plan/releases/tag/3.0.0-alpha1
