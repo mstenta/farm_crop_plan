@@ -97,7 +97,6 @@ trait MockCropPlanEntitiesTrait {
         'name' => $this->seasonTerm->label() . ' ' . $plant_type->label(),
         'type' => 'plant',
         'plant_type' => [['target_id' => $plant_type->id()]],
-        'status' => 'active',
       ]);
       $asset->save();
       $this->plantAssets[] = $asset;
@@ -110,7 +109,6 @@ trait MockCropPlanEntitiesTrait {
       'land_type' => 'field',
       'is_fixed' => TRUE,
       'is_location' => TRUE,
-      'status' => 'active',
     ]);
     $this->landAsset->save();
 
@@ -162,7 +160,6 @@ trait MockCropPlanEntitiesTrait {
       'season' => [
         ['target_id' => $this->seasonTerm->id()],
       ],
-      'status' => 'active',
     ]);
     $this->plan->save();
 
