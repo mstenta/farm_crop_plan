@@ -16,42 +16,11 @@ use Drupal\plan\Entity\PlanRecordInterface;
  */
 class CropPlan implements CropPlanInterface {
 
-  /**
-   * Entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * Log query factory.
-   *
-   * @var \Drupal\farm_log\LogQueryFactoryInterface
-   */
-  protected LogQueryFactoryInterface $logQueryFactory;
-
-  /**
-   * Log location service.
-   *
-   * @var \Drupal\farm_location\LogLocationInterface
-   */
-  protected $logLocation;
-
-  /**
-   * Class constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Entity type manager.
-   * @param \Drupal\farm_log\LogQueryFactoryInterface $log_query_factory
-   *   Log query factory.
-   * @param \Drupal\farm_location\LogLocationInterface $log_location
-   *   Log location service.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, LogQueryFactoryInterface $log_query_factory, LogLocationInterface $log_location) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->logQueryFactory = $log_query_factory;
-    $this->logLocation = $log_location;
-  }
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LogQueryFactoryInterface $logQueryFactory,
+    protected LogLocationInterface $logLocation,
+  ) {}
 
   /**
    * {@inheritdoc}

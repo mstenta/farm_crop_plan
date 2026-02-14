@@ -4,55 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\farm_crop_plan\Form;
 
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\plan\Entity\PlanInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Crop plan form.
  */
 class CropPlanTimelineForm extends FormBase {
 
-  /**
-   * Entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
+  use AutowireTrait;
 
-  /**
-   * The crop plan service.
-   *
-   * @var \Drupal\farm_crop_plan\CropPlanInterface
-   */
-  protected $cropPlan;
-
-  /**
-   * CropPlanTimelineForm constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Entity type manager.
-   * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
-   *   The crop plan service.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, CropPlanInterface $crop_plan) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->cropPlan = $crop_plan;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('farm_crop_plan'),
-    );
-  }
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected CropPlanInterface $cropPlan,
+  ) {}
 
   /**
    * {@inheritdoc}

@@ -1,5 +1,6 @@
 services:
+  _defaults:
+    autowire: true
   farm_crop_plan:
     class: Drupal\farm_crop_plan\CropPlan
-    arguments:
-      [ '@entity_type.manager', '@farm.log_query', '@log.location' ]
+  Drupal\farm_crop_plan\CropPlanInterface: '@farm_crop_plan'

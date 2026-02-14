@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\farm_crop_plan\Form;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
@@ -14,83 +15,20 @@ use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\farm_log\AssetLogsInterface;
 use Drupal\plan\Entity\PlanInterface;
 use Drupal\plan\Entity\PlanRecord;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Crop plan add planting form.
  */
 class CropPlanAddPlantingForm extends FormBase {
 
-  /**
-   * Entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
+  use AutowireTrait;
 
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected ModuleHandlerInterface $moduleHandler;
-
-  /**
-   * The current Request object.
-   *
-   * @var \Symfony\Component\HttpFoundation\Request
-   */
-  protected Request $request;
-
-  /**
-   * The crop plan service.
-   *
-   * @var \Drupal\farm_crop_plan\CropPlanInterface
-   */
-  protected CropPlanInterface $cropPlan;
-
-  /**
-   * The asset logs service.
-   *
-   * @var \Drupal\farm_log\AssetLogsInterface
-   */
-  protected $assetLogs;
-
-  /**
-   * CropPlanAddPlantingForm constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Entity type manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current Request object.
-   * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
-   *   The crop plan service.
-   * @param \Drupal\farm_log\AssetLogsInterface $asset_logs
-   *   The asset logs service.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Request $request, CropPlanInterface $crop_plan, AssetLogsInterface $asset_logs) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->moduleHandler = $module_handler;
-    $this->request = $request;
-    $this->cropPlan = $crop_plan;
-    $this->assetLogs = $asset_logs;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('module_handler'),
-      $container->get('request_stack')->getCurrentRequest(),
-      $container->get('farm_crop_plan'),
-      $container->get('asset.logs'),
-    );
-  }
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected CropPlanInterface $cropPlan,
+    protected AssetLogsInterface $assetLogs,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -141,7 +79,7 @@ class CropPlanAddPlantingForm extends FormBase {
 
     // If a plant ID was provided via query parameter, load it and set the
     // form value.
-    $plant_id = $this->request->query->get('plant');
+    $plant_id = $this->getRequest()->query->get('plant');
     if ($plant_id) {
       $plant = $this->entityTypeManager->getStorage('asset')->load($plant_id);
       if (!empty($plant) && $plant->bundle() == 'plant') {

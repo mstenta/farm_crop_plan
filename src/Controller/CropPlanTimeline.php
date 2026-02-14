@@ -6,6 +6,7 @@ namespace Drupal\farm_crop_plan\Controller;
 
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Link;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Core\Url;
@@ -14,7 +15,7 @@ use Drupal\farm_log\AssetLogsInterface;
 use Drupal\farm_timeline\TypedData\TimelineRowDefinition;
 use Drupal\log\Entity\LogInterface;
 use Drupal\plan\Entity\PlanInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -23,75 +24,16 @@ use Symfony\Component\Serializer\SerializerInterface;
  */
 class CropPlanTimeline extends ControllerBase {
 
-  /**
-   * The crop plan service.
-   *
-   * @var \Drupal\farm_crop_plan\CropPlanInterface
-   */
-  protected $cropPlan;
+  use AutowireTrait;
 
-  /**
-   * The asset logs service.
-   *
-   * @var \Drupal\farm_log\AssetLogsInterface
-   */
-  protected $assetLogs;
-
-  /**
-   * The UUID service.
-   *
-   * @var \Drupal\Component\Uuid\UuidInterface
-   */
-  protected $uuidService;
-
-  /**
-   * The typed data manager interface.
-   *
-   * @var \Drupal\Core\TypedData\TypedDataManagerInterface
-   */
-  protected $typedDataManager;
-
-  /**
-   * The serializer service.
-   *
-   * @var \Symfony\Component\Serializer\SerializerInterface
-   */
-  protected $serializer;
-
-  /**
-   * CropPlanTimeline constructor.
-   *
-   * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
-   *   The crop plan service.
-   * @param \Drupal\farm_log\AssetLogsInterface $asset_logs
-   *   The asset logs service.
-   * @param \Drupal\Component\Uuid\UuidInterface $uuid_service
-   *   The UUID service.
-   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
-   *   The typed data manager interface.
-   * @param \Symfony\Component\Serializer\SerializerInterface $serializer
-   *   The serializer service.
-   */
-  public function __construct(CropPlanInterface $crop_plan, AssetLogsInterface $asset_logs, UuidInterface $uuid_service, TypedDataManagerInterface $typed_data_manager, SerializerInterface $serializer) {
-    $this->cropPlan = $crop_plan;
-    $this->assetLogs = $asset_logs;
-    $this->uuidService = $uuid_service;
-    $this->typedDataManager = $typed_data_manager;
-    $this->serializer = $serializer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('farm_crop_plan'),
-      $container->get('asset.logs'),
-      $container->get('uuid'),
-      $container->get('typed_data_manager'),
-      $container->get('serializer'),
-    );
-  }
+  public function __construct(
+    protected CropPlanInterface $cropPlan,
+    protected AssetLogsInterface $assetLogs,
+    protected UuidInterface $uuidService,
+    protected TypedDataManagerInterface $typedDataManager,
+    #[Autowire(service: 'serializer')]
+    protected SerializerInterface $serializer,
+  ) {}
 
   /**
    * API endpoint for crop plan timeline by plant type.
