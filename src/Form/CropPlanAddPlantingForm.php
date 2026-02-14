@@ -141,7 +141,7 @@ class CropPlanAddPlantingForm extends FormBase {
 
     // If a plant ID was provided via query parameter, load it and set the
     // form value.
-    $plant_id = $this->request->get('plant');
+    $plant_id = $this->request->query->get('plant');
     if ($plant_id) {
       $plant = $this->entityTypeManager->getStorage('asset')->load($plant_id);
       if (!empty($plant) && $plant->bundle() == 'plant') {
@@ -260,10 +260,10 @@ class CropPlanAddPlantingForm extends FormBase {
     ];
 
     // If a plant asset was provided, attempt to load more details from it.
-    if (!is_null($plant) && $plant instanceof AssetInterface) {
+    if ($plant instanceof AssetInterface) {
 
       // Load the plant_type term.
-      $plant_type = $plant->get('plant_type')->first()?->entity;
+      $plant_type = $plant->get('plant_type')->referencedEntities()[0];
 
       // Load seeding date from the first seeding log.
       $seeding_log = $this->assetLogs->getFirstLog($plant, 'seeding');
@@ -321,6 +321,9 @@ class CropPlanAddPlantingForm extends FormBase {
 
     // Check for existing crop_planting records for the plan and plant.
     $plan_id = $form_state->get('plan_id');
+    // @todo Remove this @phpstan-ignore when phpstan-drupal issue is fixed.
+    // @see https://github.com/mglaman/phpstan-drupal/issues/825
+    // @phpstan-ignore method.alreadyNarrowedType
     $existing = $this->entityTypeManager->getStorage('plan_record')->getQuery()
       ->accessCheck(FALSE)
       ->condition('plan', $plan_id)

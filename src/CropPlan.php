@@ -57,7 +57,9 @@ class CropPlan implements CropPlanInterface {
    * {@inheritdoc}
    */
   public function getCropPlantings(PlanInterface $plan): array {
-    return $this->entityTypeManager->getStorage('plan_record')->loadByProperties(['plan' => $plan->id(), 'type' => 'crop_planting']);
+    /** @var \Drupal\farm_crop_plan\Bundle\CropPlantingInterface[] $crop_plantings */
+    $crop_plantings = $this->entityTypeManager->getStorage('plan_record')->loadByProperties(['plan' => $plan->id(), 'type' => 'crop_planting']);
+    return $crop_plantings;
   }
 
   /**
@@ -163,10 +165,10 @@ class CropPlan implements CropPlanInterface {
 
     // Sort stages chronologically.
     usort($stages, function ($a, $b) {
-      if ($a['start'] == $b['end']) {
+      if ($a['start'] == $b['start']) {
         return 0;
       }
-      return ($a['start'] < $b['end']) ? -1 : 1;
+      return ($a['start'] < $b['start']) ? -1 : 1;
     });
 
     // Iterate through the stages and fill in end timestamps, if available.

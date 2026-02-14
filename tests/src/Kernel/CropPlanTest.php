@@ -139,7 +139,7 @@ class CropPlanTest extends KernelTestBase {
           'location' => [],
         ],
       ];
-      $stages = \Drupal::service('farm_crop_plan')->getCropPlantingStages($crop_record, FALSE);
+      $stages = \Drupal::service('farm_crop_plan')->getCropPlantingStages($crop_record);
       $this->assertCount(3, $stages);
       foreach ($stages as $i => $stage) {
         $this->assertEquals($expected_stages[$i]['type'], $stage['type']);

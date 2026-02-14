@@ -38,7 +38,10 @@ class CropPlanting extends PlanRecord implements CropPlantingInterface {
    * {@inheritdoc}
    */
   public function getPlant(): ?AssetInterface {
-    return $this->get('plant')->first()?->entity;
+    if ($this->get('plant')->isEmpty()) {
+      return NULL;
+    }
+    return $this->get('plant')->referencedEntities()[0];
   }
 
 }
