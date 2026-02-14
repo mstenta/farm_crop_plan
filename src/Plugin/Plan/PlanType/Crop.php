@@ -11,7 +11,7 @@ use Drupal\farm_entity\Plugin\Plan\PlanType\FarmPlanType;
  *
  * @PlanType(
  *   id = "crop",
- *   label = @Translation("Crop"),
+ *   label = @Translation("Crop plan"),
  * )
  */
 class Crop extends FarmPlanType {
