@@ -19,9 +19,10 @@ jobs:
           path: ${{ env.MODULE_NAME }}
       - name: Run farmOS development environment containers.
         run: |
-          curl -O https://raw.githubusercontent.com/farmOS/farmOS/3.x/docker/docker-compose.testing.common.yml
-          curl -O https://raw.githubusercontent.com/farmOS/farmOS/3.x/docker/docker-compose.testing.pgsql.yml
+          curl -O https://raw.githubusercontent.com/farmOS/farmOS/4.x/docker/docker-compose.testing.common.yml
+          curl -O https://raw.githubusercontent.com/farmOS/farmOS/4.x/docker/docker-compose.testing.pgsql.yml
           docker compose -f docker-compose.testing.common.yml -f docker-compose.testing.pgsql.yml config > docker-compose.yml
+          mkdir www && sudo chown 1000:1000 www
           docker compose up -d
         env:
           DB_URL: pgsql://farm:farm@db/farm
@@ -29,7 +30,7 @@ jobs:
         # The www-container-fs-ready file is only created once we expect the
         # containers to be online so waiting for that lets us know it is safe to
         # start the tests.
-        run: until [ -f ./www/www-container-fs-ready ]; do sleep 0.1; done
+        run: sudo bash -c 'until [ -f ./www/www-container-fs-ready ]; do sleep 0.1; done'
       - name: Install the module via Composer
         run: |
           sudo mv ${MODULE_NAME} www/${MODULE_NAME}
@@ -43,7 +44,7 @@ jobs:
           sudo sed -i '/level: 1/a \  reportUnmatchedIgnoredErrors: false' www/phpstan.neon
           docker compose exec -u www-data -T www phpstan analyze /opt/drupal/web/modules/${MODULE_NAME}
       - name: Run PHPUnit tests
-        run: docker compose exec -u www-data -T www phpunit --verbose --debug /opt/drupal/web/modules/${MODULE_NAME}
+        run: docker compose exec -u www-data -T www phpunit /opt/drupal/web/modules/${MODULE_NAME}
       - name: Test installing farmOS and the module
         run: |
           docker compose exec -u www-data -T www drush site-install --db-url=pgsql://farm:farm@db/farm farm farm.modules='base'
