@@ -11,6 +11,7 @@ use Drupal\farm_crop_plan\CropPlanInterface;
 use Drupal\farm_import_csv\Access\CsvImportMigrationAccess;
 use Drupal\farm_import_csv\Controller\CsvImportController;
 use Drupal\farm_location\LogLocationInterface;
+use Drupal\farm_log\AssetLogsInterface;
 use Drupal\migrate\Plugin\MigrationPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +28,13 @@ class CropPlanImport extends CsvImportController implements ContainerInjectionIn
    * @var \Drupal\farm_crop_plan\CropPlanInterface
    */
   protected $cropPlan;
+
+  /**
+   * The asset logs service.
+   *
+   * @var \Drupal\farm_log\AssetLogsInterface
+   */
+  protected $assetLogs;
 
   /**
    * Log location service.
@@ -57,14 +65,17 @@ class CropPlanImport extends CsvImportController implements ContainerInjectionIn
    *   The database connection.
    * @param \Drupal\farm_crop_plan\CropPlanInterface $crop_plan
    *   The crop plan service.
+   * @param \Drupal\farm_log\AssetLogsInterface $asset_logs
+   *   The asset logs service.
    * @param \Drupal\farm_location\LogLocationInterface $log_location
    *   Log location service.
    * @param \Symfony\Component\Serializer\SerializerInterface $serializer
    *   The serializer service.
    */
-  public function __construct(MenuLinkTreeInterface $menu_link_tree, FormBuilderInterface $form_builder, MigrationPluginManager $plugin_manager_migration, CsvImportMigrationAccess $migration_access, Connection $database, CropPlanInterface $crop_plan, LogLocationInterface $log_location, SerializerInterface $serializer) {
+  public function __construct(MenuLinkTreeInterface $menu_link_tree, FormBuilderInterface $form_builder, MigrationPluginManager $plugin_manager_migration, CsvImportMigrationAccess $migration_access, Connection $database, CropPlanInterface $crop_plan, AssetLogsInterface $asset_logs, LogLocationInterface $log_location, SerializerInterface $serializer) {
     parent::__construct($menu_link_tree, $form_builder, $plugin_manager_migration, $migration_access, $database);
     $this->cropPlan = $crop_plan;
+    $this->assetLogs = $asset_logs;
     $this->logLocation = $log_location;
     $this->serializer = $serializer;
   }
@@ -80,6 +91,7 @@ class CropPlanImport extends CsvImportController implements ContainerInjectionIn
       $container->get('farm_import_csv.access'),
       $container->get('database'),
       $container->get('farm_crop_plan'),
+      $container->get('asset.logs'),
       $container->get('log.location'),
       $container->get('serializer'),
     );
@@ -187,7 +199,7 @@ class CropPlanImport extends CsvImportController implements ContainerInjectionIn
       $row['plant_type'] = implode(', ', $plant_types);
 
       // Look up the first seeding log location and timestamp.
-      $log = $this->cropPlan->getFirstLog($crop_planting, 'seeding');
+      $log = $this->assetLogs->getFirstLog($crop_planting->getPlant(), 'seeding');
       if (!empty($log)) {
         $locations = array_map(function ($asset) {
           return $asset->label(0);
@@ -197,7 +209,7 @@ class CropPlanImport extends CsvImportController implements ContainerInjectionIn
       }
 
       // Look up the first transplanting log location and timestamp.
-      $log = $this->cropPlan->getFirstLog($crop_planting, 'transplanting');
+      $log = $this->assetLogs->getFirstLog($crop_planting->getPlant(), 'transplanting');
       if (!empty($log)) {
         $locations = array_map(function ($asset) {
           return $asset->label(0);
