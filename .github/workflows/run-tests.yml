@@ -43,7 +43,7 @@ jobs:
         run: docker compose exec -u www-data -T www phpcs /opt/drupal/web/modules/${MODULE_NAME} --exclude=DrupalPractice.InfoFiles.NamespacedDependency
       - name: Run PHPStan
         run: |
-          sudo sed -i '/level: 1/a \  reportUnmatchedIgnoredErrors: false' www/phpstan.neon
+          sudo sed -i 's/reportUnmatchedIgnoredErrors: true/reportUnmatchedIgnoredErrors: false/' www/phpstan.neon
           docker compose exec -u www-data -T www phpstan analyze /opt/drupal/web/modules/${MODULE_NAME}
       - name: Run PHPUnit tests
         run: docker compose exec -u www-data -T www phpunit /opt/drupal/web/modules/${MODULE_NAME}
