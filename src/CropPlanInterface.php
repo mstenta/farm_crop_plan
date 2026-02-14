@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\farm_crop_plan;
 
 use Drupal\asset\Entity\AssetInterface;

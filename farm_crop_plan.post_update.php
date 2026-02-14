@@ -5,6 +5,8 @@
  * Post update functions for farm_crop_plan module.
  */
 
+declare(strict_types=1);
+
 /**
  * Install the farmOS Timeline module.
  */

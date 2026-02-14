@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\farm_crop_plan\Traits;
 
 use Drupal\asset\Entity\Asset;
