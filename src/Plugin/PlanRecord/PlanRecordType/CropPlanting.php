@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\farm_crop_plan\Plugin\PlanRecord\PlanRecordType;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\farm_entity\Attribute\PlanRecordType;
 use Drupal\farm_entity\Plugin\PlanRecord\PlanRecordType\FarmPlanRecordType;
 
 /**
  * Provides the crop planting plan record type.
- *
- * @PlanRecordType(
- *   id = "crop_planting",
- *   label = @Translation("Crop Planting"),
- * )
  */
+#[PlanRecordType(
+  id: 'crop_planting',
+  label: new TranslatableMarkup('Crop planting'),
+)]
 class CropPlanting extends FarmPlanRecordType {
 
   /**

@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\farm_crop_plan\Plugin\Plan\PlanType;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\farm_entity\Attribute\PlanType;
 use Drupal\farm_entity\Plugin\Plan\PlanType\FarmPlanType;
 
 /**
  * Provides the crop plan type.
- *
- * @PlanType(
- *   id = "crop",
- *   label = @Translation("Crop plan"),
- * )
  */
+#[PlanType(
+  id: 'crop',
+  label: new TranslatableMarkup('Crop plan'),
+)]
 class Crop extends FarmPlanType {
 
   /**
