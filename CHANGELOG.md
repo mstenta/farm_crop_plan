@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha4] 2026-02-14
+
+### Added
+
+- Added support for farmOS v4.
+
+### Changed
+
+- Code cleanup and modernization.
+
+### Removed
+
+- Dropped support for farmOS v3.
+- Drop inherited `asset` and `log` fields from crop plan entity.
+
 ## [3.0.0-alpha3] 2024-09-24
 
 ### Changed
@@ -52,7 +67,8 @@ Here is a summary of the major features this release provides:
   [svelte-gantt](https://github.com/ANovokmet/svelte-gantt), with the ability to
   view by plant type or by location.
 
-[Unreleased]: https://github.com/mstenta/farm_crop_plan/compare/3.0.0-alpha3...HEAD
+[Unreleased]: https://github.com/mstenta/farm_crop_plan/compare/3.0.0-alpha4...HEAD
+[3.0.0-alpha4]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha4
 [3.0.0-alpha3]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha3
 [3.0.0-alpha2]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha2
 [3.0.0-alpha1]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha1
