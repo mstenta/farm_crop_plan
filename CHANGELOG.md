@@ -53,6 +53,6 @@ Here is a summary of the major features this release provides:
   view by plant type or by location.
 
 [Unreleased]: https://github.com/mstenta/farm_crop_plan/compare/3.0.0-alpha3...HEAD
-[3.0.0-alpha3]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha2
+[3.0.0-alpha3]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha3
 [3.0.0-alpha2]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha2
 [3.0.0-alpha1]: https://github.com/mstenta/farm_crop_plan/releases/tag/3.0.0-alpha1
