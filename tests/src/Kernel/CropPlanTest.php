@@ -7,11 +7,13 @@ namespace Drupal\Tests\farm_crop_plan\Kernel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\farm_crop_plan\Traits\MockCropPlanEntitiesTrait;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests for farmOS crop plan.
  */
 #[Group('farm_crop_plan')]
+#[RunTestsInSeparateProcesses]
 class CropPlanTest extends KernelTestBase {
 
   use MockCropPlanEntitiesTrait;
