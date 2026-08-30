@@ -6,12 +6,12 @@ namespace Drupal\Tests\farm_crop_plan\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\farm_crop_plan\Traits\MockCropPlanEntitiesTrait;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Tests for farmOS crop plan.
- *
- * @group farm_crop_plan
  */
+#[Group('farm_crop_plan')]
 class CropPlanTest extends KernelTestBase {
 
   use MockCropPlanEntitiesTrait;
