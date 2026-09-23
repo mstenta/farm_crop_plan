@@ -21,7 +21,7 @@ class CropPlanting extends FarmPlanRecordType {
    * {@inheritdoc}
    */
   public function buildFieldDefinitions() {
-    $fields = parent::buildFieldDefinitions();
+    $fields = [];
     $field_info = [
       'plant' => [
         'type' => 'entity_reference',
