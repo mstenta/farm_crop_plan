@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\farm_crop_plan\Form;
 
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;

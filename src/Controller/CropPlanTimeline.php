@@ -6,7 +6,6 @@ namespace Drupal\farm_crop_plan\Controller;
 
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\Link;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Core\Url;
