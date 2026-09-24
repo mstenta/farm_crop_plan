@@ -17,8 +17,6 @@ use Drupal\plan\Entity\PlanInterface;
  */
 class CropPlanTimelineForm extends FormBase {
 
-  use AutowireTrait;
-
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
     protected CropPlanInterface $cropPlan,

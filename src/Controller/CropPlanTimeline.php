@@ -24,8 +24,6 @@ use Symfony\Component\Serializer\SerializerInterface;
  */
 class CropPlanTimeline extends ControllerBase {
 
-  use AutowireTrait;
-
   public function __construct(
     protected CropPlanInterface $cropPlan,
     protected AssetLogsInterface $assetLogs,

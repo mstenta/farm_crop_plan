@@ -21,8 +21,6 @@ use Drupal\plan\Entity\PlanRecord;
  */
 class CropPlanAddPlantingForm extends FormBase {
 
-  use AutowireTrait;
-
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
     protected ModuleHandlerInterface $moduleHandler,
